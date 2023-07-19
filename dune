@@ -69,6 +69,11 @@
 
 (copy_files# printer/*.ml{,i})
 
+(rule
+  (with-stdout-to keywords_token.mli
+    (progn (echo "type token = Parser.token =")
+           (run tools/scrape_token.exe %{dep:parser.mli}))))
+
 (menhir
  (modules parser)
  (flags
@@ -123,6 +128,7 @@
   asttypes
   cmo_format
   cmj_format
+  keywords_token
   outcometree
   parsetree
   debug_event
@@ -177,6 +183,8 @@
   camlinternalMenhirLib
   ast_iterator
   parser
+  keywords_token
+  keywords
   lexer
   parse
   pprintast

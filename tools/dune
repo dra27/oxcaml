@@ -162,3 +162,7 @@
  (name gen_compiler_libs_installation)
  (modes native)
  (modules gen_compiler_libs_installation))
+
+(executable
+  (name scrape_token)
+  (modules scrape_token))

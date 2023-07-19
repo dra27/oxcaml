@@ -34,85 +34,6 @@ type error =
 
 exception Error of error * Location.t
 
-(* The table of keywords *)
-
-let keyword_table =
-  create_hashtable 149 [
-    "and", AND;
-    "as", AS;
-    "assert", ASSERT;
-    "begin", BEGIN;
-    "class", CLASS;
-    "constraint", CONSTRAINT;
-    "do", DO;
-    "done", DONE;
-    "downto", DOWNTO;
-    "else", ELSE;
-    "end", END;
-    "exception", EXCEPTION;
-    "exclave_", EXCLAVE;
-    "external", EXTERNAL;
-    "false", FALSE;
-    "for", FOR;
-    "fun", FUN;
-    "function", FUNCTION;
-    "functor", FUNCTOR;
-    "global_", GLOBAL;
-    "if", IF;
-    "in", IN;
-    "include", INCLUDE;
-    "inherit", INHERIT;
-    "initializer", INITIALIZER;
-    "kind_abbrev_", KIND_ABBREV;
-    "kind_of_", KIND_OF;
-    "lazy", LAZY;
-    "let", LET;
-    "local_", LOCAL;
-    "match", MATCH;
-    "method", METHOD;
-    "mod", MOD;
-    "module", MODULE;
-    "mutable", MUTABLE;
-    "new", NEW;
-    "nonrec", NONREC;
-    "object", OBJECT;
-    "of", OF;
-    "once_", ONCE;
-    "open", OPEN;
-    "or", OR;
-    "overwrite_", OVERWRITE;
-(*  "parser", PARSER; *)
-    "private", PRIVATE;
-    "rec", REC;
-    "sig", SIG;
-    "stack_", STACK;
-    "struct", STRUCT;
-    "then", THEN;
-    "to", TO;
-    "true", TRUE;
-    "try", TRY;
-    "type", TYPE;
-    "unique_", UNIQUE;
-    "val", VAL;
-    "virtual", VIRTUAL;
-    "when", WHEN;
-    "while", WHILE;
-    "with", WITH;
-
-    "lor", INFIXOP3("lor"); (* Should be INFIXOP2 *)
-    "lxor", INFIXOP3("lxor"); (* Should be INFIXOP2 *)
-    "land", INFIXOP3("land");
-    "lsl", INFIXOP4("lsl");
-    "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr")
-]
-
-let lookup_keyword name =
-  match Hashtbl.find keyword_table name with
-  | kw -> kw
-  | exception Not_found ->
-     LIDENT name
-
 (* To buffer string literals *)
 
 let string_buffer = Buffer.create 256
@@ -401,13 +322,8 @@ let uchar_for_uchar_escape lexbuf =
       illegal_escape lexbuf
         (Printf.sprintf "%X is not a Unicode scalar value" cp)
 
-let is_keyword name =
-  match lookup_keyword name with
-  | LIDENT _ -> false
-  | _ -> true
-
 let check_label_name lexbuf name =
-  if is_keyword name then error lexbuf (Keyword_as_label name)
+  if Keywords.is_keyword name then error lexbuf (Keyword_as_label name)
 
 (* Update the current location with file name and line number. *)
 
@@ -621,15 +537,15 @@ rule token = parse
   | (lowercase identchar * as name) ('#' symbolchar_or_hash+ as hashop)
       (* See Note [Lexing hack for hash operators] *)
       { enqueue_hashop_from_end_of_lexbuf_window lexbuf ~hashop;
-        lookup_keyword name }
+        Keywords.lookup_keyword name }
   | (lowercase identchar * as name) '#'
       (* See Note [Lexing hack for float#] *)
       { enqueue_hash_suffix_from_end_of_lexbuf_window lexbuf;
-        lookup_keyword name }
+        Keywords.lookup_keyword name }
   | raw_ident_escape (lowercase identchar * as name)
       { LIDENT name }
   | lowercase identchar * as name
-      { lookup_keyword name }
+      { Keywords.lookup_keyword name }
   (* Lowercase latin1 identifiers are split into 3 cases, and the order matters
      (longest to shortest).
   *)
