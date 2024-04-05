@@ -613,7 +613,7 @@ let rec read_args xs r = match xs,r with
 | _,_ ->
     fatal_error "Parmatch.read_args"
 
-let do_set_args ~erase_mutable q r = match q with
+let set_args q r = match q with
 | {pat_desc = Tpat_tuple omegas} ->
     let args,rest = read_args (List.map snd omegas) r in
     make_pat
@@ -630,30 +630,20 @@ let do_set_args ~erase_mutable q r = match q with
       q.pat_type q.pat_env::rest
 | {pat_desc = Tpat_record (omegas,closed)} ->
     let args,rest = read_args omegas r in
-    make_pat
-      (Tpat_record
-         (List.map2 (fun (lid, lbl,_) arg ->
-           if erase_mutable && Types.is_mutable lbl.lbl_mut
-           then
-             lid, lbl, omega
-           else
-             lid, lbl, arg)
-            omegas args, closed))
-      q.pat_type q.pat_env::
-    rest
+    let args =
+      List.map2 (fun (lid, lbl, _) arg -> (lid, lbl, arg)) omegas args in
+    make_pat (Tpat_record (args, closed)) q.pat_type q.pat_env :: rest
 | {pat_desc = Tpat_record_unboxed_product (omegas,closed)} ->
     let args,rest = read_args omegas r in
+    let args =
+      List.map2 (fun (lid, lbl, _) arg ->
+        if Types.is_mutable lbl.lbl_mut then
+          fatal_error
+            "Parmatch.do_set_args: unboxed record labels are never mutable"
+        else
+          lid, lbl, arg) omegas args in
     make_pat
-      (Tpat_record_unboxed_product
-         (List.map2 (fun (lid, lbl,_) arg ->
-           if Types.is_mutable lbl.lbl_mut then
-             fatal_error
-               "Parmatch.do_set_args: unboxed record labels are never mutable"
-           else
-             lid, lbl, arg)
-            omegas args, closed))
-      q.pat_type q.pat_env::
-    rest
+      (Tpat_record_unboxed_product (args, closed)) q.pat_type q.pat_env :: rest
 | {pat_desc = Tpat_construct (lid, c, omegas, _)} ->
     let args,rest = read_args omegas r in
     make_pat
@@ -678,7 +668,6 @@ let do_set_args ~erase_mutable q r = match q with
     end
 | {pat_desc = Tpat_array (am, arg_sort, omegas)} ->
     let args,rest = read_args omegas r in
-    let args = if erase_mutable then omegas else args in
     make_pat
       (Tpat_array (am, arg_sort, args)) q.pat_type q.pat_env::
     rest
@@ -686,9 +675,6 @@ let do_set_args ~erase_mutable q r = match q with
     q::r (* case any is used in matching.ml *)
 | {pat_desc = (Tpat_var _ | Tpat_alias _ | Tpat_or _); _} ->
     fatal_error "Parmatch.set_args"
-
-let set_args q r = do_set_args ~erase_mutable:false q r
-and set_args_erase_mutable q r = do_set_args ~erase_mutable:true q r
 
 (* Given a matrix of non-empty rows
    p1 :: r1...
@@ -1123,7 +1109,7 @@ let build_other ext env =
           | _ ->
               build_other_constrs env d
           end
-      | Unboxed_bool b -> 
+      | Unboxed_bool b ->
         make_pat (Tpat_unboxed_bool (not b)) d.pat_type Env.empty
       | Variant { cstr_row; type_row } ->
           let tags =
