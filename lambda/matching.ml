@@ -3924,17 +3924,18 @@ and compile_match_nonempty ~scopes value_kind repr partial ctx
   | { cases = []; args = [] } -> comp_exit ctx m
   | { args = (arg, str, arg_sort, layout) :: argl } ->
       let v, v_duid, newarg = arg_to_var arg m.cases in
-      let args = (newarg, Alias, arg_sort, layout) :: argl in
-      let cases =
-        List.map (half_simplify_nonempty ~arg:newarg)
-          m.cases
-      in
-      let m = { m with args; cases } in
-      let first_match, rem =
-        split_and_precompile_half_simplified ~arg:newarg ~arg_sort m
-      in
-      combine_handlers ~scopes value_kind repr partial ctx
-                       (v, v_duid, str, layout, arg) first_match rem
+      bind_match_arg str v v_duid layout arg (
+        let args = (newarg, Alias, arg_sort, layout) :: argl in
+        let cases =
+          List.map (half_simplify_nonempty ~arg:newarg)
+            m.cases
+        in
+        let m = { m with args; cases } in
+        let first_match, rem =
+          split_and_precompile_half_simplified ~arg:newarg ~arg_sort m
+        in
+        combine_handlers ~scopes value_kind repr partial ctx first_match rem
+      )
   | _ -> assert false
 
 and compile_match_simplified ~scopes value_kind  repr partial ctx
@@ -3943,26 +3944,16 @@ and compile_match_simplified ~scopes value_kind  repr partial ctx
   | { cases = []; args = [] } -> comp_exit ctx m
   | { args = ((Lvar v as arg), str, sort, layout) :: argl } ->
       let v_duid = Lambda.debug_uid_none in
+      bind_match_arg str v v_duid layout arg (
       (* CR sspies: Can we get a better [debug_uid] here? *)
-      let args = (arg, Alias, sort, layout) :: argl in
-      let m = { m with args } in
-      let first_match, rem = split_and_precompile_simplified m in
-      combine_handlers value_kind ~scopes repr partial ctx
-        (v, v_duid, str, layout, arg) first_match rem
+        let args = (arg, Alias, sort, layout) :: argl in
+        let m = { m with args } in
+        let first_match, rem = split_and_precompile_simplified m in
+        combine_handlers value_kind ~scopes repr partial ctx first_match rem
+      )
   | _ -> assert false
 
-and combine_handlers ~scopes value_kind repr partial ctx
-    (v, v_duid, str, arg_layout, arg) first_match rem =
-  let lam, jumps =
-    comp_match_handlers value_kind
-      (( if dbg then
-         do_compile_matching_pr ~scopes value_kind
-       else
-         do_compile_matching ~scopes value_kind
-       )
-         repr)
-      partial ctx first_match rem
-  in
+and bind_match_arg str v v_duid arg_layout arg (lam, jumps) =
   let jumps =
     (* If the Lambda expression [arg] to access the first argument is
        a mutable field read, then its binding and evaluation may be
@@ -4009,6 +4000,16 @@ and combine_handlers ~scopes value_kind repr partial ctx
         Jumps.map Context.erase_first_col jumps in
   (bind_check str v v_duid arg_layout arg lam,
    jumps)
+
+and combine_handlers ~scopes value_kind repr partial ctx first_match rem =
+  comp_match_handlers value_kind
+    (( if dbg then
+        do_compile_matching_pr ~scopes value_kind
+      else
+        do_compile_matching ~scopes value_kind
+      )
+        repr)
+    partial ctx first_match rem
 
 (* verbose version of do_compile_matching, for debug *)
 and do_compile_matching_pr ~scopes value_kind repr partial ctx x =
