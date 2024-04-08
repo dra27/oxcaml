@@ -4622,17 +4622,17 @@ let compile_flattened ~scopes value_kind repr partial ctx pmh =
         (compile_match ~scopes value_kind repr partial)
         lam total ctx hs
 
-let do_for_multiple_match ~scopes ~return_layout loc paraml mode pat_act_list partial =
+let do_for_multiple_match ~scopes ~return_layout loc idl mode pat_act_list partial =
   (* CR layouts v5: This function is called in cases where the scrutinee of a
      match is a literal tuple (e.g., [match e1, e2, e3 with ...]).  The
      typechecker treats the scrutinee here like any other tuple, so it's fine to
      assume the whole thing and the elements have sort value.  That will change
      when we allow non-values in structures. *)
   let repr = None in
-  let param_lambda = List.map (fun (l, _, _) -> l) paraml in
   let arg =
     let sloc = Scoped_location.of_location ~scopes loc in
-    Lprim (Pmakeblock (0, Immutable, All_value, mode), param_lambda, sloc)
+    let args = List.map (fun (id, _, _) -> Lvar id) idl in
+    Lprim (Pmakeblock (0, Immutable, All_value, mode), args, sloc)
   in
   let arg_sort = Jkind.Sort.Const.for_tuple in
   let handler =
@@ -4646,30 +4646,17 @@ let do_for_multiple_match ~scopes ~return_layout loc paraml mode pat_act_list pa
         cases = List.map (half_simplify_nonempty ~arg) pm1.cases }
     in
     let next, nexts = split_and_precompile_half_simplified ~arg ~arg_sort pm1_half in
-    let size = List.length paraml in
-    let (idl_with_layouts, args) =
-      List.map (function
-        | Lvar id as lid, sort, layout ->
-          (id, Lambda.debug_uid_none, layout), (lid, Alias, sort, layout)
-        (* CR sspies: Can we get a better [debug_uid] here? *)
-        | _, sort, layout ->
-          let id = Ident.create_local "*match*" in
-          let id_uid = Lambda.debug_uid_none in
-          (id, id_uid, layout), (Lvar id, Alias, sort, layout))
-        paraml
-      |> List.split
+    let size = List.length idl in
+    let args =
+      List.map (fun (id, sort, layout) -> Lvar id, Alias, sort, layout) idl
     in
     let flat_next = flatten_precompiled size args next
     and flat_nexts =
       List.map (fun (e, pm) -> (e, flatten_precompiled size args pm)) nexts
     in
-    let lam, total =
-      comp_match_handlers return_layout
-        (compile_flattened ~scopes return_layout repr) partial
-        (Context.start size) flat_next flat_nexts
-    in
-    List.fold_right2 (bind_with_layout Strict) idl_with_layouts param_lambda lam,
-    total
+    comp_match_handlers return_layout
+      (compile_flattened ~scopes return_layout repr) partial
+      (Context.start size) flat_next flat_nexts
   )
 
 (* PR#4828: Believe it or not, the 'paraml' argument below
@@ -4690,11 +4677,11 @@ let bind_opt (v, v_duid, _, layout, eo) k =
 
 let for_multiple_match ~scopes ~return_layout loc paraml mode pat_act_list partial =
   let v_paraml = List.map param_to_var paraml in
-  let paraml =
-    List.map (fun (v, _, sort, layout, _) -> (Lvar v, sort, layout)) v_paraml
+  let vl =
+    List.map (fun (v, _, sort, layout, _) -> (v, sort, layout)) v_paraml
   in
   List.fold_right bind_opt v_paraml
-    (do_for_multiple_match ~scopes ~return_layout loc paraml mode pat_act_list
+    (do_for_multiple_match ~scopes ~return_layout loc vl mode pat_act_list
        partial)
 
 let for_optional_arg_default
