@@ -32,18 +32,18 @@ match (3, 2, 1) with
    *match*/287 =[value<int>] 1)
   (catch
     (catch
-      (catch (if (%int_notequal *match*/286 3) (exit 3) (exit 1)) with (3)
-        (if (%int_notequal *match*/285 1) (exit 2) (exit 1)))
-     with (2) 0)
-   with (1) 1))
+      (catch (if (%int_notequal *match*/286 3) (exit 4) (exit 2)) with (4)
+        (if (%int_notequal *match*/285 1) (exit 3) (exit 2)))
+     with (3) 0)
+   with (2) 1))
 (let
   (*match*/285 =[value<int>] 3
    *match*/286 =[value<int>] 2
    *match*/287 =[value<int>] 1)
   (catch
     (if (%int_notequal *match*/286 3)
-      (if (%int_notequal *match*/285 1) 0 (exit 1)) (exit 1))
-   with (1) 1))
+      (if (%int_notequal *match*/285 1) 0 (exit 2)) (exit 2))
+   with (2) 1))
 - : bool = false
 |}];;
 
@@ -62,23 +62,23 @@ match (3, 2, 1) with
   (catch
     (catch
       (catch
-        (if (%int_notequal *match*/291 3) (exit 6)
+        (if (%int_notequal *match*/291 3) (exit 8)
           (let
             (x/294 =a[value<
                        (consts ())
                         (non_consts ([0: value<int>, value<int>, value<int>]))>]
                (makeblock 0 *match*/290 *match*/291 *match*/292))
-            (exit 4 x/294)))
-       with (6)
-        (if (%int_notequal *match*/290 1) (exit 5)
+            (exit 6 x/294)))
+       with (8)
+        (if (%int_notequal *match*/290 1) (exit 7)
           (let
             (x/293 =a[value<
                        (consts ())
                         (non_consts ([0: value<int>, value<int>, value<int>]))>]
                (makeblock 0 *match*/290 *match*/291 *match*/292))
-            (exit 4 x/293))))
-     with (5) 0)
-   with (4 x/288[value<
+            (exit 6 x/293))))
+     with (7) 0)
+   with (6 x/288[value<
                   (consts ())
                    (non_consts ([0: value<int>, value<int>, value<int>]))>])
     (seq (ignore x/288) 1)))
@@ -89,9 +89,9 @@ match (3, 2, 1) with
   (catch
     (if (%int_notequal *match*/291 3)
       (if (%int_notequal *match*/290 1) 0
-        (exit 4 (makeblock 0 *match*/290 *match*/291 *match*/292)))
-      (exit 4 (makeblock 0 *match*/290 *match*/291 *match*/292)))
-   with (4 x/288[value<
+        (exit 6 (makeblock 0 *match*/290 *match*/291 *match*/292)))
+      (exit 6 (makeblock 0 *match*/290 *match*/291 *match*/292)))
+   with (6 x/288[value<
                   (consts ())
                    (non_consts ([0: value<int>, value<int>, value<int>]))>])
     (seq (ignore x/288) 1)))
@@ -265,14 +265,14 @@ let _ = fun a b -> match a, b with
          p/340 =a[value<
                    (consts ()) (non_consts ([0: value<int>, value<int>]))>]
            (makeblock 0 a/331 b/332))
-        (exit 10 x/339 p/340))
+        (exit 31 x/339 p/340))
       (let
         (x/337 =a[value<(consts ()) (non_consts ([0: ]))>] b/332
          p/338 =a[value<
                    (consts ()) (non_consts ([0: value<int>, value<int>]))>]
            (makeblock 0 a/331 b/332))
-        (exit 10 x/337 p/338)))
-   with (10 x/333[value<int>] p/334[value<
+        (exit 31 x/337 p/338)))
+   with (31 x/333[value<int>] p/334[value<
                                      (consts ())
                                       (non_consts ([0: value<int>,
                                                     value<int>]))>])
@@ -286,9 +286,9 @@ let _ = fun a b -> match a, b with
                    value<
                     (consts ()) (non_consts ([0: value<int>, value<int>]))>]))
   (catch
-    (if a/331 (exit 10 a/331 (makeblock 0 a/331 b/332))
-      (exit 10 b/332 (makeblock 0 a/331 b/332)))
-   with (10 x/333[value<int>] p/334[value<
+    (if a/331 (exit 31 a/331 (makeblock 0 a/331 b/332))
+      (exit 31 b/332 (makeblock 0 a/331 b/332)))
+   with (31 x/333[value<int>] p/334[value<
                                      (consts ())
                                       (non_consts ([0: value<int>,
                                                     value<int>]))>])
@@ -395,9 +395,9 @@ let _ =fun a b -> match a, b with
      (non_consts ([0: value<int>, value<(consts (0)) (non_consts ([0: *]))>]))
   (catch
     (if a/360
-      (if b/361 (let (p/362 =a? (field_imm 0 b/361)) p/362) (exit 12))
-      (exit 12))
-   with (12)
+      (if b/361 (let (p/362 =a? (field_imm 0 b/361)) p/362) (exit 42))
+      (exit 42))
+   with (42)
     (let
       (p/363 =a[value<
                  (consts ())
@@ -411,8 +411,8 @@ let _ =fun a b -> match a, b with
           (non_consts ([0: value<(consts ()) (non_consts ([0: *, *]))>]))>]
   : (consts ())
      (non_consts ([0: value<int>, value<(consts (0)) (non_consts ([0: *]))>]))
-  (catch (if a/360 (if b/361 (field_imm 0 b/361) (exit 12)) (exit 12))
-   with (12) (makeblock 0 a/360 b/361)))
+  (catch (if a/360 (if b/361 (field_imm 0 b/361) (exit 42)) (exit 42))
+   with (42) (makeblock 0 a/360 b/361)))
 - : bool -> bool tuplist -> bool * bool tuplist = <fun>
 |}]
 
@@ -430,18 +430,18 @@ let _ = fun a b -> match a, b with
   (catch
     (catch
       (if a/364
-        (if b/365 (let (p/369 =a? (field_imm 0 b/365)) (exit 13 p/369))
-          (exit 14))
-        (exit 14))
-     with (14)
+        (if b/365 (let (p/369 =a? (field_imm 0 b/365)) (exit 46 p/369))
+          (exit 47))
+        (exit 47))
+     with (47)
       (let
         (p/368 =a[value<
                    (consts ())
                     (non_consts ([0: value<int>,
                                   value<(consts (0)) (non_consts ([0: *]))>]))>]
            (makeblock 0 a/364 b/365))
-        (exit 13 p/368)))
-   with (13 p/366[value<
+        (exit 46 p/368)))
+   with (46 p/366[value<
                    (consts ())
                     (non_consts ([0: value<int>,
                                   value<(consts (0)) (non_consts ([0: *]))>]))>])
@@ -454,9 +454,9 @@ let _ = fun a b -> match a, b with
      (non_consts ([0: value<int>, value<(consts (0)) (non_consts ([0: *]))>]))
   (catch
     (catch
-      (if a/364 (if b/365 (exit 13 (field_imm 0 b/365)) (exit 14)) (exit 14))
-     with (14) (exit 13 (makeblock 0 a/364 b/365)))
-   with (13 p/366[value<
+      (if a/364 (if b/365 (exit 46 (field_imm 0 b/365)) (exit 47)) (exit 47))
+     with (47) (exit 46 (makeblock 0 a/364 b/365)))
+   with (46 p/366[value<
                    (consts ())
                     (non_consts ([0: value<int>,
                                   value<(consts (0)) (non_consts ([0: *]))>]))>])

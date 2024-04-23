@@ -20,9 +20,9 @@ let last_is_anys = function
        param/16[value<(consts ()) (non_consts ([0: value<int>, value<int>]))>]
        : int
        (catch
-         (if (field_imm 0 param/16) (if (field_imm 1 param/16) (exit 1) 1)
-           (if (field_imm 1 param/16) (exit 1) 2))
-        with (1) 3)))
+         (if (field_imm 0 param/16) (if (field_imm 1 param/16) (exit 2) 1)
+           (if (field_imm 1 param/16) (exit 2) 2))
+        with (2) 3)))
   (apply (field_imm 1 (global Toploop!)) "last_is_anys" last_is_anys/14))
 val last_is_anys : bool * bool -> int = <fun>
 |}]
@@ -39,9 +39,9 @@ let last_is_vars = function
        param/25[value<(consts ()) (non_consts ([0: value<int>, value<int>]))>]
        : int
        (catch
-         (if (field_imm 0 param/25) (if (field_imm 1 param/25) (exit 3) 1)
-           (if (field_imm 1 param/25) (exit 3) 2))
-        with (3) 3)))
+         (if (field_imm 0 param/25) (if (field_imm 1 param/25) (exit 5) 1)
+           (if (field_imm 1 param/25) (exit 5) 2))
+        with (5) 3)))
   (apply (field_imm 1 (global Toploop!)) "last_is_vars" last_is_vars/21))
 val last_is_vars : bool * bool -> int = <fun>
 |}]
@@ -85,9 +85,9 @@ let f = function
        : int
        (let (*match*/35 =a? (field_imm 0 param/34))
          (catch
-           (if (%eq *match*/35 A/29) (if (field_imm 1 param/34) 1 (exit 8))
-             (exit 8))
-          with (8)
+           (if (%eq *match*/35 A/29) (if (field_imm 1 param/34) 1 (exit 11))
+             (exit 11))
+          with (11)
            (if (field_imm 1 param/34)
              (if (%eq (field_imm 0 *match*/35) B/30) 2
                (if (%eq (field_imm 0 *match*/35) C/31) 3 4))

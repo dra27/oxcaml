@@ -94,9 +94,9 @@ let f r =
            (catch
              (if *match*/313
                (let (*match*/315 =o? (field_mut 0 (field_imm 0 *match*/313)))
-                 (if *match*/315 (exit 7) 0))
-               (exit 7))
-            with (7)
+                 (if *match*/315 (exit 11) 0))
+               (exit 11))
+            with (11)
              (if (seq (setfield_ptr 0 r/311 0) 0) 1
                (if *match*/313
                  (let

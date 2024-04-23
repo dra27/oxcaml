@@ -196,9 +196,10 @@ let match_anf_aliased r =
        (catch
          (let (y/342 =a? (field_imm 1 r/340))
            (if (%eq y/342 "")
-             (let (*match*/349 =[value<int>] 0) (exit 8 y/342))
-             (let (*match*/347 =[value<int>] 1) (exit 8 (field_imm 1 r/340)))))
-        with (8 y/341)
+             (let (*match*/349 =[value<int>] 0) (exit 21 y/342))
+             (let (*match*/347 =[value<int>] 1)
+               (exit 21 (field_imm 1 r/340)))))
+        with (21 y/341)
          (let
            (r/344 =[value<(consts ()) (non_consts ([0: *, *]))>]
               (apply aliased_use/290 r/340))
@@ -229,10 +230,10 @@ let match_anf_unique r =
        (catch
          (let (y/354 =o? (field_mut 1 r/352))
            (if (%eq y/354 "")
-             (let (*match*/361 =[value<int>] 0) (exit 14 y/354))
+             (let (*match*/361 =[value<int>] 0) (exit 29 y/354))
              (let (y/355 =o? (field_mut 1 r/352) *match*/359 =[value<int>] 1)
-               (exit 14 y/355))))
-        with (14 y/353)
+               (exit 29 y/355))))
+        with (29 y/353)
          (let
            (r/356 =[value<(consts ()) (non_consts ([0: *, *]))>]
               (apply unique_use/293 r/352))
@@ -379,10 +380,10 @@ let swap_inner (t : tree) =
                                                                   *]))>]))>)
                        (field_imm 2 *match*/379) (field_int 1 *match*/383)
                        (field_imm 2 *match*/383)))
-                   (exit 19)))
-               (exit 19)))
-           (exit 19))
-        with (19) t/370)))
+                   (exit 36)))
+               (exit 36)))
+           (exit 36))
+        with (36) t/370)))
   (apply (field_imm 1 (global Toploop!)) "swap_inner" swap_inner/368))
 val swap_inner : tree -> tree = <fun>
 |}]
