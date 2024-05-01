@@ -2343,14 +2343,6 @@ let inline_lazy_force arg pos loc =
         ap_result_layout = Lambda.layout_lazy_contents;
         ap_region_close = pos;
         ap_mode = alloc_heap;
-        (* nroberts: To make sure this wasn't inlined:
-             - Upstream changed [code_force_lazy] to a non-inlineable
-               function when compiling with AFL support.
-             - We just changed this to Never_inlined.
-
-           If these two approaches are solving the same problem, we should
-           just converge to one.
-        *)
         ap_inlined = Never_inlined;
         ap_specialised = Default_specialise;
         ap_probe=None;
