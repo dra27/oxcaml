@@ -62,6 +62,7 @@ expunge := expunge$(EXE)
 utils_SOURCES = $(addprefix utils/, \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -2163,6 +2164,7 @@ ocamlprof_LIBRARIES =
 ocamlprof_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -2189,6 +2191,7 @@ ocamlprof_SOURCES = \
 ocamlcp_ocamloptp_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   profile.mli profile.ml \
   warnings.mli warnings.ml \
@@ -2216,6 +2219,7 @@ ocamlmklib_LIBRARIES =
 ocamlmklib_SOURCES = \
   config.ml \
   build_path_prefix_map.ml \
+  format_doc.ml \
   misc.ml \
   ocamlmklib.mli ocamlmklib.ml
 
@@ -2225,6 +2229,7 @@ ocamlmktop_LIBRARIES =
 ocamlmktop_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
