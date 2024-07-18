@@ -387,7 +387,7 @@ let link ~ppf_dump objfiles output_name =
 module Style = Misc.Style
 open Format_doc
 
-let report_error ppf = function
+let report_error_doc ppf = function
   | File_not_found name ->
       fprintf ppf "Cannot find file %a" Style.inline_code name
   | Not_an_object_file name ->
@@ -451,9 +451,11 @@ let report_error ppf = function
 let () =
   Location.register_error_of_exn
     (function
-      | Error err -> Some (Location.error_of_printer_file report_error err)
+      | Error err -> Some (Location.error_of_printer_file report_error_doc err)
       | _ -> None
     )
+
+let report_error = Format_doc.compat report_error_doc
 
 let reset () =
   Cmi_consistbl.clear crc_interfaces;

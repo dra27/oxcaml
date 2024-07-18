@@ -2001,7 +2001,7 @@ module Reaching_path = struct
 end
 
 let quoted_type ppf ty = Style.as_inline_code !Oprint.out_type ppf ty
-let report_error ppf = function
+let report_error_doc ppf = function
   | Repeated_parameter ->
       fprintf ppf "A type parameter occurs several times"
   | Duplicate_constructor s ->
@@ -2288,7 +2288,9 @@ let () =
   Location.register_error_of_exn
     (function
       | Error (loc, err) ->
-        Some (Location.error_of_printer ~loc report_error err)
+        Some (Location.error_of_printer ~loc report_error_doc err)
       | _ ->
         None
     )
+
+let report_error = Format_doc.compat report_error_doc
