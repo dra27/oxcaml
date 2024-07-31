@@ -4182,71 +4182,69 @@ and do_compile_matching ~scopes value_kind repr partial ctx pmh =
       let ph = what_is_cases pm.cases in
       let pomega = Patterns.Head.to_omega_pattern ph in
       let ploc = head_loc ~scopes ph in
+      let compile_no_test divide combine =
+        compile_no_test ~scopes value_kind divide combine repr partial ctx pm
+      in
+      let compile_test divide combine =
+        compile_test
+          (compile_match ~scopes value_kind repr partial)
+          partial divide combine ctx pm
+      in
       let open Patterns.Head in
       match ph.pat_desc with
       | Any ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             divide_var
-            Context.rshift repr partial ctx pm
+            Context.rshift
       | Unboxed_unit ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             divide_var
-            Context.rshift repr partial ctx pm
+            Context.rshift
       | Unboxed_bool _ ->
           compile_test
-            (compile_match ~scopes value_kind repr partial)
-            partial divide_unboxed_bool
+            divide_unboxed_bool
             (combine_unboxed_bool value_kind ploc arg partial)
-            ctx pm
       | Tuple _ ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             (divide_tuple ~scopes ph)
-            Context.combine repr partial ctx pm
+            Context.combine
       | Unboxed_tuple shape ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             (divide_unboxed_tuple ~scopes ph shape)
-            Context.combine repr partial ctx pm
+            Context.combine
       | Record [] | Record_unboxed_product [] -> assert false
       | Record (lbl :: _) ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             (divide_record ~scopes lbl.lbl_all ph)
-            Context.combine repr partial ctx pm
+            Context.combine
       | Record_unboxed_product (lbl :: _) ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             (divide_record_unboxed_product ~scopes lbl.lbl_all ph)
-            Context.combine repr partial ctx pm
+            Context.combine
       | Constant (Const_float32 _ | Const_unboxed_float32 _) ->
           Parmatch.raise_matched_float32 ()
       | Constant cst ->
           compile_test
-            (compile_match ~scopes value_kind repr partial)
-            partial divide_constant
+            divide_constant
             (combine_constant value_kind ploc arg cst partial)
-            ctx pm
       | Construct cstr ->
           compile_test
-            (compile_match ~scopes value_kind repr partial)
-            partial (divide_constructor ~scopes)
+            (divide_constructor ~scopes)
             (combine_constructor value_kind ploc arg ph.pat_env ph.pat_unique_barrier cstr partial)
-            ctx pm
       | Array (_, elt_sort, _) ->
           let elt_sort = Jkind.Sort.default_for_transl_and_get elt_sort in
           let kind = Typeopt.array_pattern_kind pomega elt_sort in
           compile_test
-            (compile_match ~scopes value_kind repr partial)
-            partial (divide_array ~scopes kind)
+            (divide_array ~scopes kind)
             (combine_array value_kind ploc arg kind partial)
-            ctx pm
       | Lazy ->
-          compile_no_test ~scopes value_kind
+          compile_no_test
             (divide_lazy ~scopes ph)
-            Context.combine repr partial ctx pm
+            Context.combine
       | Variant { cstr_row = row } ->
           compile_test
-            (compile_match ~scopes value_kind repr partial)
-            partial (divide_variant ~scopes !row)
+            (divide_variant ~scopes !row)
             (combine_variant value_kind ploc !row arg ph.pat_unique_barrier partial)
-            ctx pm
     )
   | PmVar { inside = pmh } ->
       let lam, total =
