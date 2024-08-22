@@ -110,7 +110,13 @@ let example_2 () =
                    [1: 3]
                    (let
                      (*match*/355 =o? (field_mut 0 (field_imm 1 input/346)))
-                     (makeblock 0 (value<int>) (field_imm 0 *match*/355))))
+                     (switch* *match*/355
+                      case tag 0:
+                       (makeblock 0 (value<int>) (field_imm 0 *match*/355))
+                      case tag 1:
+                       (raise
+                         (makeblock 0 (getpredef Match_failure/49!!)
+                           [0: "contexts_2.ml" 11 2])))))
                 case tag 1: [1: 2]))
              [1: 1])))))
   (apply (field_imm 1 (global Toploop!)) "example_2" example_2/344))

@@ -68,7 +68,7 @@ val simple : t -> int = <fun>
    if the two accesses to [b] are done on different reads of the same
    mutable field.
 
-   PASS: a single read of [field_mut 1 x], no Match_failure case. *)
+   PASS: two reads of [field_mut 1 x], and a Match_failure case. *)
 let f x =
   match x with
   | {a = false; b = _} -> 0
@@ -81,7 +81,12 @@ let f x =
      (function {nlocal = 0} x/310 : int
        (if (field_int 0 x/310)
          (let (*match*/314 =o? (field_mut 1 x/310))
-           (if *match*/314 (field_imm 0 *match*/314) 1))
+           (if *match*/314 (field_imm 0 *match*/314)
+             (let (*match*/315 =o? (field_mut 1 x/310))
+               (if *match*/315
+                 (raise
+                   (makeblock 0 (getpredef Match_failure/49!!) [0: "" 2 2]))
+                 1))))
          0)))
   (apply (field_imm 1 (global Toploop!)) "f" f/309))
 val f : t -> int = <fun>
@@ -101,9 +106,7 @@ let f r =
    (field_mut 0) access, or the second access should include
    a Match_failure case.
 
-   FAIL: the second occurrence of (field_mut 0) is used with a direct
-   (field_imm 0) access without a constructor check. The compiler is
-   unsound here. *)
+   PASS: two different reads (field_mut 0), and a Match_failure case. *)
 [%%expect {|
 (let
   (f/316 =
@@ -122,7 +125,10 @@ let f r =
                (if *match*/319
                  (let
                    (*match*/323 =o? (field_mut 0 (field_imm 0 *match*/319)))
-                   (field_imm 0 *match*/323))
+                   (if *match*/323 (field_imm 0 *match*/323)
+                     (raise
+                       (makeblock 0 (getpredef Match_failure/49!!)
+                         [0: "" 2 2]))))
                  3)))))))
   (apply (field_imm 1 (global Toploop!)) "f" f/316))
 val f : int option ref -> int = <fun>
@@ -161,7 +167,11 @@ let test = function
   | { contents = None } -> 0
   | { contents = Some (Int n) } -> n
 ;;
-(* Performance expectation: there should not be a Match_failure case. *)
+(* Performance expectation: there should not be a Match_failure case.
+
+   Currently there *is* a Match_failure case, as the compiler is unable
+   to distinguish this situation from a situation where the matrix is split
+   and there are several accesses to the mutable field. *)
 [%%expect {|
 0
 type _ t = Int : int -> int t | Bool : bool -> bool t
@@ -169,7 +179,14 @@ type _ t = Int : int -> int t | Bool : bool -> bool t
   (test/335 =
      (function {nlocal = 0} param/337 : int
        (let (*match*/338 =o? (field_mut 0 param/337))
-         (if *match*/338 (field_imm 0 (field_imm 0 *match*/338)) 0))))
+         (if *match*/338
+           (let (*match*/339 =a? (field_imm 0 *match*/338))
+             (switch* *match*/339
+              case tag 0: (field_imm 0 *match*/339)
+              case tag 1:
+               (raise
+                 (makeblock 0 (getpredef Match_failure/49!!) [0: "" 3 11]))))
+           0))))
   (apply (field_imm 1 (global Toploop!)) "test" test/335))
 val test : int t option ref -> int = <fun>
 |}]
@@ -239,7 +256,7 @@ let deep r =
   | Some { contents = ((), Some n) } -> n
   | None -> 3
 ;;
-(* FAIL: two different reads (field_mut 0), but no Match_failure case. *)
+(* PASS: two different reads (field_mut 0), and a Match_failure case. *)
 [%%expect {|
 (let
   (deep/353 =
@@ -257,8 +274,12 @@ let deep r =
              (if (seq (setfield_ptr 0 r/355 [0: 0 0]) 0) 1
                (if *match*/357
                  (let
-                   (*match*/363 =o? (field_mut 0 (field_imm 0 *match*/357)))
-                   (field_imm 0 (field_imm 1 *match*/363)))
+                   (*match*/363 =o? (field_mut 0 (field_imm 0 *match*/357))
+                    *match*/365 =a? (field_imm 1 *match*/363))
+                   (if *match*/365 (field_imm 0 *match*/365)
+                     (raise
+                       (makeblock 0 (getpredef Match_failure/49!!)
+                         [0: "" 2 2]))))
                  3)))))))
   (apply (field_imm 1 (global Toploop!)) "deep" deep/353))
 val deep : (unit * int option) ref -> int = <fun>

@@ -107,8 +107,9 @@ let guard_total : bool t ref -> int = function
      (function {nlocal = 0} param/408 : int
        (if (opaque 0) 1
          (let (*match*/409 =o? (field_mut 0 param/408))
-           (switch* *match*/409 case int 0: 0
-                                case int 1: 12)))))
+           (if (isint *match*/409) (if *match*/409 12 0)
+             (raise
+               (makeblock 0 (getpredef Match_failure/49!!) [0: "" 1 38])))))))
   (apply (field_imm 1 (global Toploop!)) "guard_total" guard_total/314))
 val guard_total : bool t ref -> int = <fun>
 |}];;
@@ -118,16 +119,18 @@ let guard_needs_partial : bool t ref -> int = function
   | _ when Sys.opaque_identity false -> 1
   | { contents = False } -> 12
 (* This pattern-matching is partial: a Match_failure case is
-   necessary for soundness.
-
-   FAIL: the compiler is currently unsound here. *)
+   necessary for soundness. *)
 [%%expect {|
 (let
   (guard_needs_partial/410 =
      (function {nlocal = 0} param/412 : int
        (let (*match*/413 =o? (field_mut 0 param/412))
          (catch (if (isint *match*/413) (if *match*/413 (exit 9) 0) (exit 9))
-          with (9) (if (opaque 0) 1 12)))))
+          with (9)
+           (if (opaque 0) 1
+             (if (isint *match*/413) 12
+               (raise
+                 (makeblock 0 (getpredef Match_failure/49!!) [0: "" 1 46]))))))))
   (apply (field_imm 1 (global Toploop!)) "guard_needs_partial"
     guard_needs_partial/410))
 val guard_needs_partial : bool t ref -> int = <fun>
