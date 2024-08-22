@@ -20,8 +20,8 @@ type _ t =
 let lazy_total : _ * bool t -> int = function
   | ({ contents = _ }, True) -> 0
   | ({ contents = lazy () }, False) -> 12
-(* This pattern-matching is in fact total: a Match_failure case is
-   not necessary for soundness. *)
+(* This pattern-matching is total: a Match_failure case is not
+   necessary for soundness. *)
 [%%expect {|
 0
 type _ t = Int : int -> int t | True : bool t | False : bool t
@@ -35,24 +35,20 @@ type _ t = Int : int -> int t | True : bool t | False : bool t
                                   (consts (1 0))
                                    (non_consts ([0: value<int>]))>]))>]
        : int
-       (let
-         (*match*/293 =o? (field_mut 0 (field_imm 0 param/291))
-          *match*/294 =a? (field_imm 1 param/291))
-         (if (isint *match*/294)
-           (if *match*/294
-             (let
-               (*match*/301 =?
-                  (let (tag/296 =a[value<int>] (caml_obj_tag *match*/293))
-                    (if (%int_equal tag/296 250) (field_mut 0 *match*/293)
-                      (if
-                        (|| (%int_equal tag/296 246)
-                          (%int_equal tag/296 244))
-                        (apply (field_imm 1 (global CamlinternalLazy!))
-                          (opaque *match*/293) never_inline)
-                        *match*/293))))
-               12)
-             0)
-           (raise (makeblock 0 (getpredef Match_failure/49!!) [0: "" 6 37]))))))
+       (let (*match*/293 =o? (field_mut 0 (field_imm 0 param/291)))
+         (switch* (field_imm 1 param/291)
+          case int 0: 0
+          case int 1:
+           (let
+             (*match*/301 =?
+                (let (tag/296 =a[value<int>] (caml_obj_tag *match*/293))
+                  (if (%int_equal tag/296 250) (field_mut 0 *match*/293)
+                    (if
+                      (|| (%int_equal tag/296 246) (%int_equal tag/296 244))
+                      (apply (field_imm 1 (global CamlinternalLazy!))
+                        (opaque *match*/293) never_inline)
+                      *match*/293))))
+             12)))))
   (apply (field_imm 1 (global Toploop!)) "lazy_total" lazy_total/289))
 val lazy_total : unit lazy_t ref * bool t -> int = <fun>
 |}];;
