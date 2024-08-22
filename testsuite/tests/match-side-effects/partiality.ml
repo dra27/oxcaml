@@ -263,3 +263,247 @@ let deep r =
   (apply (field_imm 1 (global Toploop!)) "deep" deep/353))
 val deep : (unit * int option) ref -> int = <fun>
 |}]
+
+
+(* In this example:
+   - the pattern-matching is total, with subtle GADT usage
+     (only the type-checker can tell that it is Total)
+   - there are no mutable fields
+
+   Performance expectation: there should not be a Match_failure clause.
+
+   This example is a reduction of a regression caused by #13076 on the
+   'CamlinternalFormat.trans' function in the standard library.
+*)
+type _ t = Bool : bool t | Int : int t | Char : char t;;
+let test : type a . a t * a t -> unit = function
+  | Int, Int -> ()
+  | Bool, Bool -> ()
+  | _, Char -> ()
+;;
+(* PASS: no Match_failure clause generated. *)
+[%%expect {|
+0
+type _ t = Bool : bool t | Int : int t | Char : char t
+(let
+  (test/370 =
+     (function {nlocal = 0}
+       param/372[value<
+                  (consts ()) (non_consts ([0: value<int>, value<int>]))>]
+       : int
+       (catch
+         (if (%int_greaterequal (field_imm 0 param/372) 2) (exit 24)
+           (if (%int_greaterequal (field_imm 1 param/372) 2) (exit 24) 0))
+        with (24) 0)))
+  (apply (field_imm 1 (global Toploop!)) "test" test/370))
+val test : 'a t * 'a t -> unit = <fun>
+|}];;
+
+(* Another regression testcase from #13076, proposed by Nick Roberts.
+
+   Performance expectation: no Match_failure clause.
+*)
+type nothing = |
+type t = A | B | C of nothing
+let f : bool * t -> int = function
+  | true, A -> 3
+  | false, A -> 4
+  | _, B -> 5
+  | _, C _ -> .
+(* PASS: no Match_failure clause generated. *)
+[%%expect {|
+0
+type nothing = |
+0
+type t = A | B | C of nothing
+(let
+  (f/382 =
+     (function {nlocal = 0}
+       param/383[value<
+                  (consts ())
+                   (non_consts ([0: value<int>,
+                                 value<
+                                  (consts (1 0))
+                                   (non_consts ([0: value<int>]))>]))>]
+       : int
+       (catch
+         (if (field_imm 0 param/383)
+           (switch* (field_imm 1 param/383)
+            case int 0: 3
+            case int 1: (exit 27))
+           (switch* (field_imm 1 param/383)
+            case int 0: 4
+            case int 1: (exit 27)))
+        with (27) 5)))
+  (apply (field_imm 1 (global Toploop!)) "f" f/382))
+val f : bool * t -> int = <fun>
+|}];;
+
+
+(* Another regression testcase from #13076, proposed by Nick Roberts.
+
+   Performance expectation: no Match_failure clause.
+*)
+type t =
+  | A of int
+  | B of string
+  | C of string
+  | D of string
+
+let compare t1 t2 =
+  match t1, t2 with
+  | A i, A j -> Int.compare i j
+  | B l1, B l2 -> String.compare l1 l2
+  | C l1, C l2 -> String.compare l1 l2
+  | D l1, D l2 -> String.compare l1 l2
+  | A _, (B _ | C _ | D _ ) -> -1
+  | (B _ | C _ | D _ ), A _ -> 1
+  | B _, (C _ | D _) -> -1
+  | (C _ | D _), B _ -> 1
+  | C _, D _ -> -1
+  | D _, C _ -> 1
+(* PASS: no Match_failure clause generated. *)
+[%%expect {|
+0
+type t = A of int | B of string | C of string | D of string
+(let
+  (compare/393 =
+     (function {nlocal = 0}
+       t1/394[value<
+               (consts ()) (non_consts ([3: *] [2: *] [1: *]
+                [0: value<int>]))>]
+       t2/395[value<
+               (consts ()) (non_consts ([3: *] [2: *] [1: *]
+                [0: value<int>]))>]
+       : int
+       (catch
+         (switch* t1/394
+          case tag 0:
+           (switch t2/395
+            case tag 0:
+             (apply (field_imm 8 (global Stdlib__Int!)) (field_imm 0 t1/394)
+               (field_imm 0 t2/395))
+            default: -1)
+          case tag 1:
+           (catch
+             (switch* t2/395
+              case tag 0: (exit 31)
+              case tag 1:
+               (caml_string_compare (field_imm 0 t1/394)
+                 (field_imm 0 t2/395))
+              case tag 2: (exit 36)
+              case tag 3: (exit 36))
+            with (36) -1)
+          case tag 2:
+           (switch* t2/395
+            case tag 0: (exit 31)
+            case tag 1: (exit 31)
+            case tag 2:
+             (caml_string_compare (field_imm 0 t1/394) (field_imm 0 t2/395))
+            case tag 3: -1)
+          case tag 3:
+           (switch* t2/395
+            case tag 0: (exit 31)
+            case tag 1: (exit 31)
+            case tag 2: 1
+            case tag 3:
+             (caml_string_compare (field_imm 0 t1/394) (field_imm 0 t2/395))))
+        with (31) (switch* t2/395 case tag 0: 1
+                                  case tag 1: 1))))
+  (apply (field_imm 1 (global Toploop!)) "compare" compare/393))
+val compare : t -> t -> int = <fun>
+|}];;
+
+
+(* Different testcases involving or-patterns and polymorphic variants,
+   proposed by Nick Roberts. In both cases, we do *not* expect a Match_failure case. *)
+
+let f x y =
+ match x, y with
+ | _, `Y1 -> 0
+ | `X1, `Y2 -> 1
+ | (`X2 | `X3), `Y3 -> 2
+ | `X1, `Y3
+ | `X2, `Y2
+ | `X3, _  -> 3
+(* PASS: no Match_failure generated *)
+[%%expect {|
+(let
+  (f/515 =
+     (function {nlocal = 0} x/516[value<int>] y/517[value<int>] : int
+       (catch
+         (catch
+           (catch
+             (if (isint y/517) (if (%int_notequal y/517 19896) (exit 45) 0)
+               (exit 45))
+            with (45)
+             (if (%int_notequal x/516 19674)
+               (if (%int_greaterequal x/516 19675) (exit 44)
+                 (if (%int_greaterequal y/517 19898) (exit 42) 1))
+               (if (isint y/517)
+                 (if (%int_notequal y/517 19897) (exit 44) (exit 42))
+                 (exit 44))))
+          with (44)
+           (if (isint y/517) (if (%int_notequal y/517 19898) (exit 42) 2)
+             (exit 42)))
+        with (42) 3)))
+  (apply (field_imm 1 (global Toploop!)) "f" f/515))
+val f : [< `X1 | `X2 | `X3 ] -> [< `Y1 | `Y2 | `Y3 ] -> int = <fun>
+|}];;
+
+
+let check_results r1 r2 =
+  match r1 r2 with
+  | (Ok _ as r), _ | _, (Ok _ as r) -> r
+  | (Error `A as r), Error _
+  | Error _, (Error `A as r) -> r
+  | (Error `B as r), Error `B -> r
+(* PASS: no Match_failure case generated *)
+[%%expect {|
+(let
+  (check_results/518 =
+     (function {nlocal = 0} r1/520 r2/521?
+       : (consts ()) (non_consts ([1: ?] [0: ?]))
+       (let
+         (*match*/527 =[value<
+                         (consts ())
+                          (non_consts ([0:
+                                        value<
+                                         (consts ()) (non_consts ([1: ?]
+                                          [0: ?]))>,
+                                        value<
+                                         (consts ()) (non_consts ([1: ?]
+                                          [0: ?]))>]))>]
+            (apply r1/520 r2/521))
+         (catch
+           (catch
+             (let (r/526 =a? (field_imm 0 *match*/527))
+               (catch
+                 (switch* r/526
+                  case tag 0: (exit 50 r/526)
+                  case tag 1:
+                   (catch
+                     (if (%int_greaterequal (field_imm 0 r/526) 66)
+                       (let (*match*/535 =a? (field_imm 1 *match*/527))
+                         (switch* *match*/535
+                          case tag 0: (exit 52)
+                          case tag 1:
+                           (let (*match*/536 =a? (field_imm 0 *match*/535))
+                             (if (isint *match*/536)
+                               (if (%int_notequal *match*/536 66) (exit 53)
+                                 r/526)
+                               (exit 53)))))
+                       (switch* (field_imm 1 *match*/527)
+                        case tag 0: (exit 52)
+                        case tag 1: (exit 51 r/526)))
+                    with (53) (exit 51 (field_imm 1 *match*/527))))
+                with (52) (exit 50 (field_imm 1 *match*/527))))
+            with (50 r/522[value<(consts ()) (non_consts ([1: ?] [0: ?]))>])
+             r/522)
+          with (51 r/524[value<(consts ()) (non_consts ([1: ?] [0: ?]))>])
+           r/524))))
+  (apply (field_imm 1 (global Toploop!)) "check_results" check_results/518))
+val check_results :
+  ('a -> ('b, [< `A | `B ]) result * ('b, [< `A | `B ]) result) ->
+  'a -> ('b, [> `A | `B ]) result = <fun>
+|}];;
