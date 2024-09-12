@@ -67,23 +67,21 @@ let lazy_needs_partial : _ * bool t ref -> int = function
          (let
            (*match*/306 =a? (field_imm 0 param/305)
             *match*/308 =o? (field_mut 0 (field_imm 1 param/305)))
-           (if (isint *match*/308)
-             (if *match*/308
-               (let
-                 (*match*/311 =?
-                    (let (tag/310 =a[value<int>] (caml_obj_tag *match*/306))
-                      (if (%int_equal tag/310 250) (field_mut 0 *match*/306)
-                        (if
-                          (|| (%int_equal tag/310 246)
-                            (%int_equal tag/310 244))
-                          (apply (field_imm 1 (global CamlinternalLazy!))
-                            (opaque *match*/306) never_inline)
-                          *match*/306)))
-                  *match*/313 =o? (field_mut 0 (field_imm 1 param/305)))
-                 (if (isint *match*/313) (if *match*/313 12 (exit 3))
-                   (exit 3)))
-               0)
-             (exit 3)))
+           (switch* *match*/308
+            case int 0: 0
+            case int 1:
+             (let
+               (*match*/311 =?
+                  (let (tag/310 =a[value<int>] (caml_obj_tag *match*/306))
+                    (if (%int_equal tag/310 250) (field_mut 0 *match*/306)
+                      (if
+                        (|| (%int_equal tag/310 246)
+                          (%int_equal tag/310 244))
+                        (apply (field_imm 1 (global CamlinternalLazy!))
+                          (opaque *match*/306) never_inline)
+                        *match*/306)))
+                *match*/313 =o? (field_mut 0 (field_imm 1 param/305)))
+               (if (isint *match*/313) (if *match*/313 12 (exit 3)) (exit 3)))))
         with (3)
          (raise (makeblock 0 (getpredef Match_failure/49!!) [0: "" 1 49])))))
   (apply (field_imm 1 (global Toploop!)) "lazy_needs_partial"

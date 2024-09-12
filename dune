@@ -16,14 +16,10 @@
 
 ; set warning as error in release profile
 
-; CR dallsopp: Fix the match in record_frame_label in backend/amd64/emit.ml
-; not to raise w74 (can't seem to disable it in the file). This bug disappears
-; with the next PR!
-
 (env
  (release
   (flags
-   (:standard -g -principal -w +a-4-9-40-41-42-44-45-48-66-67-70-74)))
+   (:standard -g -principal -w +a-4-9-40-41-42-44-45-48-66-67-70)))
  (main
   (flags
    (:standard
@@ -32,14 +28,14 @@
     -warn-error
     +A
     -w
-    +a-4-9-40-41-42-44-45-48-66-67-70-74)))
+    +a-4-9-40-41-42-44-45-48-66-67-70)))
  (dev
   (flags
    (:standard
     -g
     -principal
     -w
-    +a-4-9-40-41-42-44-45-48-66-67-70-74
+    +a-4-9-40-41-42-44-45-48-66-67-70
     -warn-error
     +A))))
 
