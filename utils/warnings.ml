@@ -130,6 +130,7 @@ type t =
   | Unused_tmc_attribute                    (* 71 *)
   | Tmc_breaks_tailcall                     (* 72 *)
   | Generative_application_expects_unit     (* 73 *)
+  | Degraded_to_partial_match               (* 74 *)
   | Unmutated_mutable of string             (* 186 *)
   | Incompatible_with_upstream of upstream_compat_warning (* 187 *)
   | Unerasable_position_argument            (* 188 *)
@@ -228,6 +229,7 @@ let number = function
   | Unused_tmc_attribute -> 71
   | Tmc_breaks_tailcall -> 72
   | Generative_application_expects_unit -> 73
+  | Degraded_to_partial_match -> 74
   | Unmutated_mutable _ -> 186
   | Incompatible_with_upstream _ -> 187
   | Unerasable_position_argument -> 188
@@ -586,6 +588,11 @@ let descriptions = [
     description = "A generative functor is applied to an empty structure \
                    (struct end) rather than to ().";
     since = since 5 1 };
+  { number = 74;
+    names = ["degraded-to-partial-match"];
+    description = "A pattern-matching is compiled as partial \
+                   even if it appears to be total.";
+    since = since 5 3 };
   { number = 186;
     names = ["unmutated-mutable"];
     description =
@@ -974,7 +981,7 @@ let parse_options errflag s =
   alerts
 
 (* If you change these, don't forget to change them in man/ocamlc.m *)
-let defaults_w = "+a-4-7-9-27-29-30-32..42-44-45-48-50-60-66..70"
+let defaults_w = "+a-4-7-9-27-29-30-32..42-44-45-48-50-60-66..70-74"
 let defaults_warn_error = "-a"
 let default_disabled_alerts = [ "unstable"; "unsynchronized_access" ]
 
@@ -1256,6 +1263,16 @@ let message = function
   | Generative_application_expects_unit ->
       "A generative functor\n\
        should be applied to '()'; using '(struct end)' is deprecated."
+  | Degraded_to_partial_match ->
+      let[@manual.ref "ss:warn74"] ref_manual = [ 13; 5; 5 ] in
+      Format.asprintf
+        "This pattern-matching is compiled \n\
+         as partial, even if it appears to be total. \
+         It may generate a Match_failure\n\
+         exception. This typically occurs due to \
+         complex matches on mutable fields.\n\
+         %a"
+        (Format_doc.compat Misc.print_see_manual) ref_manual
   | Unmutated_mutable v -> "mutable variable " ^ v ^ " was never mutated."
   | Incompatible_with_upstream (Immediate_erasure id)  ->
       Printf.sprintf
