@@ -417,7 +417,7 @@ end
 module SyntacticCompat =
   Compat
     (struct
-      let equal c1 c2 =  Types.equal_tag c1.cstr_tag c2.cstr_tag
+      let equal = Types.equal_constr
     end)
 
 let compat =  SyntacticCompat.compat
@@ -452,7 +452,7 @@ let simple_match d h =
   let open Patterns.Head in
   match d.pat_desc, h.pat_desc with
   | Construct c1, Construct c2 ->
-      Types.equal_tag c1.cstr_tag c2.cstr_tag
+      Types.equal_constr c1 c2
   | Variant { tag = t1; _ }, Variant { tag = t2 } ->
       t1 = t2
   | Constant c1, Constant c2 -> const_compare c1 c2 = 0
@@ -1918,7 +1918,7 @@ let rec le_pat p q =
   | _, Tpat_alias(q,_,_,_,_,_,_) -> le_pat p q
   | Tpat_constant(c1), Tpat_constant(c2) -> const_compare c1 c2 = 0
   | Tpat_construct(_,c1,ps,_), Tpat_construct(_,c2,qs,_) ->
-      Types.equal_tag c1.cstr_tag c2.cstr_tag && le_pats ps qs
+      Types.equal_constr c1 c2 && le_pats ps qs
   | Tpat_variant(l1,Some p1,_), Tpat_variant(l2,Some p2,_) ->
       (l1 = l2 && le_pat p1 p2)
   | Tpat_variant(l1,None,_r1), Tpat_variant(l2,None,_) ->
@@ -1992,7 +1992,7 @@ let rec lub p q = match p.pat_desc,q.pat_desc with
     let r = lub p q in
     make_pat (Tpat_lazy r) p.pat_type p.pat_env
 | Tpat_construct (lid,c1,ps1,_), Tpat_construct (_,c2,ps2,_)
-      when  Types.equal_tag c1.cstr_tag c2.cstr_tag  ->
+      when Types.equal_constr c1 c2 ->
         let rs = lubs ps1 ps2 in
         make_pat (Tpat_construct (lid, c1, rs, None))
           p.pat_type p.pat_env

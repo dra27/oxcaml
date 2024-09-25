@@ -1439,14 +1439,15 @@ let can_group discr pat =
   | Constant (Const_unboxed_int64 _), Constant (Const_unboxed_int64 _)
   | Constant (Const_unboxed_nativeint _), Constant (Const_unboxed_nativeint _)->
       true
-  | Construct { cstr_tag = Extension _ as discr_tag }, Construct pat_cstr
+  | Construct { cstr_tag = Extension p1 },
+    Construct { cstr_tag = Extension p2 }
     ->
       (* Extension constructors with distinct names may be equal thanks to
          constructor rebinding. So we need to produce a specialized
          submatrix for each syntactically-distinct constructor (with a threading
          of exits such that each submatrix falls back to the
          potentially-compatible submatrices below it).  *)
-      Types.equal_tag discr_tag pat_cstr.cstr_tag
+      Path.same p1 p2
   | Construct _, Construct _
   | Unboxed_unit, (Unboxed_unit | Any)
   | Unboxed_bool _, Unboxed_bool _
@@ -2202,7 +2203,7 @@ let get_expr_args_constr ~scopes head { arg; mut; sort; layout; _ } rem =
 let divide_constructor ~scopes ctx pm =
   divide
     (get_expr_args_constr ~scopes)
-    (fun cstr1 cstr2 -> Types.equal_tag cstr1.cstr_tag cstr2.cstr_tag)
+    Types.equal_constr
     get_key_constr
     get_pat_args_constr
     ctx pm
