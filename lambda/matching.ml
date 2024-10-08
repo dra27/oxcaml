@@ -3142,12 +3142,12 @@ let rec last def = function
   | [ (x, _) ] -> x
   | _ :: rem -> last def rem
 
-let get_edges low high l =
+let get_edges ~low ~high l =
   match l with
   | [] -> (low, high)
   | (x, _) :: _ -> (x, last high l)
 
-let as_interval_canfail fail low high l =
+let as_interval_canfail fail ~low ~high l =
   let store = StoreExp.mk_store () in
   let do_store _tag act =
     let i = store.act_store () act in
@@ -3251,15 +3251,15 @@ let sort_int_lambda_list l =
         0)
     l
 
-let as_interval fail low high l =
+let as_interval fail ?(low = min_int) ?(high = max_int) l =
   let l = sort_int_lambda_list l in
-  ( get_edges low high l,
+  ( get_edges ~low ~high l,
     match fail with
     | None -> as_interval_nofail l
-    | Some act -> as_interval_canfail act low high l )
+    | Some act -> as_interval_canfail act ~low ~high l )
 
-let call_switcher kind loc fail arg low high int_lambda_list =
-  let edges, (cases, actions) = as_interval fail low high int_lambda_list in
+let call_switcher kind loc fail arg ?low ?high int_lambda_list =
+  let edges, (cases, actions) = as_interval fail ?low ?high int_lambda_list in
   Switcher.zyva loc kind edges arg cases actions
 
 let rec list_as_pat = function
@@ -3471,7 +3471,7 @@ let combine_constant value_kind loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-        call_switcher value_kind loc fail arg min_int max_int int_lambda_list
+        call_switcher value_kind loc fail arg int_lambda_list
     | Const_int8 _ ->
         let int_lambda_list =
           List.map
@@ -3482,7 +3482,7 @@ let combine_constant value_kind loc arg cst partial ctx def
         in
         let max_excl = 1 lsl 7 in
         call_switcher value_kind loc fail arg
-          (-max_excl) (max_excl - 1) int_lambda_list
+          ~low:(-max_excl) ~high:(max_excl - 1) int_lambda_list
     | Const_int16 _ ->
         let int_lambda_list =
           List.map
@@ -3493,7 +3493,7 @@ let combine_constant value_kind loc arg cst partial ctx def
         in
         let max_excl = 1 lsl 15 in
         call_switcher value_kind loc fail arg
-          (-max_excl) (max_excl - 1) int_lambda_list
+          ~low:(-max_excl) ~high:(max_excl - 1) int_lambda_list
     | Const_char _ ->
         let int_lambda_list =
           List.map
@@ -3502,7 +3502,7 @@ let combine_constant value_kind loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-        call_switcher value_kind loc fail arg 0 255 int_lambda_list
+        call_switcher value_kind loc fail arg ~low:0 ~high:255 int_lambda_list
     | Const_string _ ->
         (* Note as the bytecode compiler may resort to dichotomic search,
    the clauses of stringswitch  are sorted with duplicates removed.
@@ -3631,173 +3631,181 @@ let transl_match_on_option value_kind arg loc ~if_some ~if_none =
 let transl_match_on_or_null value_kind arg loc ~if_null ~if_this =
   Lifthenelse (Lprim (Pisnull, [ arg ], loc), if_null, if_this, value_kind)
 
-let combine_constructor value_kind loc arg pat_env pat_barrier cstr partial ctx def
+let combine_extension_constructor value_kind loc arg pat_env pat_barrier partial ctx def
+    (descr_lambda_list, total1, _pats) =
+  let fail, local_jumps = mk_failaction_neg partial ctx def in
+  let lambda1 =
+    let consts, nonconsts = split_extension_cases descr_lambda_list in
+    let default, consts, nonconsts =
+      match fail with
+      | None -> (
+          match (consts, nonconsts) with
+          | _, (_, act) :: rem -> (act, consts, rem)
+          | (_, act) :: rem, _ -> (act, rem, nonconsts)
+          | _ -> assert false
+        )
+      | Some fail -> (fail, consts, nonconsts)
+    in
+    let nonconst_lambda =
+      match nonconsts with
+      | [] -> default
+      | _ ->
+          let tag = Ident.create_local "tag" in
+          let tag_duid = Lambda.debug_uid_none in
+          let tests =
+            List.fold_right
+              (fun (path, act) rem ->
+                let ext = transl_extension_path loc pat_env path in
+                Lifthenelse
+                  (phys_equal ~loc (Lvar tag) ext, act, rem, value_kind))
+              nonconsts default
+          in
+          let ubr = Translmode.transl_unique_barrier pat_barrier in
+          let sem = add_barrier_to_read ubr Reads_agree in
+          let str = add_barrier_to_let_kind ubr Alias in
+          Llet (str, Lambda.layout_block, tag, tag_duid,
+                Lprim (Pfield (0, Pointer, sem), [ arg ], loc),
+                tests)
+    in
+    List.fold_right
+      (fun (path, act) rem ->
+        let ext = transl_extension_path loc pat_env path in
+        Lifthenelse (phys_equal ~loc arg ext, act, rem,
+                      value_kind))
+      consts nonconst_lambda
+  in
+  (lambda1, Jumps.union local_jumps total1)
+
+let combine_regular_constructor value_kind loc arg cstr partial ctx def
     (descr_lambda_list, total1, pats) =
+  (* Regular concrete type *)
+  let ncases = List.length descr_lambda_list
+  and nconstrs = cstr.cstr_consts + cstr.cstr_nonconsts in
+  let sig_complete = ncases = nconstrs in
+  let fail_opt, fails, local_jumps =
+    if sig_complete then
+      (None, [], Jumps.empty Total)
+    else
+      let constrs =
+        List.map2 (fun (constr, _act) p -> { p with pat_desc = constr })
+          descr_lambda_list pats in
+      mk_failaction_pos partial constrs ctx def
+  in
+  let descr_lambda_list = fails @ descr_lambda_list in
+  let consts, nonconsts, null = split_cases descr_lambda_list in
+  (* Our duty below is to generate code, for matching on a list of
+      constructor+action cases, that is good for both bytecode and
+      native-code compilation. (Optimizations that only work well
+      for one backend should be done in the backend.)
+
+      The [Lswitch] construct is generally an excellent choice, as
+      it generates a single instruction in bytecode, and can be
+      turned into efficient, simpler control-flow constructs in
+      native-code. (The lambda/switch.ml module is precisely
+      responsible for efficiently compiling switches to simpler
+      tests.)
+
+      Some additional optimizations make sense here when they let
+      us generate better code, including in bytecode: the generated
+      code should still fit in one bytecode instruction or less.
+
+      [Lswitch] has the downside of always needing a byte per
+      constructor in the generated bytecode, even when many actions
+      are shared. For types with a lot of constructors, calling the
+      switcher directly can result in more compact code. This is
+      a reason to deviate from the one-instruction policy.
+  *)
+  let lambda1 =
+    match (fail_opt, same_actions descr_lambda_list) with
+    | None, Some act ->
+        (* Identical actions, no failure: 0 control-flow instructions. *)
+        act
+    | _ -> (
+        match
+          (cstr.cstr_consts, cstr.cstr_nonconsts, consts, nonconsts, null)
+        with
+        | 1, 1, [ (0, act1) ], [ (0, act2) ], None
+          when not (Clflags.is_flambda2 ()) ->
+            transl_match_on_option value_kind arg loc
+              ~if_none:act1 ~if_some:act2
+        | 1, 1, [], [(_, act2)], Some act1 ->
+            (* The [Variant_with_null] case. *)
+            transl_match_on_or_null value_kind arg loc
+              ~if_null:act1 ~if_this:act2
+        | _, _, _, _, Some _ ->
+            Misc.fatal_error "Matching.combine_constructor: Unexpected Null case"
+        | n, 0, _, [], None ->
+            (* The matched type defines constant constructors only.
+                (typically the constant cases are dense, so
+                call_switcher will generate a Lswitch, still one
+                instruction.) *)
+            call_switcher value_kind loc fail_opt arg
+              ~low:0 ~high:(n - 1) consts
+        | n, _, _, _, None -> (
+            let act0 =
+              (* = Some act when all non-const constructors match to act *)
+              match (fail_opt, nonconsts) with
+              | Some a, [] -> Some a
+              | Some _, _ ->
+                  if List.length nonconsts = cstr.cstr_nonconsts then
+                    same_actions nonconsts
+                  else
+                    None
+              | None, _ -> same_actions nonconsts
+            in
+            match act0 with
+            | Some act ->
+                (* This case deviates from our policy, by typically
+                    generating three bytecode instructions.
+
+                    It can save a lot of bytecode space when matching
+                    on a type with many non-constant constructors,
+                    all sent to the same action. This pattern occurs
+                    several times in the compiler codebase
+                    (for example), due to code fragments such as the
+                    following:
+
+                        match token with SEMISEMI -> true | _ -> false
+
+                    (The type of tokens has more than 120 constructors.)
+                *)
+                Lifthenelse
+                  ( Lprim (Pisint { variant_only = true }, [ arg ], loc),
+                    call_switcher value_kind loc fail_opt arg
+                      ~low:0 ~high:(n - 1) consts,
+                    act, value_kind )
+            | None ->
+                (* In the general case, emit a switch. *)
+                let sw =
+                  { sw_numconsts = cstr.cstr_consts;
+                    sw_consts = consts;
+                    sw_numblocks = cstr.cstr_nonconsts;
+                    sw_blocks = nonconsts;
+                    sw_failaction = fail_opt
+                  }
+                in
+                let hs, sw = share_actions_sw value_kind sw in
+                let sw = reintroduce_fail sw in
+                hs (Lswitch (arg, sw, loc, value_kind))))
+  in
+  (lambda1, Jumps.union local_jumps total1)
+
+let combine_constructor value_kind loc arg pat_env pat_barrier cstr partial ctx def actions =
   match cstr.cstr_tag with
   | Extension _ ->
-      (* Special cases for extensions *)
-      let fail, local_jumps = mk_failaction_neg partial ctx def in
-      let lambda1 =
-        let consts, nonconsts = split_extension_cases descr_lambda_list in
-        let default, consts, nonconsts =
-          match fail with
-          | None -> (
-              match (consts, nonconsts) with
-              | _, (_, act) :: rem -> (act, consts, rem)
-              | (_, act) :: rem, _ -> (act, rem, nonconsts)
-              | _ -> assert false
-            )
-          | Some fail -> (fail, consts, nonconsts)
-        in
-        let nonconst_lambda =
-          match nonconsts with
-          | [] -> default
-          | _ ->
-              let tag = Ident.create_local "tag" in
-              let tag_duid = Lambda.debug_uid_none in
-              let tests =
-                List.fold_right
-                  (fun (path, act) rem ->
-                    let ext = transl_extension_path loc pat_env path in
-                    Lifthenelse
-                      (phys_equal ~loc (Lvar tag) ext, act, rem, value_kind))
-                  nonconsts default
-              in
-              let ubr = Translmode.transl_unique_barrier pat_barrier in
-              let sem = add_barrier_to_read ubr Reads_agree in
-              let str = add_barrier_to_let_kind ubr Alias in
-              Llet (str, Lambda.layout_block, tag, tag_duid,
-                    Lprim (Pfield (0, Pointer, sem), [ arg ], loc),
-                    tests)
-        in
-        List.fold_right
-          (fun (path, act) rem ->
-            let ext = transl_extension_path loc pat_env path in
-            Lifthenelse (phys_equal ~loc arg ext, act, rem,
-                         value_kind))
-          consts nonconst_lambda
-      in
-      (lambda1, Jumps.union local_jumps total1)
+    combine_extension_constructor value_kind loc arg pat_env pat_barrier partial ctx def actions
   | _ ->
-      (* Regular concrete type *)
-      let ncases = List.length descr_lambda_list
-      and nconstrs = cstr.cstr_consts + cstr.cstr_nonconsts in
-      let sig_complete = ncases = nconstrs in
-      let fail_opt, fails, local_jumps =
-        if sig_complete then
-          (None, [], Jumps.empty Total)
-        else
-          let constrs =
-            List.map2 (fun (constr, _act) p -> { p with pat_desc = constr })
-              descr_lambda_list pats in
-          mk_failaction_pos partial constrs ctx def
-      in
-      let descr_lambda_list = fails @ descr_lambda_list in
-      let consts, nonconsts, null = split_cases descr_lambda_list in
-      (* Our duty below is to generate code, for matching on a list of
-         constructor+action cases, that is good for both bytecode and
-         native-code compilation. (Optimizations that only work well
-         for one backend should be done in the backend.)
-
-         The [Lswitch] construct is generally an excellent choice, as
-         it generates a single instruction in bytecode, and can be
-         turned into efficient, simpler control-flow constructs in
-         native-code. (The lambda/switch.ml module is precisely
-         responsible for efficiently compiling switches to simpler
-         tests.)
-
-         Some additional optimizations make sense here when they let
-         us generate better code, including in bytecode: the generated
-         code should still fit in one bytecode instruction or less.
-
-         [Lswitch] has the downside of always needing a byte per
-         constructor in the generated bytecode, even when many actions
-         are shared. For types with a lot of constructors, calling the
-         switcher directly can result in more compact code. This is
-         a reason to deviate from the one-instruction policy.
-      *)
-      let lambda1 =
-        match (fail_opt, same_actions descr_lambda_list) with
-        | None, Some act ->
-            (* Identical actions, no failure: 0 control-flow instructions. *)
-            act
-        | _ -> (
-            match
-              (cstr.cstr_consts, cstr.cstr_nonconsts, consts, nonconsts, null)
-            with
-            | 1, 1, [ (0, act1) ], [ (0, act2) ], None
-              when not (Clflags.is_flambda2 ()) ->
-                transl_match_on_option value_kind arg loc
-                  ~if_none:act1 ~if_some:act2
-            | 1, 1, [], [(_, act2)], Some act1 ->
-                (* The [Variant_with_null] case. *)
-                transl_match_on_or_null value_kind arg loc
-                  ~if_null:act1 ~if_this:act2
-            | _, _, _, _, Some _ ->
-                Misc.fatal_error "Matching.combine_constructor: Unexpected Null case"
-            | n, 0, _, [], None ->
-                (* The matched type defines constant constructors only.
-                   (typically the constant cases are dense, so
-                   call_switcher will generate a Lswitch, still one
-                   instruction.) *)
-                call_switcher value_kind loc fail_opt arg 0 (n - 1) consts
-            | n, _, _, _, None -> (
-                let act0 =
-                  (* = Some act when all non-const constructors match to act *)
-                  match (fail_opt, nonconsts) with
-                  | Some a, [] -> Some a
-                  | Some _, _ ->
-                      if List.length nonconsts = cstr.cstr_nonconsts then
-                        same_actions nonconsts
-                      else
-                        None
-                  | None, _ -> same_actions nonconsts
-                in
-                match act0 with
-                | Some act ->
-                    (* This case deviates from our policy, by typically
-                       generating three bytecode instructions.
-
-                       It can save a lot of bytecode space when matching
-                       on a type with many non-constant constructors,
-                       all sent to the same action. This pattern occurs
-                       several times in the compiler codebase
-                       (for example), due to code fragments such as the
-                       following:
-
-                           match token with SEMISEMI -> true | _ -> false
-
-                       (The type of tokens has more than 120 constructors.)
-                    *)
-                    Lifthenelse
-                      ( Lprim (Pisint { variant_only = true }, [ arg ], loc),
-                        call_switcher value_kind loc fail_opt arg 0 (n - 1) consts,
-                        act, value_kind )
-                | None ->
-                    (* In the general case, emit a switch. *)
-                    let sw =
-                      { sw_numconsts = cstr.cstr_consts;
-                        sw_consts = consts;
-                        sw_numblocks = cstr.cstr_nonconsts;
-                        sw_blocks = nonconsts;
-                        sw_failaction = fail_opt
-                      }
-                    in
-                    let hs, sw = share_actions_sw value_kind sw in
-                    let sw = reintroduce_fail sw in
-                    hs (Lswitch (arg, sw, loc, value_kind))))
-      in
-      (lambda1, Jumps.union local_jumps total1)
+    combine_regular_constructor value_kind loc arg cstr partial ctx def actions
 
 let make_test_sequence_variant_constant
       value_kind loc fail arg int_lambda_list =
   let _, (cases, actions) =
-    as_interval fail min_int max_int int_lambda_list
+    as_interval fail int_lambda_list
   in
   Switcher.test_sequence loc value_kind arg cases actions
 
 let call_switcher_variant_constant kind loc fail arg int_lambda_list =
-  call_switcher kind loc fail arg min_int max_int int_lambda_list
+  call_switcher kind loc fail arg int_lambda_list
 
 let call_switcher_variant_constr value_kind loc fail arg pat_barrier int_lambda_list =
   let v = Ident.create_local "variant" in
@@ -3810,7 +3818,7 @@ let call_switcher_variant_constr value_kind loc fail arg pat_barrier int_lambda_
       v,
       v_duid,
       Lprim (nonconstant_variant_field ubr 0, [ arg ], loc),
-      call_switcher value_kind loc fail (Lvar v) min_int max_int int_lambda_list )
+      call_switcher value_kind loc fail (Lvar v) int_lambda_list )
 
 let combine_variant value_kind loc row arg pat_barrier partial ctx def
     (tag_lambda_list, total1, _pats)
@@ -3890,7 +3898,7 @@ let combine_array value_kind loc arg kind partial ctx def (len_lambda_list, tota
     let newvar = Ident.create_local "len" in
     let newvar_duid = Lambda.debug_uid_none in
     let switch =
-      call_switcher value_kind loc fail (Lvar newvar) 0 max_int len_lambda_list
+      call_switcher value_kind loc fail (Lvar newvar) ~low:0 len_lambda_list
     in
     bind_with_layout Alias (newvar, newvar_duid, Lambda.layout_int)
       (Lprim (Parraylength kind, [ arg ], loc)) switch
