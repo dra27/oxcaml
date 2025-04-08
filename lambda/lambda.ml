@@ -1749,14 +1749,21 @@ let transl_extension_path loc env path =
 let transl_class_path loc env path =
   transl_path Env.find_class_address loc env path
 
-let transl_prim mod_name name =
-  let pers = Ident.create_persistent mod_name in
-  let env = Env.add_persistent_structure pers Env.empty in
-  let lid = Longident.Ldot (Longident.Lident mod_name, name) in
-  match Env.find_value_by_name_lazy lid env with
-  | path, _ -> transl_value_path Loc_unknown env path
+let transl_prim modname field =
+  let mod_ident = Ident.create_persistent modname in
+  let env = Env.add_persistent_structure mod_ident (Lazy.force Env.initial) in
+  match Env.open_pers_signature modname env with
   | exception Not_found ->
-      fatal_error ("Primitive " ^ name ^ " not found.")
+      fatal_errorf "Module %s unavailable." modname
+  | _, _, env -> (
+      match Env.find_value_by_name_lazy (Longident.Lident field) env with
+      | exception Not_found ->
+          fatal_errorf "Primitive %s.%s not found." modname field
+      | path, _ ->
+        (* Loc_unknown is appropriate here: this references a compiler-internal
+            primitive with no corresponding user source location. *)
+        transl_value_path Loc_unknown env path
+    )
 
 let block_of_module_representation ~loc = function
   | Module_value_only _ -> Pmakeblock(0, Immutable, All_value, alloc_heap)
