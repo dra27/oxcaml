@@ -3092,15 +3092,21 @@ let reintroduce_fail sw =
       in
       List.iter seen sw.sw_consts;
       List.iter seen sw.sw_blocks;
-      let i_max = ref None and max = ref (-1) in
+      let c_max = ref (-1) in
+      let i_max = ref None in
       Static_label.Tbl.iter
         (fun i c ->
-          if c > !max then (
+          if c > !c_max then (
             i_max := Some i;
-            max := c
+            c_max := c
+          ) else if c = !c_max then (
+           (* Pick the miminal [i] which has maximal [c], and not just
+              the first [i], as the Hashtbl iteration order is not
+              deterministic: see #14088. *)
+            i_max := Some (Static_label.min i (Option.get !i_max));
           ))
         t;
-      if !max >= 3 then
+      if !c_max >= 3 then
         match !i_max with
         | Some default ->
             let remove =
