@@ -424,13 +424,22 @@ locate_test = \
     echo "tests/$${test}"; \
   )
 
+# KEEP is provided as a rather easier to remmber alias of
+# KEEP_TEST_DIR_ON_SUCCESS, but to prevent the risk of naming conflict it's only
+# recognised when used as make -C testsuite KEEP=1 ...
+ifeq "$(origin KEEP)" "command line"
+KEEP_TEST_DIR_ON_SUCCESS ?= $(KEEP)
+else
+KEEP_TEST_DIR_ON_SUCCESS ?=
+endif
+
 test-one-no-rebuild:
 	(export OCAMLSRCDIR=$$(pwd)/_runtest; \
 	 export CAML_LD_LIBRARY_PATH=$$(pwd)/_runtest/lib/ocaml/stublibs; \
 	 if $$(which gfortran > /dev/null 2>&1); then \
 	   export LIBRARY_PATH=$$(dirname $$(gfortran -print-file-name=libgfortran.a)); \
 	 fi; \
-	 cd _runtest/testsuite && make one $(if $(TEST),TEST=$(call locate_test,$(TEST))) $(if $(DIR),DIR=$(call locate_test,$(DIR))))
+	 cd _runtest/testsuite && make one KEEP_TEST_DIR_ON_SUCCESS=$(KEEP_TEST_DIR_ON_SUCCESS) $(if $(TEST),TEST=$(call locate_test,$(TEST))) $(if $(DIR),DIR=$(call locate_test,$(DIR))))
 
 promote-one: install_for_test
 	$(MAKE) promote-one-no-rebuild
