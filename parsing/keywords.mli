@@ -16,3 +16,17 @@
 val is_keyword : string -> bool
 
 val lookup_keyword : string -> Keywords_token.token
+
+(** Comment tracking *)
+
+val add_comment : (string * Location.t) -> unit
+(** Add a comment to the list of saved comments *)
+
+val add_docstring_comment : Docstrings.docstring -> unit
+(** Convert a docstring to a comment and add it to the list *)
+
+val comments : unit -> (string * Location.t) list
+(** Get all saved comments in order *)
+
+val reset_comments : unit -> unit
+(** Clear the comment list *)

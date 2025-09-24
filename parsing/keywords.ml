@@ -98,3 +98,21 @@ let is_keyword name =
   match lookup_keyword name with
   | LIDENT _ -> false
   | _ -> true
+
+(* Comment tracking *)
+
+let comment_list = ref []
+
+let add_comment com =
+  comment_list := com :: !comment_list
+
+let add_docstring_comment ds =
+  let com =
+    ("*" ^ Docstrings.docstring_body ds,
+     Docstrings.docstring_loc ds)
+  in
+  add_comment com
+
+let comments () = List.rev !comment_list
+
+let reset_comments () = comment_list := []

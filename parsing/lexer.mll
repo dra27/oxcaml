@@ -351,18 +351,11 @@ let warn_latin1 lexbuf =
     "ISO-Latin1 characters in identifiers"
 
 let handle_docstrings = ref true
-let comment_list = ref []
 
-let add_comment com =
-  comment_list := com :: !comment_list
-
-let add_docstring_comment ds =
-  let com =
-    ("*" ^ Docstrings.docstring_body ds, Docstrings.docstring_loc ds)
-  in
-    add_comment com
-
-let comments () = List.rev !comment_list
+(* Comment tracking is now handled by Keywords module *)
+let add_comment = Keywords.add_comment
+let add_docstring_comment = Keywords.add_docstring_comment
+let comments = Keywords.comments
 
 let float ~maybe_hash lit modifier =
   match maybe_hash with
@@ -1112,7 +1105,7 @@ and skip_hash_bang = parse
   let init () =
     is_in_string := false;
     comment_start_loc := [];
-    comment_list := [];
+    Keywords.reset_comments ();
     match !preprocessor with
     | None -> ()
     | Some (init, _preprocess) -> init ()
