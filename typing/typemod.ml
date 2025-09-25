@@ -3016,9 +3016,9 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
       let mode = Value.newvar () in
       let exp =
         Ctype.with_local_level_if_principal
-          (fun () -> Typecore.type_exp env sexp
+          (fun () -> !Typecore_ind.type_exp env sexp
             ~mode:(Value.disallow_left mode))
-          ~post:Typecore.generalize_structure_exp
+          ~post:!Typecore_ind.generalize_structure_exp
       in
       let mty =
         match get_desc (Ctype.expand_head env exp.exp_type) with
@@ -3028,14 +3028,14 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
               raise (Error (smod.pmod_loc, env,
                             Incomplete_packed_module exp.exp_type));
             if !Clflags.principal &&
-              not (Typecore.generalizable (Btype.generic_level-1) exp.exp_type)
+              not (!Typecore_ind.generalizable (Btype.generic_level-1) exp.exp_type)
             then
               Location.prerr_warning smod.pmod_loc
                 (Warnings.Not_principal "this module unpacking");
             modtype_of_package env smod.pmod_loc p fl
         | Tvar _ ->
-            raise (Typecore.Error
-                     (smod.pmod_loc, env, Typecore.Cannot_infer_signature))
+            raise (Typecore_ind.Error
+                     (smod.pmod_loc, env, Typecore_ind.Cannot_infer_signature))
         | _ ->
             raise (Error(smod.pmod_loc, env, Not_a_packed_module exp.exp_type))
       in
@@ -3396,7 +3396,7 @@ and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
           (* We could consider allowing [any] here when not in the toplevel,
              though for now the sort is used in the void safety check. *)
           Builtin_attributes.warning_scope attrs
-            (fun () -> Typecore.type_representable_expression
+            (fun () -> !Typecore_ind.type_representable_expression
                          ~why:Structure_item_expression env sexpr)
         in
         if force_toplevel then
@@ -3411,9 +3411,9 @@ and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
         Tstr_eval (expr, sort, attrs), [], shape_map, env
     | Pstr_value (rec_flag, sdefs) ->
         let (defs, newenv) =
-          Typecore.type_binding env Immutable rec_flag ~force_toplevel sdefs in
+          !Typecore_ind.type_binding env Immutable rec_flag ~force_toplevel sdefs in
         let defs = match rec_flag with
-          | Recursive -> Typecore.annotate_recursive_bindings env defs
+          | Recursive -> !Typecore_ind.annotate_recursive_bindings env defs
           | Nonrecursive -> defs
         in
         if force_toplevel then
@@ -4041,13 +4041,13 @@ let type_open_ ?used_slot ?toplevel ovf env loc lid =
   path, newenv
 
 let () =
-  Typecore.type_module := type_module_alias;
+  Typecore_ind.type_module := type_module_alias;
   Typetexp.transl_modtype_longident := transl_modtype_longident;
   Typetexp.transl_modtype := transl_modtype;
-  Typecore.type_open := type_open_ ?toplevel:None;
+  Typecore_ind.type_open := type_open_ ?toplevel:None;
   Typetexp.type_open := type_open_ ?toplevel:None;
-  Typecore.type_open_decl := type_open_decl;
-  Typecore.type_package := type_package;
+  Typecore_ind.type_open_decl := type_open_decl;
+  Typecore_ind.type_package := type_package;
   Typeclass.type_open_descr := type_open_descr;
   type_module_type_of_fwd := type_module_type_of
 
@@ -4140,8 +4140,8 @@ let type_implementation target modulename initial_env ast =
   in
   Cmt_format.clear ();
   Misc.try_finally (fun () ->
-      Typecore.reset_delayed_checks ();
-      Typecore.reset_allocations ();
+      !Typecore_ind.reset_delayed_checks ();
+      !Typecore_ind.reset_allocations ();
       Env.reset_required_globals ();
       Env.reset_probes ();
       if !Clflags.print_types then (* #7656 *)
@@ -4172,8 +4172,8 @@ let type_implementation target modulename initial_env ast =
           remove_modality_and_zero_alloc_variables_sg finalenv ~zap_modality
             simple_sg
         in
-        Typecore.force_delayed_checks ();
-        Typecore.optimise_allocations ();
+        !Typecore_ind.force_delayed_checks ();
+        !Typecore_ind.optimise_allocations ();
         let shape = Shape_reduce.local_reduce Env.empty shape in
         Printtyp.wrap_printing_env ~error:false initial_env
           (fun () -> fprintf std_formatter "%a@."
@@ -4246,8 +4246,8 @@ let type_implementation target modulename initial_env ast =
           let argument_interface =
             check_argument_type_if_given initial_env source_intf dclsig arg_type
           in
-          Typecore.force_delayed_checks ();
-          Typecore.optimise_allocations ();
+          !Typecore_ind.force_delayed_checks ();
+          !Typecore_ind.optimise_allocations ();
           (* It is important to run these checks after the inclusion test above,
              so that value declarations which are not used internally but
              exported are not reported as being unused. *)
@@ -4285,8 +4285,8 @@ let type_implementation target modulename initial_env ast =
           let argument_interface =
             check_argument_type_if_given initial_env sourcefile simple_sg arg_type
           in
-          Typecore.force_delayed_checks ();
-          Typecore.optimise_allocations ();
+          !Typecore_ind.force_delayed_checks ();
+          !Typecore_ind.optimise_allocations ();
           (* See comment above. Here the target signature contains all
              the values being exported. We can still capture unused
              declarations like "let x = true;; let x = 1;;", because in this

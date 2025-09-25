@@ -487,7 +487,7 @@ and transl_exp0 ~in_new_scope ~scopes sort e =
       transl_match ~scopes ~arg_sort ~return_sort:sort e arg pat_expr_list
         partial
   | Texp_try(body, pat_expr_list) ->
-      let id, id_duid = Typecore.name_cases "exn" pat_expr_list in
+      let id, id_duid = Typecore_ind.name_cases "exn" pat_expr_list in
       let return_layout = layout_exp sort e in
       Ltrywith(transl_exp ~scopes sort body, id, id_duid,
                Matching.for_trywith ~scopes ~return_layout e.exp_loc (Lvar id)
@@ -2488,7 +2488,7 @@ and transl_match ~scopes ~arg_sort ~return_sort e arg pat_expr_list partial =
      value actions run outside the try..with exception handler.
   *)
   let static_catch scrutinees val_ids handler =
-    let id, id_duid = Typecore.name_pattern "exn" (List.map fst exn_cases) in
+    let id, id_duid = Typecore_ind.name_pattern "exn" (List.map fst exn_cases) in
     let static_exception_id = next_raise_count () in
     Lstaticcatch
       (Ltrywith (Lstaticraise (static_exception_id, scrutinees), id, id_duid,
@@ -2522,7 +2522,7 @@ and transl_match ~scopes ~arg_sort ~return_sort e arg pat_expr_list partial =
           List.map
             (fun (arg,s) ->
                let layout = layout_exp s arg in
-               let id, id_duid = Typecore.name_pattern "val" [] in
+               let id, id_duid = Typecore_ind.name_pattern "val" [] in
                (id, id_duid, layout), (Lvar id, s, layout))
             argl
           |> List.split
@@ -2538,7 +2538,7 @@ and transl_match ~scopes ~arg_sort ~return_sort e arg pat_expr_list partial =
         e.exp_loc None (transl_exp ~scopes arg_sort arg) val_cases partial
     | arg, _ :: _ ->
         let val_id, val_id_duid =
-          Typecore.name_pattern "val" (List.map fst val_cases)
+          Typecore_ind.name_pattern "val" (List.map fst val_cases)
         in
         let arg_layout = layout_exp arg_sort arg in
         static_catch

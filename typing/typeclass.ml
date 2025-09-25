@@ -735,8 +735,8 @@ let rec class_field_first_pass self_loc cl_num sign self_scope acc cf =
            end;
            let definition =
              Ctype.with_local_level_if_principal
-               ~post:Typecore.generalize_structure_exp
-               (fun () -> Typecore.type_exp val_env sdefinition)
+               ~post:!Typecore_ind.generalize_structure_exp
+               (fun () -> !Typecore_ind.type_exp val_env sdefinition)
            in
            begin
              match
@@ -829,10 +829,10 @@ let rec class_field_first_pass self_loc cl_num sign self_scope acc cf =
                      Ctype.newvar (Jkind.Builtin.value ~why:Object_field)
                    in
                    Ctype.unify val_env (Ctype.newmono ty') ty;
-                   Typecore.type_approx val_env sbody ty'
+                   !Typecore_ind.type_approx val_env sbody ty'
                | Tpoly (ty1, tl) ->
                    let ty1' = Ctype.instance_poly tl ty1 in
-                   Typecore.type_approx val_env sbody ty1'
+                   !Typecore_ind.type_approx val_env sbody ty1'
                | _ -> assert false
              with Ctype.Unify err ->
                raise(Error(loc, val_env,
@@ -965,12 +965,12 @@ and class_field_second_pass cl_num sign met_env field =
            let arrow_desc = Nolabel, Mode.Alloc.legacy, Mode.Alloc.legacy in
            let self_param_type = Btype.newgenty (Tpoly(self_type, [])) in
            let meth_type =
-             Typecore.mk_expected (Btype.newgenty
+             Typecore_ind.mk_expected (Btype.newgenty
                 (Tarrow(arrow_desc, self_param_type, ty, commu_ok)))
            in
            let texp =
              Ctype.with_raised_nongen_level
-               (fun () -> Typecore.type_expect met_env sdefinition meth_type) in
+               (fun () -> !Typecore_ind.type_expect met_env sdefinition meth_type) in
            let kind = Tcfk_concrete (override, texp) in
            let desc = Tcf_method(label, priv, kind) in
            met_env, mkcf desc loc attributes)
@@ -984,12 +984,12 @@ and class_field_second_pass cl_num sign met_env field =
            let self_param_type = Ctype.newmono sign.Types.csig_self in
            let arrow_desc = Nolabel, Mode.Alloc.legacy, Mode.Alloc.legacy in
            let meth_type =
-             Typecore.mk_expected (Ctype.newty
+             Typecore_ind.mk_expected (Ctype.newty
                (Tarrow (arrow_desc, self_param_type, unit_type, commu_ok)))
            in
            let texp =
              Ctype.with_raised_nongen_level
-               (fun () -> Typecore.type_expect met_env sexpr meth_type) in
+               (fun () -> !Typecore_ind.type_expect met_env sexpr meth_type) in
            let desc = Tcf_initializer texp in
            met_env, mkcf desc loc attributes)
   | Attribute { attribute; loc; attributes; } ->
@@ -1050,10 +1050,10 @@ and class_structure cl_num virt self_scope final val_env met_env loc
   end;
 
   (* Self binder *)
-  let (self_pat, self_pat_vars) = Typecore.type_self_pattern val_env spat in
+  let (self_pat, self_pat_vars) = !Typecore_ind.type_self_pattern val_env spat in
   let val_env, par_env =
     List.fold_right
-      (fun {Typecore.pv_id; _} (val_env, par_env) ->
+      (fun {Typecore_ind.pv_id; _} (val_env, par_env) ->
          let name = Ident.name pv_id in
          let val_env = enter_self_val name val_env in
          let par_env = enter_self_val name par_env in
@@ -1105,7 +1105,7 @@ and class_structure cl_num virt self_scope final val_env met_env loc
   in
   let met_env =
     List.fold_right
-      (fun {Typecore.pv_id; pv_type; pv_loc; pv_as_var; pv_attributes} met_env ->
+      (fun {Typecore_ind.pv_id; pv_type; pv_loc; pv_as_var; pv_attributes} met_env ->
          add_self_met pv_loc pv_id sign self_var_kind vars
            cl_num pv_as_var pv_type pv_attributes met_env)
       self_pat_vars met_env
@@ -1192,7 +1192,7 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
           cl_attributes = scl.pcl_attributes;
          }
   | Pcl_fun (l, Some default, spat, sbody) ->
-      if Typecore.has_poly_constraint spat then
+      if !Typecore_ind.has_poly_constraint spat then
         raise(Error(spat.ppat_loc, val_env, Polymorphic_class_parameter));
       let loc = default.pexp_loc in
       let open Ast_helper in
@@ -1232,12 +1232,12 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
       class_expr cl_num val_env met_env virt self_scope sfun
   | Pcl_fun (l, None, spat, scl') ->
       let l, spat = Typetexp.transl_label_from_pat l spat in
-      if Typecore.has_poly_constraint spat then
+      if !Typecore_ind.has_poly_constraint spat then
         raise(Error(spat.ppat_loc, val_env, Polymorphic_class_parameter));
       let (pat, pv, val_env', met_env) =
         Ctype.with_local_level_if_principal
           (fun () ->
-            Typecore.type_class_arg_pattern cl_num val_env met_env l spat)
+            !Typecore_ind.type_class_arg_pattern cl_num val_env met_env l spat)
           ~post: begin fun (pat, _, _, _) ->
             let gen {pat_type = ty} = Ctype.generalize_structure ty in
             iter_pattern gen pat
@@ -1268,8 +1268,8 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
         | _ -> true
       in
       let partial =
-        let dummy = Typecore.type_exp val_env (Ast_helper.Exp.unreachable ()) in
-        Typecore.check_partial val_env pat.pat_type pat.pat_loc
+        let dummy = !Typecore_ind.type_exp val_env (Ast_helper.Exp.unreachable ()) in
+        !Typecore_ind.check_partial val_env pat.pat_type pat.pat_loc
           [{c_lhs = pat; c_guard = None; c_rhs = dummy}]
       in
       let val_env' = Env.add_escape_lock Class val_env' in
@@ -1332,24 +1332,24 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
             let use_arg sarg l' =
               Arg (
                 if not optional || Btype.is_optional l' then
-                  let arg = Typecore.type_argument val_env sarg ty ty0 in
+                  let arg = !Typecore_ind.type_argument val_env sarg ty ty0 in
                   arg, Jkind.Sort.value
                 else
-                  Typecore.type_option_some val_env sarg ty ty0,
+                  !Typecore_ind.type_option_some val_env sarg ty ty0,
                   (* CR layouts v5: Change the sort when options can hold
                      non-values. *)
                   Jkind.Sort.value
               )
             in
             let eliminate_optional_arg () =
-              Arg (Typecore.type_option_none val_env ty0 Location.none,
+              Arg (!Typecore_ind.type_option_none val_env ty0 Location.none,
                    (* CR layouts v5: Change the sort when options can hold
                       non-values. *)
                    Jkind.Sort.value
                   )
             in
             let eliminate_position_arg () =
-              let arg = Typecore.src_pos (Location.ghostify scl.pcl_loc) [] val_env in
+              let arg = Typecore_ind.src_pos (Location.ghostify scl.pcl_loc) [] val_env in
               Arg (arg, Jkind.Sort.value)
             in
             let remaining_sargs, arg =
@@ -1434,13 +1434,13 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
          }
   | Pcl_let (rec_flag, sdefs, scl') ->
       let (defs, val_env) =
-        Typecore.type_let In_class_def val_env Immutable rec_flag sdefs in
+        !Typecore_ind.type_let In_class_def val_env Immutable rec_flag sdefs in
       let (vals, met_env) =
         List.fold_right
           (fun (id, modes_and_sorts, _) (vals, met_env) ->
              List.iter
                (fun (loc, mode, sort) ->
-                  Typecore.escape ~loc ~env:val_env ~reason:Other mode;
+                  Typecore_ind.escape.escape ~loc ~env:val_env ~reason:Other mode;
                   if not (Jkind.Sort.(equate sort value))
                   then
                     raise (Error(loc, met_env,
@@ -1485,7 +1485,7 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
       in
       let cl = class_expr cl_num val_env met_env virt self_scope scl' in
       let defs = match rec_flag with
-        | Recursive -> Typecore.annotate_recursive_bindings val_env defs
+        | Recursive -> !Typecore_ind.annotate_recursive_bindings val_env defs
         | Nonrecursive -> defs
       in
       rc {cl_desc = Tcl_let (rec_flag, defs, vals, cl);
@@ -1716,13 +1716,13 @@ let class_infos define_class kind
       (* Type the class expression *)
       let (expr, typ) =
         try
-          Typecore.self_coercion :=
-            (Path.Pident obj_id, coercion_locs) :: !Typecore.self_coercion;
+          Typecore_ind.self_coercion :=
+            (Path.Pident obj_id, coercion_locs) :: !Typecore_ind.self_coercion;
           let res = kind env cl.pci_virt cl.pci_expr in
-          Typecore.self_coercion := List.tl !Typecore.self_coercion;
+          Typecore_ind.self_coercion := List.tl !Typecore_ind.self_coercion;
           res
         with exn ->
-          Typecore.self_coercion := []; raise exn
+          Typecore_ind.self_coercion := []; raise exn
       in
       let sign = Btype.signature_of_class_type typ in
       (ci_params, params, coercion_locs, expr, typ, sign)
@@ -1990,7 +1990,7 @@ let check_coercions env { id; id_loc; clty; ty_id; cltydef; obj_id; obj_abbr;
       in
       begin try Ctype.subtype env cl_ty obj_ty ()
       with Ctype.Subtype err ->
-        raise(Typecore.Error(loc, env, Typecore.Not_subtype err))
+        raise(Typecore_ind.Error(loc, env, Typecore_ind.Not_subtype err))
       end;
       if not (Ctype.opened_object cl_ty) then
         raise(Error(loc, env, Cannot_coerce_self obj_ty))
@@ -2071,7 +2071,7 @@ let class_declarations env cls =
          (fun ci -> ci.cls_id, ci.cls_info.ci_expr)
          info)
   in
-  Typecore.check_recursive_class_bindings env ids exprs;
+  !Typecore_ind.check_recursive_class_bindings env ids exprs;
   info, env
 
 let class_descriptions env cls =
@@ -2104,7 +2104,7 @@ let type_object env loc s =
   (desc, meths)
 
 let () =
-  Typecore.type_object := type_object
+  Typecore_ind.type_object := type_object
 
 (*******************************)
 

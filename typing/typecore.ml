@@ -27,13 +27,13 @@ open Typedtree
 open Btype
 open Ctype
 
-type comprehension_type =
+type comprehension_type = Typecore_ind.comprehension_type =
   | List_comprehension
   | Array_comprehension of mutability
 
 module Style = Misc.Style
 
-type type_forcing_context =
+type type_forcing_context = Typecore_ind.type_forcing_context =
   | If_conditional
   | If_no_else_branch
   | While_loop_conditional
@@ -50,13 +50,13 @@ type type_forcing_context =
   | Comprehension_when
   | Error_message_attr of string
 
-type type_expected = {
+type type_expected = Typecore_ind.type_expected = private {
   ty: type_expr;
   explanation: type_forcing_context option;
 }
 
 module Datatype_kind = struct
-  type t = Record | Record_unboxed_product | Variant
+  type t = Typecore_ind.Datatype_kind.t = Record | Record_unboxed_product | Variant
 
   let type_name = function
     | Record -> "record"
@@ -69,18 +69,18 @@ module Datatype_kind = struct
     | Variant -> "constructor"
 end
 
-type wrong_name = {
+type wrong_name = Typecore_ind.wrong_name = {
   type_path: Path.t;
   kind: Datatype_kind.t;
   name: string loc;
   valid_names: string list;
 }
 
-type wrong_kind_context =
+type wrong_kind_context = Typecore_ind.wrong_kind_context =
   | Pattern
   | Expression of type_forcing_context option
 
-type wrong_kind_sort =
+type wrong_kind_sort = Typecore_ind.wrong_kind_sort =
   | Constructor
   | Record
   | Record_unboxed_product
@@ -110,7 +110,7 @@ let wrong_kind_sort_of_constructor (lid : Longident.t) =
   | Lident "()" | Ldot(_, "()") -> Unit
   | _ -> Constructor
 
-type existential_restriction =
+type existential_restriction = Typecore_ind.existential_restriction =
   | At_toplevel (** no existential types at the toplevel *)
   | In_group (** nor with let ... and ... *)
   | In_rec (** or recursive definition *)
@@ -119,12 +119,12 @@ type existential_restriction =
   | In_class_def  (** or in [class c = let ... in ...] *)
   | In_self_pattern (** or in self pattern *)
 
-type submode_reason =
+type submode_reason = Typecore_ind.submode_reason =
   | Application of type_expr
   | Constructor of Longident.t
   | Other
 
-type unsupported_stack_allocation =
+type unsupported_stack_allocation = Typecore_ind.unsupported_stack_allocation =
   | Lazy
   | Module
   | Object
@@ -138,11 +138,11 @@ let print_unsupported_stack_allocation ppf = function
   | List_comprehension -> Format.fprintf ppf "list comprehensions"
   | Array_comprehension -> Format.fprintf ppf "array comprehensions"
 
-type mutable_restriction =
+type mutable_restriction = Typecore_ind.mutable_restriction =
   | In_group
   | In_rec
 
-type error =
+type error = Typecore_ind.error =
   | Constructor_arity_mismatch of Longident.t * int * int
   | Constructor_labeled_arg
   | Partial_tuple_pattern_bad_type
@@ -297,7 +297,7 @@ type error =
   | Overwrite_of_invalid_term
   | Unexpected_hole
 
-exception Error of Location.t * Env.t * error
+exception Error = Typecore_ind.Error
 exception Error_forward of Location.error
 
 let error_of_filter_arrow_failure ~explanation ~first ty_fun
@@ -312,37 +312,6 @@ let error_of_filter_arrow_failure ~explanation ~first ty_fun
       else Too_many_arguments(ty_fun, explanation)
     end
   | Jkind_error (ty, err) -> Function_type_not_rep (ty, err)
-
-(* Forward declaration, to be filled in by Typemod.type_module *)
-
-let type_module =
-  ref ((fun _env _md -> assert false) :
-       Env.t -> Parsetree.module_expr -> Typedtree.module_expr * Shape.t)
-
-(* Forward declaration, to be filled in by Typemod.type_open *)
-
-let type_open :
-  (?used_slot:bool ref -> override_flag -> Env.t -> Location.t ->
-   Longident.t loc -> Path.t * Env.t)
-    ref =
-  ref (fun ?used_slot:_ _ -> assert false)
-
-let type_open_decl :
-  (?used_slot:bool ref -> Env.t -> Parsetree.open_declaration
-   -> open_declaration * Env.t)
-    ref =
-  ref (fun ?used_slot:_ _ -> assert false)
-
-(* Forward declaration, to be filled in by Typemod.type_package *)
-
-let type_package =
-  ref (fun _ -> assert false)
-
-(* Forward declaration, to be filled in by Typeclass.class_structure *)
-let type_object =
-  ref (fun _env _s -> assert false :
-       Env.t -> Location.t -> Parsetree.class_structure ->
-         Typedtree.class_structure * string list)
 
 (*
   Saving and outputting type information.
@@ -380,7 +349,7 @@ let check_probe_name name loc env =
     | _ -> raise (Error (loc, env, (Probe_name_format name)))
   ) name
 
-let mk_expected ?explanation ty = { ty; explanation; }
+let mk_expected = Typecore_ind.mk_expected
 
 let case lhs rhs =
   {c_lhs = lhs; c_guard = None; c_rhs = rhs}
@@ -930,15 +899,6 @@ let extract_option_type env ty =
 let protect_expansion env ty =
   if Env.has_local_constraints env then generic_instance ty else ty
 
-let src_pos loc attrs env =
-  { exp_desc = Texp_src_pos
-  ; exp_loc = loc
-  ; exp_extra = []
-  ; exp_type = instance Predef.type_lexing_position
-  ; exp_attributes = attrs
-  ; exp_env = env
-  }
-
 type 'rep record_extraction_result =
   | Record_type of Path.t * Path.t * Types.label_declaration list * 'rep
   | Record_type_of_other_form
@@ -1195,7 +1155,7 @@ let finalize_variants p =
 (* [type_pat_state] and related types for pattern environment;
    these should not be confused with Pattern_env.t, which is a part of the
    interface to unification functions in [Ctype] *)
-type pattern_variable =
+type pattern_variable = Typecore_ind.pattern_variable =
   {
     pv_id: Ident.t;
     pv_uid: Uid.t;
@@ -1334,7 +1294,7 @@ let add_module_variables env module_variables =
          raised level, so there's no extra step to take.
       *)
       let modl, md_shape =
-        !type_module env
+        !Typecore_ind.type_module env
           Ast_helper.(
             Mod.unpack ~loc:mv_loc
               (Exp.ident ~loc:mv_name.loc
@@ -3276,7 +3236,7 @@ and type_pat_aux
         :: p.pat_extra }
   | Ppat_open (lid,p) ->
       let path, new_env =
-        !type_open Asttypes.Fresh !!penv sp.ppat_loc lid in
+        !Typecore_ind.type_open Asttypes.Fresh !!penv sp.ppat_loc lid in
       Pattern_env.set_env penv new_env;
       let p = type_pat tps category ~penv p expected_ty sort in
       let new_env = !!penv in
@@ -4992,9 +4952,6 @@ let generalizable level ty =
   try check ty; unmark_type ty; true
   with Exit -> unmark_type ty; false
 
-(* Hack to allow coercion of self. Will clean-up later. *)
-let self_coercion = ref ([] : (Path.t * Location.t list ref) list)
-
 (* Helpers for type_cases *)
 
 let contains_variant_either ty =
@@ -5140,20 +5097,6 @@ let proper_exp_loc exp =
     | _ :: rest -> aux rest
   in
   aux exp.exp_extra
-
-(* To find reasonable names for let-bound and lambda-bound idents *)
-
-let rec name_pattern default = function
-    [] -> Ident.create_local default,
-          Shape.Uid.internal_not_actually_unique
-  | p :: rem ->
-    match p.pat_desc with
-      Tpat_var (id, _, uid, _, _) -> id, uid
-    | Tpat_alias(_, id, _, uid, _, _, _) -> id, uid
-    | _ -> name_pattern default rem
-
-let name_cases default lst =
-  name_pattern default (List.map (fun c -> c.c_lhs) lst)
 
 (* Typing of expressions *)
 
@@ -6833,7 +6776,7 @@ and type_expect_
         with_local_level begin fun () ->
           let modl, pres, id, new_env =
             Typetexp.TyVarEnv.with_local_scope begin fun () ->
-              let modl, md_shape = !type_module env smodl in
+              let modl, md_shape = !Typecore_ind.type_module env smodl in
               Mtype.lower_nongen lv modl.mod_type;
               let pres =
                 match modl.mod_type with
@@ -6938,7 +6881,7 @@ and type_expect_
       }
   | Pexp_object s ->
       submode ~loc ~env Value.legacy expected_mode;
-      let desc, meths = !type_object env loc s in
+      let desc, meths = !Typecore_ind.type_object env loc s in
       rue {
         exp_desc = Texp_object (desc, meths);
         exp_loc = loc; exp_extra = [];
@@ -7015,7 +6958,7 @@ and type_expect_
         | _ ->
             raise (Error (loc, env, Not_a_packed_module ty_expected))
       in
-      let (modl, fl') = !type_package env m p fl in
+      let (modl, fl') = !Typecore_ind.type_package env m p fl in
       let mode = Typedtree.mode_without_locks_exn modl.mod_mode in
       submode ~loc ~env mode expected_mode;
       rue {
@@ -7026,7 +6969,7 @@ and type_expect_
         exp_env = env }
   | Pexp_open (od, e) ->
       let tv = newvar (Jkind.Builtin.any ~why:Dummy_jkind) in
-      let (od, newenv) = !type_open_decl env od in
+      let (od, newenv) = !Typecore_ind.type_open_decl env od in
       let exp = type_expect newenv expected_mode e ty_expected_explained in
       (* Force the return type to be well-formed in the original
          environment. *)
@@ -7110,7 +7053,7 @@ and type_expect_
         | [case] -> case
         | _ -> assert false
       in
-      let param, param_debug_uid = name_cases "param" cases in
+      let param, param_debug_uid = Typecore_ind.name_cases "param" cases in
       let let_ =
         { bop_op_name = slet.pbop_op;
           bop_op_path = op_path;
@@ -7196,7 +7139,7 @@ and type_expect_
       | _ -> raise (Error (loc, env, Probe_is_enabled_format))
     end
   | Pexp_extension ({ txt = "src_pos"; _ }, _) ->
-      rue (src_pos loc sexp.pexp_attributes env)
+      rue (Typecore_ind.src_pos loc sexp.pexp_attributes env)
   | Pexp_extension ({ txt = ("ocaml.atomic.loc"
                              |"atomic.loc"); _ },
                     payload) ->
@@ -7540,7 +7483,7 @@ and type_coerce
         end
         ~post:(fun (_, arg_type, _) -> enforce_current_level env arg_type)
     in
-    begin match !self_coercion, get_desc ty' with
+    begin match !Typecore_ind.self_coercion, get_desc ty' with
       | ((path, r) :: _, Tconstr (path', _, _))
         when is_self arg && Path.same path path' ->
           (* prerr_endline "self coercion"; *)
@@ -7966,7 +7909,7 @@ and type_function
       let fp_kind, fp_param, fp_param_debug_uid =
         match default_arg with
         | None ->
-            let param, param_uid = name_pattern "param" [ pat ] in
+            let param, param_uid = Typecore_ind.name_pattern "param" [ pat ] in
             Tparam_pat pat, param, param_uid
         | Some (default_arg, arg_label, default_arg_sort) ->
             let param = Ident.create_local ("*opt*" ^ arg_label) in
@@ -8563,7 +8506,7 @@ and type_argument ?explanation ?recarg ~overwrite env (mode : expected_mode) sar
                non-values in structures. *)
             make_args ((l, Arg (ty, Jkind.Sort.value)) :: args) ty_fun
         | Tarrow ((l,_marg,_mret),_,ty_fun,_) when is_position l ->
-            let arg = src_pos (Location.ghostify sarg.pexp_loc) [] env in
+            let arg = Typecore_ind.src_pos (Location.ghostify sarg.pexp_loc) [] env in
             make_args ((l, Arg (arg, Jkind.Sort.value)) :: args) ty_fun
         | Tarrow ((l,_,_),_,ty_res',_) when l = Nolabel || !Clflags.classic ->
             List.rev args, ty_fun, no_labels ty_res'
@@ -8650,7 +8593,7 @@ and type_argument ?explanation ?recarg ~overwrite env (mode : expected_mode) sar
         let e = {texp with exp_type = ty_res; exp_desc = Texp_exclave e} in
         let cases = [ case eta_pat e ] in
         let cases_loc = { texp.exp_loc with loc_ghost = true } in
-        let param, param_uid = name_cases "param" cases in
+        let param, param_uid = Typecore_ind.name_cases "param" cases in
         { texp with exp_type = ty_fun; exp_desc =
           Texp_function
             { params = [];
@@ -8782,7 +8725,7 @@ and type_apply_arg env ~app_loc ~funct ~index ~position_and_mode ~partial_app (l
           let arg = type_option_none env (instance ty_arg) Location.none in
           (lbl, Arg (arg, Mode.Value.legacy, sort_arg))
       | Position _ ->
-          let arg = src_pos (Location.ghostify funct.exp_loc) [] env in
+          let arg = Typecore_ind.src_pos (Location.ghostify funct.exp_loc) [] env in
           (lbl, Arg (arg, Mode.Value.legacy, sort_arg))
       | Labelled _ | Nolabel -> assert false)
   | Omitted _ as arg -> (lbl, arg)
@@ -9611,7 +9554,7 @@ and type_function_cases_expect
            (Tarrow ((Nolabel, arg_mode, ret_mode), ty_arg, ty_ret, commu_ok)))
     in
     unify_exp_types loc env ty_fun (instance ty_expected);
-    let param , param_uid = name_cases "param" cases in
+    let param , param_uid = Typecore_ind.name_cases "param" cases in
     let cases =
       { fc_cases = cases;
         fc_partial = partial;
@@ -11760,3 +11703,29 @@ let type_argument env e t1 t2 =
 let type_option_some env e t1 t2 =
   let exp = type_option_some env mode_legacy e t1 t2 in
   maybe_check_uniqueness_exp exp; exp
+
+let () =
+  Typecore_ind.type_binding := type_binding;
+  Typecore_ind.type_let := type_let;
+  Typecore_ind.type_expression := type_expression;
+  Typecore_ind.type_class_arg_pattern := type_class_arg_pattern;
+  Typecore_ind.type_self_pattern := type_self_pattern;
+  Typecore_ind.check_partial := check_partial;
+  Typecore_ind.type_expect := type_expect;
+  Typecore_ind.type_exp := type_exp;
+  Typecore_ind.type_approx := type_approx;
+  Typecore_ind.type_argument := type_argument;
+  Typecore_ind.type_option_some := type_option_some;
+  Typecore_ind.type_option_none := type_option_none;
+  Typecore_ind.extract_option_type := extract_option_type;
+  Typecore_ind.generalizable := generalizable;
+  Typecore_ind.generalize_structure_exp := generalize_structure_exp;
+  Typecore_ind.optimise_allocations := optimise_allocations;
+  Typecore_ind.reset_allocations := reset_allocations;
+  Typecore_ind.reset_delayed_checks := reset_delayed_checks;
+  Typecore_ind.force_delayed_checks := force_delayed_checks;
+  Typecore_ind.has_poly_constraint := has_poly_constraint;
+  Typecore_ind.annotate_recursive_bindings := annotate_recursive_bindings;
+  Typecore_ind.check_recursive_class_bindings := check_recursive_class_bindings;
+  Typecore_ind.escape.escape <- escape;
+  Typecore_ind.type_representable_expression := type_representable_expression
