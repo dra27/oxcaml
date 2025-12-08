@@ -83,8 +83,13 @@ val compile_only : bool ref
 val output_name : string option ref
 val include_dirs : visible_include list ref
 val hidden_include_dirs : string list ref
+<<<<<<< OxCaml
 val include_manifests : string list ref
 val hidden_include_manifests : string list ref
+||||||| Upstream OCaml
+=======
+val standard_library_default : string option ref
+>>>>>>> ocaml/ocaml#14244
 val no_std_include : bool ref
 val no_cwd : bool ref
 val print_types : bool ref

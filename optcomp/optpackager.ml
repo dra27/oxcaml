@@ -195,6 +195,7 @@ end) : S = struct
           Oxcaml_utils.File_sections.Builder.add_all file_sections
             info.ui_file_sections)
         units
+<<<<<<< OxCaml
     in
     let ui_export_info =
       List.fold_left2
@@ -242,6 +243,97 @@ end) : S = struct
       }
     in
     Compilenv.write_unit_info pkg_infos cmxfile
+||||||| Upstream OCaml
+    else
+      units
+  in
+  let ui = Compilenv.current_unit_infos() in
+  let ui_export_info =
+    if Config.flambda then
+      let ui_export_info =
+        List.fold_left (fun acc info ->
+            Export_info.merge acc (get_export_info info))
+          (Export_info_for_pack.import_for_pack ~pack_units
+             ~pack:(Compilenv.current_unit ())
+             (get_export_info ui))
+          units
+      in
+      Flambda ui_export_info
+    else
+      Clambda (get_approx ui)
+  in
+  Export_info_for_pack.clear_import_state ();
+  let pkg_infos =
+    { ui_name = ui.ui_name;
+      ui_symbol = ui.ui_symbol;
+      ui_defines =
+          List.flatten (List.map (fun info -> info.ui_defines) units) @
+          [ui.ui_symbol];
+      ui_imports_cmi =
+          (ui.ui_name, Some (Env.crc_of_unit ui.ui_name)) ::
+          filter(Asmlink.extract_crc_interfaces());
+      ui_imports_cmx =
+          filter(Asmlink.extract_crc_implementations());
+      ui_curry_fun =
+          union(List.map (fun info -> info.ui_curry_fun) units);
+      ui_apply_fun =
+          union(List.map (fun info -> info.ui_apply_fun) units);
+      ui_send_fun =
+          union(List.map (fun info -> info.ui_send_fun) units);
+      ui_force_link =
+          List.exists (fun info -> info.ui_force_link) units;
+      ui_export_info;
+      ui_for_pack = None;
+    } in
+  Compilenv.write_unit_info pkg_infos cmxfile
+=======
+    else
+      units
+  in
+  let ui = Compilenv.current_unit_infos() in
+  let ui_export_info =
+    if Config.flambda then
+      let ui_export_info =
+        List.fold_left (fun acc info ->
+            Export_info.merge acc (get_export_info info))
+          (Export_info_for_pack.import_for_pack ~pack_units
+             ~pack:(Compilenv.current_unit ())
+             (get_export_info ui))
+          units
+      in
+      Flambda ui_export_info
+    else
+      Clambda (get_approx ui)
+  in
+  let ui_need_stdlib =
+    List.exists (function {ui_need_stdlib; _} -> ui_need_stdlib) units
+  in
+  Export_info_for_pack.clear_import_state ();
+  let pkg_infos =
+    { ui_name = ui.ui_name;
+      ui_symbol = ui.ui_symbol;
+      ui_defines =
+          List.flatten (List.map (fun info -> info.ui_defines) units) @
+          [ui.ui_symbol];
+      ui_imports_cmi =
+          (ui.ui_name, Some (Env.crc_of_unit ui.ui_name)) ::
+          filter(Asmlink.extract_crc_interfaces());
+      ui_imports_cmx =
+          filter(Asmlink.extract_crc_implementations());
+      ui_curry_fun =
+          union(List.map (fun info -> info.ui_curry_fun) units);
+      ui_apply_fun =
+          union(List.map (fun info -> info.ui_apply_fun) units);
+      ui_send_fun =
+          union(List.map (fun info -> info.ui_send_fun) units);
+      ui_force_link =
+          List.exists (fun info -> info.ui_force_link) units;
+      ui_export_info;
+      ui_for_pack = None;
+      ui_need_stdlib;
+    } in
+  Compilenv.write_unit_info pkg_infos cmxfile
+>>>>>>> ocaml/ocaml#14244
 
   let package_object_files ~ppf_dump files target targetcmx coercion =
     let pack_path = Unit_info.Artifact.modname target in

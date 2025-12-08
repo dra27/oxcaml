@@ -78,8 +78,13 @@ let compile_only = ref false            (* -c *)
 and output_name = ref (None : string option) (* -o *)
 and include_dirs = ref ([] : visible_include list)  (* -I, -Ix *)
 and hidden_include_dirs = ref ([] : string list) (* -H *)
+<<<<<<< OxCaml
 and include_manifests = ref ([] : string list) (* -I-manifest *)
 and hidden_include_manifests = ref ([] : string list) (* -H-manifest *)
+||||||| Upstream OCaml
+=======
+and standard_library_default = ref None (* -set-runtime-default *)
+>>>>>>> ocaml/ocaml#14244
 and no_std_include = ref false          (* -nostdlib *)
 and no_cwd = ref false                  (* -nocwd *)
 and print_types = ref false             (* -i *)
