@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "20260108"
+version: "20251119"
 license: "LGPL-2.1-or-later WITH OCaml-LGPL-linking-exception"
 synopsis: "OxCaml Development Tools"
 maintainer: "David Allsopp <dallsopp@janestreet.com>"
@@ -15,11 +15,11 @@ authors: [
 homepage: "https://oxcaml.org"
 bug-reports: "https://github.com/oxcaml/oxcaml/issues"
 depends: [
-  "ocaml" {>= "5.4.0~~" & < "5.5.0~~"}
+  "ocaml" {>= "4.14.0~~" & < "4.15.0~~"}
 
   "ocaml-options-vanilla"
 
-  "dune" {>= "3.20.0"}
+  "dune" {>= "3.17.0" & < "3.18.0"}
   "menhir" {= "20231231"}
   "ocamlformat" {>= "0.28.0" & < "0.29.0"}
 ]
