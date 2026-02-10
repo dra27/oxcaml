@@ -21,3 +21,6 @@ val ext_dll: string
 val cmo_magic_number: string
 val cma_magic_number: string
 val cmxs_magic_number: string
+
+val ccomp_type: string
+val runtime5: bool
