@@ -462,6 +462,20 @@ parsing/docstrings.cmx : \
 parsing/docstrings.cmi : \
     parsing/parsetree.cmi \
     parsing/location.cmi
+parsing/keywords.cmo : \
+    utils/misc.cmi \
+    parsing/keywords_token.cmi \
+    parsing/keywords.cmi
+parsing/keywords.cmx : \
+    utils/misc.cmx \
+    parsing/keywords_token.cmi \
+    parsing/keywords.cmi
+parsing/keywords.cmi : \
+    parsing/keywords_token.cmi
+parsing/keywords_token.cmi : \
+    parsing/parser.cmi \
+    parsing/location.cmi \
+    parsing/docstrings.cmi
 parsing/language_extension.cmo : \
     utils/misc.cmi \
     utils/language_extension_kernel.cmi \
@@ -477,6 +491,7 @@ parsing/lexer.cmo : \
     parsing/parser.cmi \
     utils/misc.cmi \
     parsing/location.cmi \
+    parsing/keywords.cmi \
     parsing/docstrings.cmi \
     parsing/lexer.cmi
 parsing/lexer.cmx : \
@@ -574,6 +589,7 @@ parsing/pprintast.cmo : \
     utils/misc.cmi \
     parsing/longident.cmi \
     parsing/location.cmi \
+    parsing/keywords.cmi \
     parsing/language_extension.cmi \
     parsing/asttypes.cmi \
     parsing/ast_helper.cmi \
@@ -583,6 +599,7 @@ parsing/pprintast.cmx : \
     utils/misc.cmx \
     parsing/longident.cmx \
     parsing/location.cmx \
+    parsing/keywords.cmx \
     parsing/language_extension.cmx \
     parsing/asttypes.cmi \
     parsing/ast_helper.cmx \
@@ -1139,12 +1156,14 @@ typing/mtype.cmi : \
 typing/oprint.cmo : \
     parsing/pprintast.cmi \
     typing/outcometree.cmi \
+    parsing/keywords.cmi \
     typing/jkind.cmi \
     parsing/asttypes.cmi \
     typing/oprint.cmi
 typing/oprint.cmx : \
     parsing/pprintast.cmx \
     typing/outcometree.cmi \
+    parsing/keywords.cmx \
     typing/jkind.cmx \
     parsing/asttypes.cmi \
     typing/oprint.cmi
@@ -1205,9 +1224,11 @@ typing/parmatch.cmi : \
     typing/env.cmi \
     parsing/asttypes.cmi
 typing/path.cmo : \
+    parsing/keywords.cmi \
     typing/ident.cmi \
     typing/path.cmi
 typing/path.cmx : \
+    parsing/keywords.cmx \
     typing/ident.cmx \
     typing/path.cmi
 typing/path.cmi : \

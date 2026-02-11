@@ -121,6 +121,7 @@ COMPILERLIBS_SOURCES=\
   parsing/ast_mapper.ml \
   parsing/camlinternalMenhirLib.ml \
   parsing/parser.ml \
+  parsing/keywords.ml \
   parsing/lexer.ml \
   parsing/pprintast.ml \
   typing/solver.ml \
