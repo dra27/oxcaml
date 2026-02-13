@@ -13,284 +13,17 @@ module type S1 =
   sig type t_immediate : immediate type t_immediate64 : immediate64 end
 |}];;
 
-(* Same is not true when constraining type vars *)
+(* Same is true when constraining type vars *)
 (* immediate *)
 module type S = sig
   val f_immediate : ('a : immediate). 'a -> 'a -> 'a
 end;;
 [%%expect {|
-Line 2, characters 2-52:
-2 |   val f_immediate : ('a : immediate). 'a -> 'a -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f_immediate
-can't be erased for compatibility with upstream OCaml.
-
 module type S = sig val f_immediate : ('a : immediate). 'a -> 'a -> 'a end
 |}];;
 
-module type S = sig
-  val f_immediate : ('a : immediate) -> 'a -> 'a
-end;;
-[%%expect {|
-Line 2, characters 2-48:
-2 |   val f_immediate : ('a : immediate) -> 'a -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f_immediate
-can't be erased for compatibility with upstream OCaml.
 
-module type S = sig val f_immediate : ('a : immediate). 'a -> 'a -> 'a end
-|}];;
-
-module type S = sig
-  type ('a : immediate) t
-end;;
-[%%expect {|
-Line 2, characters 2-25:
-2 |   type ('a : immediate) t
-      ^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in t
-can't be erased for compatibility with upstream OCaml.
-
-module type S = sig type ('a : immediate) t end
-|}];;
-
-module type S = sig
-  type _ g = | MkG : ('a : immediate). 'a g
-end;;
-[%%expect {|
-Line 2, characters 2-43:
-2 |   type _ g = | MkG : ('a : immediate). 'a g
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in g
-can't be erased for compatibility with upstream OCaml.
-
-module type S = sig type _ g = MkG : ('a : immediate). 'a g end
-|}];;
-
-let f (type a : immediate): a -> a = fun x -> x
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f (type a : immediate): a -> a = fun x -> x
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate). 'a -> 'a = <fun>
-|}];;
-
-let f x = (x : (_ : immediate))
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f x = (x : (_ : immediate))
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate). 'a -> 'a = <fun>
-|}];;
-
-let f v: ((_ : immediate)[@error_message "Custom message"]) = v
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f v: ((_ : immediate)[@error_message "Custom message"]) = v
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate). 'a -> 'a = <fun>
-|}];;
-
-(* immediate64 *)
-module type S = sig
-  val f_immediate64 : ('a : immediate64). 'a -> 'a -> 'a
-end;;
-[%%expect {|
-Line 2, characters 2-56:
-2 |   val f_immediate64 : ('a : immediate64). 'a -> 'a -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f_immediate64
-can't be erased for compatibility with upstream OCaml.
-
-module type S =
-  sig val f_immediate64 : ('a : immediate64). 'a -> 'a -> 'a end
-|}];;
-
-module type S = sig
-  val f_immediate64 : ('a : immediate64) -> 'a -> 'a
-end;;
-[%%expect {|
-Line 2, characters 2-52:
-2 |   val f_immediate64 : ('a : immediate64) -> 'a -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f_immediate64
-can't be erased for compatibility with upstream OCaml.
-
-module type S =
-  sig val f_immediate64 : ('a : immediate64). 'a -> 'a -> 'a end
-|}];;
-
-module type S = sig
-  type ('a : immediate64) t
-end;;
-[%%expect {|
-Line 2, characters 2-27:
-2 |   type ('a : immediate64) t
-      ^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in t
-can't be erased for compatibility with upstream OCaml.
-
-module type S = sig type ('a : immediate64) t end
-|}];;
-
-module type S = sig
-  type _ g = | MkG : ('a : immediate64). 'a g
-end;;
-[%%expect {|
-Line 2, characters 2-45:
-2 |   type _ g = | MkG : ('a : immediate64). 'a g
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in g
-can't be erased for compatibility with upstream OCaml.
-
-module type S = sig type _ g = MkG : ('a : immediate64). 'a g end
-|}];;
-
-let f (type a : immediate64): a -> a = fun x -> x
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f (type a : immediate64): a -> a = fun x -> x
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate64). 'a -> 'a = <fun>
-|}];;
-
-let f x = (x : (_ : immediate64))
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f x = (x : (_ : immediate64))
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate64). 'a -> 'a = <fun>
-|}];;
-
-let f v: ((_ : immediate64)[@error_message "Custom message"]) = v
-[%%expect {|
-Line 1, characters 4-5:
-1 | let f v: ((_ : immediate64)[@error_message "Custom message"]) = v
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate64). 'a -> 'a = <fun>
-|}];;
-
-(* CR layouts: This message should change after we fix the package hack.
-   But it should still be an error under [-extension-universe upstream_compatible]. *)
-module type S = sig
-  type t[@@immediate64]
-end
-
-module type K = sig
-  val f : 'a -> (module S with type t = 'a) -> 'a
-end
-
-[%%expect {|
-module type S = sig type t : immediate64 end
-Line 6, characters 2-49:
-6 |   val f : 'a -> (module S with type t = 'a) -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-module type K =
-  sig val f : ('a : immediate64). 'a -> (module S with type t = 'a) -> 'a end
-|}];;
-
-(* Annotations here do nothing and should be accepted *)
-module type S = sig
-  val f : (int as (_ : immediate)) -> (int as (_ : immediate64))
-end
-
-[%%expect {|
-module type S = sig val f : int -> int end
-|}];;
-
-
-(* Annotation would affect ['a] and should be rejected *)
-module type S = sig
-  type 'b id = 'b
-  val f : ('a id as (_ : immediate)) -> 'a
-end
-
-[%%expect {|
-Line 3, characters 2-42:
-3 |   val f : ('a id as (_ : immediate)) -> 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-module type S = sig type 'b id = 'b val f : ('a : immediate). 'a id -> 'a end
-|}];;
-
-(* Inferring [f] to have an immediate type parameter is enough *)
-module type S = sig
-  type t [@@immediate]
-end
-
-let f (module _ : S with type t = 'a) (x : 'a) = x
-;;
-
-[%%expect{|
-module type S = sig type t : immediate end
-Line 5, characters 4-5:
-5 | let f (module _ : S with type t = 'a) (x : 'a) = x
-        ^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in f
-can't be erased for compatibility with upstream OCaml.
-
-val f : ('a : immediate). (module S with type t = 'a) -> 'a -> 'a = <fun>
-|}]
-
-(* CR layouts: this example should raise a warning, but it does not.
-   It's quite complicated, and missing it only means that this error
-   will be caught by the upstream compiler later. We have decided that
-   fixing this is not worth the effort. *)
-module type S = sig
-  type t [@@immediate]
-end
-
-let x =
-  ignore (fun (module _ : S with type t = 'a) (_ : 'a) -> 10);
-  15
-;;
-
-[%%expect{|
-module type S = sig type t : immediate end
-val x : int = 15
-|}]
-
-(* CR layouts: this example should raise a warning, but it does not.
-   It's quite complicated, and missing it only means that this error
-   will be caught by the upstream compiler later. We have decided that
-   fixing this is not worth the effort. *)
-let y =
-  ignore (fun (type a : immediate) (x : a) ->
-    let module _ : S = struct
-      type t = a
-    end in
-    ());
-  4
-;;
-
-[%%expect{|
-val y : int = 4
-|}]
-
-(* Other annotations are not effected by this flag *)
+(* Other annotations are not affected by this flag *)
 module type S = sig
   val f_any : ('a : any). ('a : any) -> (('a : any)[@error_message ""])
   type ('a : any) t_any : any
@@ -585,13 +318,10 @@ external f_4 : M3.t -> M3.t = "%identity" [@@unboxed]
 (* Disabling warnings *)
 
 module M4 : sig
-  [@@@warning "-187"]
   type ('a : immediate) t = Something of 'a
 
   val f : ('a : immediate). 'a t -> 'a
 end = struct
-  [@@@warning "-187"]
-
   type ('a : immediate) t = Something of 'a
 
   let f (Something x) = x
@@ -605,7 +335,7 @@ module M4 :
   end
 |}]
 
-module[@warning "-187"] M5 = struct
+module M5 = struct
   let f (type a : immediate): a -> a = fun x -> x
 end;;
 
@@ -616,47 +346,28 @@ module M5 : sig val f : ('a : immediate). 'a -> 'a end
 (* Just disabling the warning on the expression level doesn't work
    if the declaration has a type variable annotation. *)
 
-let[@warning "-187"] fails (type a : immediate): a -> a = fun x -> x
+let fails (type a : immediate): a -> a = fun x -> x
 ;;
 
 [%%expect{|
-Line 1, characters 21-26:
-1 | let[@warning "-187"] fails (type a : immediate): a -> a = fun x -> x
-                         ^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in fails
-can't be erased for compatibility with upstream OCaml.
-
 val fails : ('a : immediate). 'a -> 'a = <fun>
 |}]
 
 module type S1 = sig
-  type ('a : immediate) fails = int [@@warning "-187"]
+  type ('a : immediate) fails = int
 end;;
 
 [%%expect{|
-Line 2, characters 2-54:
-2 |   type ('a : immediate) fails = int [@@warning "-187"]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in fails
-can't be erased for compatibility with upstream OCaml.
-
 module type S1 = sig type ('a : immediate) fails = int end
 |}]
 
 (* Disabling the warning just in the signature isn't sufficient. *)
 module M6 : sig
-  [@@@warning "-187"]
   type ('a : immediate) t = 'a * 'a
 end = struct
   type ('a : immediate) t = 'a * 'a
 end;;
 [%%expect{|
-Line 5, characters 2-35:
-5 |   type ('a : immediate) t = 'a * 'a
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 187 [incompatible-with-upstream]: Usage of layout immediate/immediate64 in t
-can't be erased for compatibility with upstream OCaml.
-
 module M6 : sig type ('a : immediate) t = 'a * 'a end
 |}]
 
