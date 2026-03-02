@@ -364,7 +364,6 @@ type primitive =
   (* Integer to external pointer *)
   | Pint_as_pointer of locality_mode
   (* Atomic operations *)
-<<<<<<< oxcaml
   | Patomic_load_field of {immediate_or_pointer : immediate_or_pointer}
   | Patomic_set_field of {immediate_or_pointer : immediate_or_pointer}
   | Patomic_exchange_field of {immediate_or_pointer : immediate_or_pointer}
@@ -377,14 +376,6 @@ type primitive =
   | Patomic_land_field
   | Patomic_lor_field
   | Patomic_lxor_field
-||||||| upstream-base
-  | Patomic_load of {immediate_or_pointer : immediate_or_pointer}
-  | Patomic_exchange
-  | Patomic_cas
-  | Patomic_fetch_add
-=======
-  | Patomic_load
->>>>>>> upstream-incoming
   (* Inhibition of optimisation *)
   | Popaque of layout
   (* Statically-defined probes *)
