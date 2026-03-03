@@ -32,7 +32,7 @@
     statically known and control flow cannot escape function boundaries.
 *)
 
-type t
+type t = private int
 
 include Identifiable.S with type t := t
 
@@ -60,3 +60,6 @@ val get_and_incr : sequence -> t
     This function should only be used when interfacing with legacy code
     that provides raw integers. *)
 val of_int_unsafe : int -> t
+
+(** Dummy label, guaranteed to be less than all valid labels. *)
+val dummy : t
