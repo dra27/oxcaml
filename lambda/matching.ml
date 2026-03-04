@@ -740,16 +740,10 @@ module Default_environment : sig
 
   val pp_section : Format.formatter -> t -> unit
 end = struct
-<<<<<<< oxcaml
-  type t = (Static_label.t * matrix) list
-||||||| upstream-base
-  type t = (int * matrix) list
-=======
   type t = {
-    env: (int * matrix) list;
+    env: (Static_label.t * matrix) list;
     final_exit: int;
   }
->>>>>>> upstream-incoming
   (** All matrices in the list should have the same arity -- their rows should
       have the same number of columns -- as it should match the arity of the
       current scrutiny vector. *)
@@ -961,16 +955,10 @@ module Jumps : sig
 
   val pp_section : Format.formatter -> t -> unit
 end = struct
-<<<<<<< oxcaml
-  type t = (Static_label.t * Context.t) list
-||||||| upstream-base
-  type t = (int * Context.t) list
-=======
   type t = {
-    env : (int * Context.t) list;
+    env : (Static_label.t * Context.t) list;
     partial : partial;
   }
->>>>>>> upstream-incoming
 
   let partial { partial = p; _ } = p
 
@@ -1035,31 +1023,6 @@ end = struct
     else
       { jumps with env = add jumps.env }
 
-<<<<<<< oxcaml
-  let rec union (env1 : t) env2 =
-    match (env1, env2) with
-    | [], _ -> env2
-    | _, [] -> env1
-    | ((i1, pss1) as x1) :: rem1, ((i2, pss2) as x2) :: rem2 ->
-        if Static_label.equal i1 i2 then
-          (i1, Context.union pss1 pss2) :: union rem1 rem2
-        else if Static_label.compare i1 i2 > 0 then
-          x1 :: union rem1 env2
-        else
-          x2 :: union env1 rem2
-||||||| upstream-base
-  let rec union (env1 : t) env2 =
-    match (env1, env2) with
-    | [], _ -> env2
-    | _, [] -> env1
-    | ((i1, pss1) as x1) :: rem1, ((i2, pss2) as x2) :: rem2 ->
-        if i1 = i2 then
-          (i1, Context.union pss1 pss2) :: union rem1 rem2
-        else if i1 > i2 then
-          x1 :: union rem1 env2
-        else
-          x2 :: union env1 rem2
-=======
   let singleton i ctx =
     (* Total: a singleton only jumps to exit [i],
        not to the final exit. *)
@@ -1071,9 +1034,9 @@ end = struct
       | [], _ -> env2
       | _, [] -> env1
       | ((i1, pss1) as x1) :: rem1, ((i2, pss2) as x2) :: rem2 ->
-          if i1 = i2 then
+          if Static_label.equal i1 i2 then
             (i1, Context.union pss1 pss2) :: union rem1 rem2
-          else if i1 > i2 then
+          else if Static_label.compare i1 i2 > 0 then
             x1 :: union rem1 env2
           else
             x2 :: union env1 rem2
@@ -1085,7 +1048,6 @@ end = struct
         | Partial, _ | _, Partial -> Partial
       );
     }
->>>>>>> upstream-incoming
 
   let rec merge = function
     | env1 :: env2 :: rem -> union env1 env2 :: merge rem
@@ -1224,19 +1186,9 @@ let arg_of_pure = function
 
 type handler = {
   provenance : matrix;
-<<<<<<< oxcaml
   exit : Static_label.t;
-  vars : (Ident.t * Lambda.debug_uid * Lambda.layout) list;
-  pm : initial_clause pattern_matching
-||||||| upstream-base
-  exit : int;
-  vars : (Ident.t * Lambda.value_kind) list;
-  pm : initial_clause pattern_matching
-=======
-  exit : int;
   vars : (Ident.t * Lambda.value_kind) list;
   pm : (args, initial_clause) pattern_matching
->>>>>>> upstream-incoming
 }
 
 type ('args, 'head_pat, 'matrix) pm_or_compiled = {
@@ -3374,40 +3326,21 @@ let reintroduce_fail sw =
       in
       List.iter seen sw.sw_consts;
       List.iter seen sw.sw_blocks;
-<<<<<<< oxcaml
-      let i_max = ref None and max = ref (-1) in
-      Static_label.Tbl.iter
-||||||| upstream-base
-      let i_max = ref (-1) and max = ref (-1) in
-      Hashtbl.iter
-=======
       let c_max = ref (-1) in
-      let i_max = ref max_int in
-      Hashtbl.iter
->>>>>>> upstream-incoming
+      let i_max = ref None in
+      Static_label.Tbl.iter
         (fun i c ->
-<<<<<<< oxcaml
-          if c > !max then (
-            i_max := Some i;
-            max := c
-||||||| upstream-base
-          if c > !max then (
-            i_max := i;
-            max := c
-=======
           if c > !c_max then (
-            i_max := i;
+            i_max := Some i;
             c_max := c
           ) else if c = !c_max then (
            (* Pick the miminal [i] which has maximal [c], and not just
               the first [i], as the Hashtbl iteration order is not
               deterministic: see #14088. *)
-            i_max := min i !i_max;
->>>>>>> upstream-incoming
+            i_max := Static_label.min i (Option.get !i_max);
           ))
         t;
-<<<<<<< oxcaml
-      if !max >= 3 then
+      if !c_max >= 3 then
         match !i_max with
         | Some default ->
             let remove =
@@ -3422,35 +3355,6 @@ let reintroduce_fail sw =
               sw_failaction = Some (make_exit default)
             }
         | None -> sw
-||||||| upstream-base
-      if !max >= 3 then
-        let default = !i_max in
-        let remove =
-          List.filter (fun (_, lam) ->
-              match as_simple_exit lam with
-              | Some j -> j <> default
-              | None -> true)
-        in
-        { sw with
-          sw_consts = remove sw.sw_consts;
-          sw_blocks = remove sw.sw_blocks;
-          sw_failaction = Some (make_exit default)
-        }
-=======
-      if !c_max >= 3 then
-        let default = !i_max in
-        let remove =
-          List.filter (fun (_, lam) ->
-              match as_simple_exit lam with
-              | Some j -> j <> default
-              | None -> true)
-        in
-        { sw with
-          sw_consts = remove sw.sw_consts;
-          sw_blocks = remove sw.sw_blocks;
-          sw_failaction = Some (make_exit default)
-        }
->>>>>>> upstream-incoming
       else
         sw
   | Some _ -> sw
