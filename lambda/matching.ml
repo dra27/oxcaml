@@ -222,17 +222,9 @@ end = struct
     | Tpat_any
     | Tpat_var _ ->
         p
-<<<<<<< oxcaml
     | Tpat_alias (q, id, s, uid, sort, mode, ty) ->
         { p with pat_desc =
             Tpat_alias (simpl_under_orpat q, id, s, uid, sort, mode, ty) }
-||||||| upstream-base
-    | Tpat_alias (q, id, s) ->
-        { p with pat_desc = Tpat_alias (simpl_under_orpat q, id, s) }
-=======
-    | Tpat_alias (q, id, s, uid, ty) ->
-        { p with pat_desc = Tpat_alias (simpl_under_orpat q, id, s, uid, ty) }
->>>>>>> upstream-incoming
     | Tpat_or (p1, p2, o) ->
         let p1, p2 = (simpl_under_orpat p1, simpl_under_orpat p2) in
         if le_pat p1 p2 then
@@ -258,18 +250,9 @@ end = struct
       in
       match p.pat_desc with
       | `Any -> stop p `Any
-<<<<<<< oxcaml
       | `Var (id, s, uid, sort, mode) ->
         continue p (`Alias (Patterns.omega, id, s, uid, sort, mode, p.pat_type))
       | `Alias (p, id, _, duid, sort, _, _) ->
-||||||| upstream-base
-      | `Var (id, s) -> continue p (`Alias (Patterns.omega, id, s))
-      | `Alias (p, id, _) ->
-=======
-      | `Var (id, s, uid) ->
-          continue p (`Alias (Patterns.omega, id, s, uid, p.pat_type))
-      | `Alias (p, id, _, _, _) ->
->>>>>>> upstream-incoming
           aux
             ( (General.view p, patl),
               bind_alias p id duid ~arg
@@ -325,7 +308,6 @@ end = struct
       match p.pat_desc with
       | `Any -> `Any
       | `Constant cst -> `Constant cst
-<<<<<<< oxcaml
       | `Unboxed_unit -> `Unboxed_unit
       | `Unboxed_bool b -> `Unboxed_bool b
       | `Tuple ps ->
@@ -333,12 +315,6 @@ end = struct
       | `Unboxed_tuple ps ->
           `Unboxed_tuple
             (List.map (fun (label, p, sort) -> label, alpha_pat env p, sort) ps)
-||||||| upstream-base
-      | `Tuple ps -> `Tuple (List.map (alpha_pat env) ps)
-=======
-      | `Tuple ps ->
-          `Tuple (List.map (fun (label, p) -> label, alpha_pat env p) ps)
->>>>>>> upstream-incoming
       | `Construct (cstr, cst_descr, args) ->
           `Construct (cstr, cst_descr, List.map (alpha_pat env) args)
       | `Variant (cstr, argo, row_desc) ->
@@ -346,16 +322,10 @@ end = struct
       | `Record (fields, closed) ->
           let alpha_field env (lid, l, p) = (lid, l, alpha_pat env p) in
           `Record (List.map (alpha_field env) fields, closed)
-<<<<<<< oxcaml
       | `Record_unboxed_product (fields, closed) ->
           let alpha_field env (lid, l, p) = (lid, l, alpha_pat env p) in
           `Record_unboxed_product (List.map (alpha_field env) fields, closed)
       | `Array (am, arg_sort, ps) -> `Array (am, arg_sort, List.map (alpha_pat env) ps)
-||||||| upstream-base
-      | `Array ps -> `Array (List.map (alpha_pat env) ps)
-=======
-      | `Array (am, ps) -> `Array (am, List.map (alpha_pat env) ps)
->>>>>>> upstream-incoming
       | `Lazy p -> `Lazy (alpha_pat env p)
     in
     { p with pat_desc }
@@ -392,25 +362,11 @@ end = struct
       match p.pat_desc with
       | `Or (p1, p2, _) ->
           split_explode p1 aliases (split_explode p2 aliases rem)
-<<<<<<< oxcaml
       | `Alias (p, id, _, _, _, _, _) -> split_explode p (id :: aliases) rem
       | `Var (id, str, uid, sort, mode) ->
-||||||| upstream-base
-      | `Alias (p, id, _) -> split_explode p (id :: aliases) rem
-      | `Var (id, str) ->
-=======
-      | `Alias (p, id, _, _, _) -> split_explode p (id :: aliases) rem
-      | `Var (id, str, uid) ->
->>>>>>> upstream-incoming
           explode
             { p with pat_desc =
-<<<<<<< oxcaml
                 `Alias (Patterns.omega, id, str, uid, sort, mode, p.pat_type) }
-||||||| upstream-base
-            { p with pat_desc = `Alias (Patterns.omega, id, str) }
-=======
-                       `Alias (Patterns.omega, id, str, uid, p.pat_type) }
->>>>>>> upstream-incoming
             aliases rem
       | #view as view ->
           (* We are doing two things here:
@@ -518,42 +474,12 @@ let matcher discr (p : Simple.pattern) rem =
       (* NB: may_equal_constr considers (potential) constructor rebinding;
           Types.may_equal_constr does check that the arities are the same,
           preserving row-size coherence. *)
-<<<<<<< oxcaml
-      yesif (Types.may_equal_constr cstr cstr')
-||||||| upstream-base
-      yesif (Types.may_equal_constr cstr cstr')
-  | Construct _, (Constant _ | Variant _ | Lazy | Array _ | Record _ | Tuple _)
-    ->
-      no ()
-=======
       yesif (Data_types.may_equal_constr cstr cstr')
-  | Construct _, (Constant _ | Variant _ | Lazy | Array _ | Record _ | Tuple _)
-    ->
-      no ()
->>>>>>> upstream-incoming
   | Variant { tag; has_arg }, Variant { tag = tag'; has_arg = has_arg' } ->
       yesif (tag = tag' && has_arg = has_arg')
-<<<<<<< oxcaml
   | Array (am1, _, n1), Array (am2, _, n2) -> yesif (am1 = am2 && n1 = n2)
   | Unboxed_unit, Unboxed_unit -> yes ()
   | Unboxed_bool b1, Unboxed_bool b2 -> yesif (Bool.equal b1 b2)
-||||||| upstream-base
-  | Variant _, (Constant _ | Construct _ | Lazy | Array _ | Record _ | Tuple _)
-    ->
-      no ()
-  | Array n1, Array n2 -> yesif (n1 = n2)
-  | Array _, (Constant _ | Construct _ | Variant _ | Lazy | Record _ | Tuple _)
-    ->
-      no ()
-=======
-  | Variant _, (Constant _ | Construct _ | Lazy | Array _ | Record _ | Tuple _)
-    ->
-      no ()
-  | Array (am1, n1), Array (am2, n2) -> yesif (am1 = am2 && n1 = n2)
-  | Array _, (Constant _ | Construct _ | Variant _ | Lazy | Record _ | Tuple _)
-    ->
-      no ()
->>>>>>> upstream-incoming
   | Tuple n1, Tuple n2 -> yesif (n1 = n2)
   | Unboxed_tuple l1, Unboxed_tuple l2 ->
     yesif (List.for_all2 (fun (lbl1, _) (lbl2, _) -> lbl1 = lbl2) l1 l2)
@@ -697,13 +623,7 @@ end = struct
           match p.pat_desc with
           | `Or (p1, p2, _) ->
               filter_rec ((left, p1, right) :: (left, p2, right) :: rem)
-<<<<<<< oxcaml
           | `Alias (p, _, _, _, _, _, _) -> filter_rec ((left, p, right) :: rem)
-||||||| upstream-base
-          | `Alias (p, _, _) -> filter_rec ((left, p, right) :: rem)
-=======
-          | `Alias (p, _, _, _, _) -> filter_rec ((left, p, right) :: rem)
->>>>>>> upstream-incoming
           | `Var _ -> filter_rec ((left, Patterns.omega, right) :: rem)
           | #Simple.view as view -> (
               let p = { p with pat_desc = view } in
@@ -753,13 +673,7 @@ let rec flatten_pat_line size p k =
   | Tpat_tuple args -> (List.map snd args) :: k
   | Tpat_or (p1, p2, _) ->
       flatten_pat_line size p1 (flatten_pat_line size p2 k)
-<<<<<<< oxcaml
   | Tpat_alias (p, _, _, _, _, _, _) ->
-||||||| upstream-base
-  | Tpat_alias (p, _, _) ->
-=======
-  | Tpat_alias (p, _, _, _, _) ->
->>>>>>> upstream-incoming
       (* Note: we are only called from flatten_matrix,
          which is itself only ever used in places
          where variables do not matter (default environments,
@@ -806,17 +720,7 @@ let flatten_matrix size pss =
 module Default_environment : sig
   type t
 
-<<<<<<< oxcaml
-  val is_empty : t -> bool
-
   val pop : t -> ((Static_label.t * matrix) * t) option
-||||||| upstream-base
-  val is_empty : t -> bool
-
-  val pop : t -> ((int * matrix) * t) option
-=======
-  val pop : t -> ((int * matrix) * t) option
->>>>>>> upstream-incoming
 
   val empty : final_exit:int -> t
 
@@ -867,13 +771,7 @@ end = struct
       | (p, ps) :: rem -> (
           let p = General.view p in
           match p.pat_desc with
-<<<<<<< oxcaml
           | `Alias (p, _, _, _, _, _, _) -> filter_rec ((p, ps) :: rem)
-||||||| upstream-base
-          | `Alias (p, _, _) -> filter_rec ((p, ps) :: rem)
-=======
-          | `Alias (p, _, _, _, _) -> filter_rec ((p, ps) :: rem)
->>>>>>> upstream-incoming
           | `Var _ -> filter_rec ((Patterns.omega, ps) :: rem)
           | `Or (p1, p2, _) -> filter_rec_or p1 p2 ps rem
           | #Simple.view as view -> (
@@ -1074,29 +972,7 @@ end = struct
   }
 >>>>>>> upstream-incoming
 
-<<<<<<< oxcaml
-  let pp ppf (env : t) =
-    if env = [] then Format.fprintf ppf "empty" else
-    Format.pp_print_list ~pp_sep:Format.pp_print_cut (fun ppf (i, ctx) ->
-      Format.fprintf ppf
-        "jump for %a@,\
-         %a"
-        Static_label.format i
-        Context.pp ctx
-    ) ppf env
-||||||| upstream-base
-  let pp ppf (env : t) =
-    if env = [] then Format.fprintf ppf "empty" else
-    Format.pp_print_list ~pp_sep:Format.pp_print_cut (fun ppf (i, ctx) ->
-      Format.fprintf ppf
-        "jump for %d@,\
-         %a"
-        i
-        Context.pp ctx
-    ) ppf env
-=======
   let partial { partial = p; _ } = p
->>>>>>> upstream-incoming
 
   let pp ppf ({ env; partial } : t) =
     Format.fprintf ppf "@[<v 2>JUMPS:%t@]"
@@ -1108,9 +984,9 @@ end = struct
            Format.fprintf ppf " (%a)@," pp_partial partial;
            Format.pp_print_list ~pp_sep:Format.pp_print_cut (fun ppf (i, ctx) ->
              Format.fprintf ppf
-               "jump for %d@,\
+               "jump for %a@,\
                 %a"
-               i
+               Static_label.format i
                Context.pp ctx
            ) ppf env
          end)
@@ -1121,22 +997,10 @@ end = struct
   let extract i jumps =
     let rec extract i = function
     | [] -> (Context.empty, [])
-<<<<<<< oxcaml
-    | ((j, pss) as x) :: rem as all ->
-        if Static_label.equal i j then
-          (pss, rem)
-        else if Static_label.compare j i < 0 then
-||||||| upstream-base
-    | ((j, pss) as x) :: rem as all ->
-        if i = j then
-          (pss, rem)
-        else if j < i then
-=======
     | ((j, ctx) as x) :: rem as all ->
-        if i = j then
+        if Static_label.equal i j then
           (ctx, rem)
-        else if j < i then
->>>>>>> upstream-incoming
+        else if Static_label.compare j i < 0 then
           (Context.empty, all)
         else
           let r, rem = extract i rem in
@@ -1688,13 +1552,7 @@ let rec omega_like p =
   | Tpat_any
   | Tpat_var _ ->
       true
-<<<<<<< oxcaml
   | Tpat_alias (p, _, _, _, _, _, _) -> omega_like p
-||||||| upstream-base
-  | Tpat_alias (p, _, _) -> omega_like p
-=======
-  | Tpat_alias (p, _, _, _, _) -> omega_like p
->>>>>>> upstream-incoming
   | Tpat_or (p1, p2, _) -> omega_like p1 || omega_like p2
   | _ -> false
 
@@ -2116,19 +1974,9 @@ and precompile_or (cls : Simple.clause list) ors args def k =
               (* variables bound in the or-pattern
                  that are used in the orpm actions *)
               Typedtree.pat_bound_idents_full orp
-<<<<<<< oxcaml
               |> List.filter (fun (id, _, _, _, _) -> Ident.Set.mem id pm_fv)
               |> List.map (fun (id, _, ty, uid, id_sort) ->
                   (id, uid, Typeopt.layout orp.pat_env orp.pat_loc id_sort ty))
-||||||| upstream-base
-              |> List.filter (fun (id, _, _) -> Ident.Set.mem id pm_fv)
-              |> List.map (fun (id, _, ty) ->
-                     (id, Typeopt.value_kind orp.pat_env ty))
-=======
-              |> List.filter (fun (id, _, _, _) -> Ident.Set.mem id pm_fv)
-              |> List.map (fun (id, _, ty, _) ->
-                     (id, Typeopt.value_kind orp.pat_env ty))
->>>>>>> upstream-incoming
             in
             let or_num = next_raise_count () in
             let new_patl = Patterns.omega_list patl in
@@ -3089,24 +2937,12 @@ let divide_record_unboxed_product all_labels ~scopes head ctx pm =
 (* Matching against an array pattern *)
 
 let get_key_array = function
-<<<<<<< oxcaml
   | { pat_desc = Tpat_array (_, _, patl) } -> List.length patl
-||||||| upstream-base
-  | { pat_desc = Tpat_array patl } -> List.length patl
-=======
-  | { pat_desc = Tpat_array (_, patl) } -> List.length patl
->>>>>>> upstream-incoming
   | _ -> assert false
 
 let get_pat_args_array p rem =
   match p with
-<<<<<<< oxcaml
   | { pat_desc = Tpat_array (_, _, patl) } -> patl @ rem
-||||||| upstream-base
-  | { pat_desc = Tpat_array patl } -> patl @ rem
-=======
-  | { pat_desc = Tpat_array (_, patl) } -> patl @ rem
->>>>>>> upstream-incoming
   | _ -> assert false
 
 <<<<<<< oxcaml
@@ -3121,13 +2957,7 @@ let get_expr_args_array ~scopes kind head { arg; mut } rem =
 >>>>>>> upstream-incoming
     let open Patterns.Head in
     match head.pat_desc with
-<<<<<<< oxcaml
     | Array (am, arg_sort, len) -> am, arg_sort, len
-||||||| upstream-base
-    | Array len -> len
-=======
-    | Array (am, len) -> am, len
->>>>>>> upstream-incoming
     | _ -> assert false
   in
   let arg_sort = Jkind.Sort.default_for_transl_and_get arg_sort in
@@ -3749,19 +3579,9 @@ let as_interval fail ?(low = min_int) ?(high = max_int) l =
     | None -> as_interval_nofail l
     | Some act -> as_interval_canfail act ~low ~high l )
 
-<<<<<<< oxcaml
-let call_switcher kind loc fail arg low high int_lambda_list =
-  let edges, (cases, actions) = as_interval fail low high int_lambda_list in
-  Switcher.zyva loc kind edges arg cases actions
-||||||| upstream-base
-let call_switcher loc fail arg low high int_lambda_list =
-  let edges, (cases, actions) = as_interval fail low high int_lambda_list in
-  Switcher.zyva loc edges arg cases actions
-=======
-let call_switcher loc fail arg ?low ?high int_lambda_list =
+let call_switcher kind loc fail arg ?low ?high int_lambda_list =
   let edges, (cases, actions) = as_interval fail ?low ?high int_lambda_list in
-  Switcher.zyva loc edges arg cases actions
->>>>>>> upstream-incoming
+  Switcher.zyva loc kind edges arg cases actions
 
 let rec list_as_pat = function
   | [] -> fatal_error "Matching.list_as_pat"
@@ -4080,8 +3900,7 @@ let combine_constant value_kind loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-<<<<<<< oxcaml
-        call_switcher value_kind loc fail arg min_int max_int int_lambda_list
+        call_switcher value_kind loc fail arg int_lambda_list
     | Const_int8 _ ->
         let int_lambda_list =
           List.map
@@ -4104,11 +3923,6 @@ let combine_constant value_kind loc arg cst partial ctx def
         let max_excl = 1 lsl 15 in
         call_switcher value_kind loc fail arg
           (-max_excl) (max_excl - 1) int_lambda_list
-||||||| upstream-base
-        call_switcher loc fail arg min_int max_int int_lambda_list
-=======
-        call_switcher loc fail arg int_lambda_list
->>>>>>> upstream-incoming
     | Const_char _ ->
         let int_lambda_list =
           List.map
@@ -4117,13 +3931,7 @@ let combine_constant value_kind loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-<<<<<<< oxcaml
-        call_switcher value_kind loc fail arg 0 255 int_lambda_list
-||||||| upstream-base
-        call_switcher loc fail arg 0 255 int_lambda_list
-=======
-        call_switcher loc fail arg ~low:0 ~high:255 int_lambda_list
->>>>>>> upstream-incoming
+        call_switcher value_kind loc fail arg ~low:0 ~high:255 int_lambda_list
     | Const_string _ ->
         (* Note as the bytecode compiler may resort to dichotomic search,
    the clauses of stringswitch  are sorted with duplicates removed.
@@ -4728,33 +4536,15 @@ let combine_constructor loc arg pat_env cstr partial ctx def actions =
     combine_regular_constructor loc arg cstr partial ctx def actions
 >>>>>>> upstream-incoming
 
-<<<<<<< oxcaml
 let make_test_sequence_variant_constant
       value_kind loc fail arg int_lambda_list =
   let _, (cases, actions) =
-    as_interval fail min_int max_int int_lambda_list
+    as_interval fail int_lambda_list
   in
   Switcher.test_sequence loc value_kind arg cases actions
-||||||| upstream-base
-let make_test_sequence_variant_constant fail arg int_lambda_list =
-  let _, (cases, actions) = as_interval fail min_int max_int int_lambda_list in
-  Switcher.test_sequence arg cases actions
-=======
-let make_test_sequence_variant_constant fail arg int_lambda_list =
-  let _, (cases, actions) = as_interval fail int_lambda_list in
-  Switcher.test_sequence arg cases actions
->>>>>>> upstream-incoming
 
-<<<<<<< oxcaml
 let call_switcher_variant_constant kind loc fail arg int_lambda_list =
-  call_switcher kind loc fail arg min_int max_int int_lambda_list
-||||||| upstream-base
-let call_switcher_variant_constant loc fail arg int_lambda_list =
-  call_switcher loc fail arg min_int max_int int_lambda_list
-=======
-let call_switcher_variant_constant loc fail arg int_lambda_list =
-  call_switcher loc fail arg int_lambda_list
->>>>>>> upstream-incoming
+  call_switcher kind loc fail arg int_lambda_list
 
 let call_switcher_variant_constr value_kind loc fail arg pat_barrier int_lambda_list =
   let v = Ident.create_local "variant" in
@@ -4765,17 +4555,9 @@ let call_switcher_variant_constr value_kind loc fail arg pat_barrier int_lambda_
     ( str,
       Lambda.layout_int,
       v,
-<<<<<<< oxcaml
       v_duid,
       Lprim (nonconstant_variant_field ubr 0, [ arg ], loc),
-      call_switcher value_kind loc fail (Lvar v) min_int max_int int_lambda_list )
-||||||| upstream-base
-      Lprim (Pfield (0, Pointer, Immutable), [ arg ], loc),
-      call_switcher loc fail (Lvar v) min_int max_int int_lambda_list )
-=======
-      Lprim (Pfield (0, Pointer, Immutable), [ arg ], loc),
-      call_switcher loc fail (Lvar v) int_lambda_list )
->>>>>>> upstream-incoming
+      call_switcher value_kind loc fail (Lvar v) int_lambda_list )
 
 let combine_variant value_kind loc row arg pat_barrier partial ctx def
     (tag_lambda_list, total1, _pats)
@@ -4855,13 +4637,7 @@ let combine_array value_kind loc arg kind partial ctx def (len_lambda_list, tota
     let newvar = Ident.create_local "len" in
     let newvar_duid = Lambda.debug_uid_none in
     let switch =
-<<<<<<< oxcaml
-      call_switcher value_kind loc fail (Lvar newvar) 0 max_int len_lambda_list
-||||||| upstream-base
-      call_switcher loc fail (Lvar newvar) 0 max_int len_lambda_list
-=======
-      call_switcher loc fail (Lvar newvar) ~low:0 len_lambda_list
->>>>>>> upstream-incoming
+      call_switcher value_kind loc fail (Lvar newvar) ~low:0 len_lambda_list
     in
     bind_with_layout Alias (newvar, newvar_duid, Lambda.layout_int)
       (Lprim (Parraylength kind, [ arg ], loc)) switch
@@ -5107,16 +4883,8 @@ let rec comp_match_handlers layout comp_fun partial ctx first_match next_matches
 let rec name_pattern default = function
   | ((pat, _), _) :: rem -> (
       match pat.pat_desc with
-<<<<<<< oxcaml
       | Tpat_var (id, _, uid, _, _) -> id, uid
       | Tpat_alias (_, id, _, uid, _, _, _) -> id, uid
-||||||| upstream-base
-      | Tpat_var (id, _) -> id
-      | Tpat_alias (_, id, _) -> id
-=======
-      | Tpat_var (id, _, _) -> id
-      | Tpat_alias (_, id, _, _, _) -> id
->>>>>>> upstream-incoming
       | _ -> name_pattern default rem
     )
   | _ -> Ident.create_local default, Lambda.debug_uid_none
@@ -6221,26 +5989,14 @@ let assign_pat ~scopes body_layout opt nraise catch_ids loc pat pat_sort lam =
     | Tpat_tuple patl, Lprim (Pmakeblock _, lams, _) ->
         opt := true;
         List.fold_left2
-<<<<<<< oxcaml
           (fun acc (_, pat) lam ->
              collect Jkind.Sort.Const.for_tuple_element acc pat lam)
-||||||| upstream-base
-        List.fold_left2 collect acc patl lams
-=======
-          (fun acc (_, pat) lam -> collect acc pat lam)
->>>>>>> upstream-incoming
           acc patl lams
     | Tpat_tuple patl, Lconst (Const_block (_, scl)) ->
         opt := true;
-<<<<<<< oxcaml
         let collect_const acc (_, pat) sc =
           collect Jkind.Sort.Const.for_tuple_element acc pat (Lconst sc)
         in
-||||||| upstream-base
-        let collect_const acc pat sc = collect acc pat (Lconst sc) in
-=======
-        let collect_const acc (_, pat) sc = collect acc pat (Lconst sc) in
->>>>>>> upstream-incoming
         List.fold_left2 collect_const acc patl scl
     | _ ->
         (* pattern idents will be bound in staticcatch (let body), so we
@@ -6275,14 +6031,8 @@ let for_let ~scopes ~arg_sort ~return_layout loc param mutable_flag pat body =
       (* This eliminates a useless variable (and stack slot in bytecode)
          for "let _ = ...". See #6865. *)
       Lsequence (param, body)
-<<<<<<< oxcaml
   | Tpat_var (id, _, duid, _, _)
   | Tpat_alias ({ pat_desc = Tpat_any }, id, _, duid, _, _, _) ->
-||||||| upstream-base
-  | Tpat_var (id, _) | Tpat_alias ({ pat_desc = Tpat_any }, id, _) ->
-=======
-  | Tpat_var (id, _, _) | Tpat_alias ({ pat_desc = Tpat_any }, id, _, _, _) ->
->>>>>>> upstream-incoming
       (* Fast path, and keep track of simple bindings to unboxable numbers.
 
          Note: the (Tpat_alias (Tpat_any, id)) case needs to be
@@ -6301,23 +6051,11 @@ let for_let ~scopes ~arg_sort ~return_layout loc param mutable_flag pat body =
       let catch_ids = pat_bound_idents_full pat in
       let ids_with_kinds =
         List.map
-<<<<<<< oxcaml
           (fun (id, _, typ, uid, sort) ->
              (id, uid, Typeopt.layout pat.pat_env pat.pat_loc sort typ))
-||||||| upstream-base
-          (fun (id, _, typ) -> (id, Typeopt.value_kind pat.pat_env typ))
-=======
-          (fun (id, _, typ, _) -> (id, Typeopt.value_kind pat.pat_env typ))
->>>>>>> upstream-incoming
           catch_ids
       in
-<<<<<<< oxcaml
       let ids = List.map (fun (id, _, _, _, _) -> id) catch_ids in
-||||||| upstream-base
-      let ids = List.map (fun (id, _, _) -> id) catch_ids in
-=======
-      let ids = List.map (fun (id, _, _, _) -> id) catch_ids in
->>>>>>> upstream-incoming
       let bind =
         map_return (assign_pat ~scopes return_layout opt nraise ids loc pat
                       arg_sort)
