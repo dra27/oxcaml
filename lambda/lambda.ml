@@ -1767,7 +1767,10 @@ let transl_prim modname field =
       match Env.find_value_by_name_lazy (Longident.Lident field) env with
       | exception Not_found ->
           fatal_errorf "Primitive %s.%s not found." modname field
-      | path, _ -> transl_value_path Loc_unknown env path
+      | path, _ ->
+        (* Loc_unknown is appropriate here: this references a compiler-internal
+            primitive with no corresponding user source location. *)
+        transl_value_path Loc_unknown env path
     )
 
 let block_of_module_representation ~loc = function

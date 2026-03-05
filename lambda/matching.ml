@@ -1439,14 +1439,8 @@ let can_group discr pat =
   | Constant (Const_unboxed_int64 _), Constant (Const_unboxed_int64 _)
   | Constant (Const_unboxed_nativeint _), Constant (Const_unboxed_nativeint _)->
       true
-<<<<<<< oxcaml
-  | Construct { cstr_tag = Extension _ as discr_tag }, Construct pat_cstr
-||||||| upstream-base
-  | Construct { cstr_tag = Cstr_extension _ as discr_tag }, Construct pat_cstr
-=======
-  | Construct { cstr_tag = Cstr_extension (p1, _) },
-    Construct { cstr_tag = Cstr_extension (p2, _) }
->>>>>>> upstream-incoming
+  | Construct { cstr_tag = Extension p1 },
+    Construct { cstr_tag = Extension p2 }
     ->
       (* Extension constructors with distinct names may be equal thanks to
          constructor rebinding. So we need to produce a specialized
@@ -2287,43 +2281,8 @@ let get_pat_args_lazy p rem =
 let prim_obj_tag =
   Lambda.simple_prim_on_values ~name:"caml_obj_tag" ~arity:1 ~alloc:false
 
-<<<<<<< oxcaml
-let get_mod_field modname field =
-  lazy
-    (let mod_ident = Ident.create_persistent modname in
-     let env =
-       Env.add_persistent_structure mod_ident
-         (Lazy.force Env.initial)
-     in
-     let _, _, env = Env.open_pers_signature modname env in
-     match Env.find_value_by_name_lazy (Longident.Lident field) env with
-     | exception Not_found ->
-         fatal_errorf "Primitive %s.%s not found." modname field
-     | path, _ ->
-         (* Loc_unknown is appropriate here: this references a compiler-internal
-            primitive with no corresponding user source location. *)
-         transl_value_path Scoped_location.Loc_unknown env path
-    )
-||||||| upstream-base
-let get_mod_field modname field =
-  lazy
-    (let mod_ident = Ident.create_persistent modname in
-     let env =
-       Env.add_persistent_structure mod_ident Env.initial
-     in
-     match Env.open_pers_signature modname env with
-     | Error `Not_found ->
-         fatal_errorf "Module %s unavailable." modname
-     | Ok env -> (
-         match Env.find_value_by_name (Longident.Lident field) env with
-         | exception Not_found ->
-             fatal_errorf "Primitive %s.%s not found." modname field
-         | path, _ -> transl_value_path Loc_unknown env path
-       ))
-=======
 let code_force_lazy_block =
   lazy (transl_prim "CamlinternalLazy" "force_lazy_block")
->>>>>>> upstream-incoming
 
 let code_force_lazy =
   lazy (transl_prim "CamlinternalLazy" "force_gen")
@@ -2436,28 +2395,12 @@ let inline_lazy_force arg pos loc =
         ap_loc = loc;
         ap_func = Lazy.force code_force_lazy;
         ap_args = [ Lconst (Const_base (Const_int 0)); arg ];
-<<<<<<< oxcaml
         ap_result_layout = Lambda.layout_lazy_contents;
         ap_region_close = pos;
         ap_mode = alloc_heap;
-        (* nroberts: To make sure this wasn't inlined:
-             - Upstream changed [code_force_lazy] to a non-inlineable
-               function when compiling with AFL support.
-             - We just changed this to Never_inlined.
-
-           If these two approaches are solving the same problem, we should
-           just converge to one.
-        *)
         ap_inlined = Never_inlined;
         ap_specialised = Default_specialise;
         ap_probe=None;
-||||||| upstream-base
-        ap_inlined = Default_inline;
-        ap_specialised = Default_specialise
-=======
-        ap_inlined = Never_inline;
-        ap_specialised = Default_specialise
->>>>>>> upstream-incoming
       }
   else if !Clflags.native_code && not (Clflags.is_flambda2 ()) then
     (* CR vlaviron: Find a way for Flambda 2 to avoid both the call to
@@ -3340,113 +3283,6 @@ let mk_failaction_neg arg_partial ctx def =
       | None -> (None, Jumps.empty Total)
       | Some (lam, jumps) -> (Some lam, jumps)
 
-<<<<<<< oxcaml
-(* In line with the article and simpler than before *)
-let mk_failaction_pos partial seen ctx defs =
-  let rec scan_def env to_test defs =
-    match (to_test, Default_environment.pop defs) with
-    | [], _
-    | _, None ->
-        List.fold_left
-          (fun (klist, jumps) (i, pats) ->
-            let action = Lstaticraise (i, []) in
-            let klist =
-              List.fold_right
-                (fun pat r -> (get_key_constr pat, action) :: r)
-                pats klist
-            and jumps =
-              Jumps.add i (Context.lub (list_as_pat pats) ctx) jumps
-            in
-            (klist, jumps))
-          ([], Jumps.empty) env
-    | _, Some ((idef, pss), rem) -> (
-        let now, later =
-          List.partition (fun (_p, p_ctx) -> Context.matches p_ctx pss) to_test
-        in
-        match now with
-        | [] -> scan_def env to_test rem
-        | _ -> scan_def ((idef, List.map fst now) :: env) later rem
-      )
-  in
-  let fail_pats = complete_pats_constrs seen in
-  if List.length fail_pats < !Clflags.match_context_rows then (
-    let fail, jmps =
-      scan_def []
-        (List.map (fun pat -> (pat, Context.lub pat ctx)) fail_pats)
-        defs
-    in
-    debugf
-      "@,@[<v 2>COMBINE (mk_failaction_pos %a)@,\
-           %a@,\
-           @[<v 2>FAIL PATTERNS:@,\
-             %a@]@,\
-           @[<v 2>POSITIVE JUMPS:@,\
-             %a@]\
-           @]"
-      pp_partial partial
-      Default_environment.pp defs
-      (Format.pp_print_list ~pp_sep:Format.pp_print_cut
-         Printpat.Compat.pretty_pat) fail_pats
-      Jumps.pp jmps
-    ;
-    (None, fail, jmps)
-  ) else (
-    (* Too many non-matched constructors -> reduced information *)
-    let fail, jumps = mk_failaction_neg partial ctx defs in
-||||||| upstream-base
-(* In line with the article and simpler than before *)
-let mk_failaction_pos partial seen ctx defs =
-  let rec scan_def env to_test defs =
-    match (to_test, Default_environment.pop defs) with
-    | [], _
-    | _, None ->
-        List.fold_left
-          (fun (klist, jumps) (i, pats) ->
-            let action = Lstaticraise (i, []) in
-            let klist =
-              List.fold_right
-                (fun pat r -> (get_key_constr pat, action) :: r)
-                pats klist
-            and jumps =
-              Jumps.add i (Context.lub (list_as_pat pats) ctx) jumps
-            in
-            (klist, jumps))
-          ([], Jumps.empty) env
-    | _, Some ((idef, pss), rem) -> (
-        let now, later =
-          List.partition (fun (_p, p_ctx) -> Context.matches p_ctx pss) to_test
-        in
-        match now with
-        | [] -> scan_def env to_test rem
-        | _ -> scan_def ((idef, List.map fst now) :: env) later rem
-      )
-  in
-  let fail_pats = complete_pats_constrs seen in
-  if List.length fail_pats < !Clflags.match_context_rows then (
-    let fail, jmps =
-      scan_def []
-        (List.map (fun pat -> (pat, Context.lub pat ctx)) fail_pats)
-        defs
-    in
-    debugf
-      "@,@[<v 2>COMBINE (mk_failaction_pos %a)@,\
-           %a@,\
-           @[<v 2>FAIL PATTERNS:@,\
-             %a@]@,\
-           @[<v 2>POSITIVE JUMPS:@,\
-             %a@]\
-           @]"
-      pp_partial partial
-      Default_environment.pp defs
-      (Format.pp_print_list ~pp_sep:Format.pp_print_cut
-         Printpat.pretty_pat) fail_pats
-      Jumps.pp jmps
-    ;
-    (None, fail, jmps)
-  ) else (
-    (* Too many non-matched constructors -> reduced information *)
-    let fail, jumps = mk_failaction_neg partial ctx defs in
-=======
 (* In [mk_failaction_pos partial seen ctx defs],
    - [partial] indicates whether the current switch
      is exhaustive
@@ -3485,7 +3321,6 @@ let mk_failaction_pos arg_partial seen ctx defs =
   if List.length input_fail_pats >= !Clflags.match_context_rows then (
     (* Too many non-matched constructors -> reduced information. *)
     let fail, jumps = mk_failaction_neg arg_partial ctx defs in
->>>>>>> upstream-incoming
     debugf
       "@,@[<v 2>COMBINE (mk_failaction_pos)@,\
            %a@,\
@@ -3760,15 +3595,10 @@ let transl_match_on_option value_kind arg loc ~if_some ~if_none =
   else
     Lifthenelse(arg, if_some, if_none, value_kind)
 
-<<<<<<< oxcaml
 let transl_match_on_or_null value_kind arg loc ~if_null ~if_this =
   Lifthenelse (Lprim (Pisnull, [ arg ], loc), if_null, if_this, value_kind)
 
-let combine_constructor value_kind loc arg pat_env pat_barrier cstr partial ctx def
-||||||| upstream-base
-let combine_constructor loc arg pat_env cstr partial ctx def
-=======
-let combine_extension_constructor loc arg pat_env partial ctx def
+let combine_extension_constructor value_kind loc arg pat_env pat_barrier partial ctx def
     (descr_lambda_list, total1, _pats) =
   let tag_lambda (cstr, act) = (cstr.cstr_tag, act) in
   let fail, local_jumps = mk_failaction_neg partial ctx def in
