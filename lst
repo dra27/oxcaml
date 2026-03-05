@@ -10,16 +10,16 @@ e9bcdc5616 Merge pull request #13467 from gasche/equal_constr
 8ce3e6a6c3 Merge pull request #13341 from gasche/matching-bug-partiality-warning
 8019365458 Merge pull request #13425 from gasche/dmatchcomp
 1c124a1f7b Merge pull request #13153 from gasche/matching-bug-remove-check_partial
-0fa46d58a7 Merge pull request #13152 from gasche/matching-bug-fix-totality-3
-7c7866ebce Merge pull request #13338 from gasche/matching-bug-13076-pessimization-fix
-ee2c5cfb74 Merge pull request #13342 from gasche/matching-refactor-do_compile_matching
-1b09b92c85 Merge pull request #13169 from Octachron/format_doc_for_error_messages
-4fc907d496 Merge pull request #13138 from gasche/matching-bug-propagate-mut-2
-4e3c1db123 Merge pull request #12309 from avsm/effect-syntax
-03d47fdb20 Merge pull request #13140 from ncik-roberts/afl-stability-fix
-9e912e8ad5 Merge pull request #13129 from gasche/matching-minor-refactorings
-d06c6dabf2 Merge pull request #13076 from gasche/matching-bug-final-exit
-b30d7d38a0 Merge pull request #13084 from gasche/matching-structure-arguments
+DONE 0fa46d58a7 Merge pull request #13152 from gasche/matching-bug-fix-totality-3
+DONE 7c7866ebce Merge pull request #13338 from gasche/matching-bug-13076-pessimization-fix
+DONE ee2c5cfb74 Merge pull request #13342 from gasche/matching-refactor-do_compile_matching
+Already present 1b09b92c85 Merge pull request #13169 from Octachron/format_doc_for_error_messages
+DONE 4fc907d496 Merge pull request #13138 from gasche/matching-bug-propagate-mut-2
+SKIPPED 4e3c1db123 Merge pull request #12309 from avsm/effect-syntax
+DONE 03d47fdb20 Merge pull request #13140 from ncik-roberts/afl-stability-fix
+DONE 9e912e8ad5 Merge pull request #13129 from gasche/matching-minor-refactorings
+DONE d06c6dabf2 Merge pull request #13076 from gasche/matching-bug-final-exit
+DONE b30d7d38a0 Merge pull request #13084 from gasche/matching-structure-arguments
 DONE f2329ec498 Merge pull request #13082 from gasche/matching-clarify-do_for_multiple_match
 DONE 1a798642c3 Merge pull request #13074 from gasche/matching-refactor-combine_handlers
 DONE c53ec9101d Merge pull request #12555 from gasche/matching-bug-2-fix-contexts
