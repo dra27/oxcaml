@@ -8,9 +8,10 @@
 #use "contexts_1.ml";;
 (* Notice that (field_mut 1 input) occurs twice, it
    is evaluated once in the 'false' branch and once in the 'true'
-   branch. The compiler assumes that its static knowledge about the
+   branch. The compiler does not assume that its static knowledge about the
    first read (it cannot be a [Right] as we already matched against it
-   and failed) also applies to the second read, which is unsound.
+   and failed) also applies to the second read, and it inserts a Match_failure
+   case if [Right] is read again.
 *)
 [%%expect {|
 
@@ -48,7 +49,13 @@ let example_1 () =
                  (if (seq (setfield_ptr(maybe-stack) 1 input/307 [1: 3]) 0)
                    [1: 3]
                    (let (*match*/334 =o? (field_mut 1 input/307))
-                     (makeblock 0 (value<int>) (field_imm 0 *match*/334))))
+                     (switch* *match*/334
+                      case tag 0:
+                       (makeblock 0 (value<int>) (field_imm 0 *match*/334))
+                      case tag 1:
+                       (raise
+                         (makeblock 0 (getpredef Match_failure/49!!)
+                           [0: "contexts_1.ml" 17 2])))))
                 case tag 1: [1: 2]))
              [1: 1])))))
   (apply (field_imm 1 (global Toploop!)) "example_1" example_1/305))
@@ -103,7 +110,13 @@ let example_2 () =
                    [1: 3]
                    (let
                      (*match*/355 =o? (field_mut 0 (field_imm 1 input/346)))
-                     (makeblock 0 (value<int>) (field_imm 0 *match*/355))))
+                     (switch* *match*/355
+                      case tag 0:
+                       (makeblock 0 (value<int>) (field_imm 0 *match*/355))
+                      case tag 1:
+                       (raise
+                         (makeblock 0 (getpredef Match_failure/49!!)
+                           [0: "contexts_2.ml" 11 2])))))
                 case tag 1: [1: 2]))
              [1: 1])))))
   (apply (field_imm 1 (global Toploop!)) "example_2" example_2/344))

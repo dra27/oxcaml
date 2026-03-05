@@ -417,7 +417,7 @@ end
 module SyntacticCompat =
   Compat
     (struct
-      let equal c1 c2 =  Types.equal_tag c1.cstr_tag c2.cstr_tag
+      let equal = Types.equal_constr
     end)
 
 let compat =  SyntacticCompat.compat
@@ -452,7 +452,7 @@ let simple_match d h =
   let open Patterns.Head in
   match d.pat_desc, h.pat_desc with
   | Construct c1, Construct c2 ->
-      Types.equal_tag c1.cstr_tag c2.cstr_tag
+      Types.equal_constr c1 c2
   | Variant { tag = t1; _ }, Variant { tag = t2 } ->
       t1 = t2
   | Constant c1, Constant c2 -> const_compare c1 c2 = 0
@@ -613,7 +613,7 @@ let rec read_args xs r = match xs,r with
 | _,_ ->
     fatal_error "Parmatch.read_args"
 
-let do_set_args ~erase_mutable q r = match q with
+let set_args q r = match q with
 | {pat_desc = Tpat_tuple omegas} ->
     let args,rest = read_args (List.map snd omegas) r in
     make_pat
@@ -630,30 +630,20 @@ let do_set_args ~erase_mutable q r = match q with
       q.pat_type q.pat_env::rest
 | {pat_desc = Tpat_record (omegas,closed)} ->
     let args,rest = read_args omegas r in
-    make_pat
-      (Tpat_record
-         (List.map2 (fun (lid, lbl,_) arg ->
-           if erase_mutable && Types.is_mutable lbl.lbl_mut
-           then
-             lid, lbl, omega
-           else
-             lid, lbl, arg)
-            omegas args, closed))
-      q.pat_type q.pat_env::
-    rest
+    let args =
+      List.map2 (fun (lid, lbl, _) arg -> (lid, lbl, arg)) omegas args in
+    make_pat (Tpat_record (args, closed)) q.pat_type q.pat_env :: rest
 | {pat_desc = Tpat_record_unboxed_product (omegas,closed)} ->
     let args,rest = read_args omegas r in
+    let args =
+      List.map2 (fun (lid, lbl, _) arg ->
+        if Types.is_mutable lbl.lbl_mut then
+          fatal_error
+            "Parmatch.do_set_args: unboxed record labels are never mutable"
+        else
+          lid, lbl, arg) omegas args in
     make_pat
-      (Tpat_record_unboxed_product
-         (List.map2 (fun (lid, lbl,_) arg ->
-           if Types.is_mutable lbl.lbl_mut then
-             fatal_error
-               "Parmatch.do_set_args: unboxed record labels are never mutable"
-           else
-             lid, lbl, arg)
-            omegas args, closed))
-      q.pat_type q.pat_env::
-    rest
+      (Tpat_record_unboxed_product (args, closed)) q.pat_type q.pat_env :: rest
 | {pat_desc = Tpat_construct (lid, c, omegas, _)} ->
     let args,rest = read_args omegas r in
     make_pat
@@ -678,7 +668,6 @@ let do_set_args ~erase_mutable q r = match q with
     end
 | {pat_desc = Tpat_array (am, arg_sort, omegas)} ->
     let args,rest = read_args omegas r in
-    let args = if erase_mutable then omegas else args in
     make_pat
       (Tpat_array (am, arg_sort, args)) q.pat_type q.pat_env::
     rest
@@ -686,9 +675,6 @@ let do_set_args ~erase_mutable q r = match q with
     q::r (* case any is used in matching.ml *)
 | {pat_desc = (Tpat_var _ | Tpat_alias _ | Tpat_or _); _} ->
     fatal_error "Parmatch.set_args"
-
-let set_args q r = do_set_args ~erase_mutable:false q r
-and set_args_erase_mutable q r = do_set_args ~erase_mutable:true q r
 
 (* Given a matrix of non-empty rows
    p1 :: r1...
@@ -1123,7 +1109,7 @@ let build_other ext env =
           | _ ->
               build_other_constrs env d
           end
-      | Unboxed_bool b -> 
+      | Unboxed_bool b ->
         make_pat (Tpat_unboxed_bool (not b)) d.pat_type Env.empty
       | Variant { cstr_row; type_row } ->
           let tags =
@@ -1932,7 +1918,7 @@ let rec le_pat p q =
   | _, Tpat_alias(q,_,_,_,_,_,_) -> le_pat p q
   | Tpat_constant(c1), Tpat_constant(c2) -> const_compare c1 c2 = 0
   | Tpat_construct(_,c1,ps,_), Tpat_construct(_,c2,qs,_) ->
-      Types.equal_tag c1.cstr_tag c2.cstr_tag && le_pats ps qs
+      Types.equal_constr c1 c2 && le_pats ps qs
   | Tpat_variant(l1,Some p1,_), Tpat_variant(l2,Some p2,_) ->
       (l1 = l2 && le_pat p1 p2)
   | Tpat_variant(l1,None,_r1), Tpat_variant(l2,None,_) ->
@@ -2006,7 +1992,7 @@ let rec lub p q = match p.pat_desc,q.pat_desc with
     let r = lub p q in
     make_pat (Tpat_lazy r) p.pat_type p.pat_env
 | Tpat_construct (lid,c1,ps1,_), Tpat_construct (_,c2,ps2,_)
-      when  Types.equal_tag c1.cstr_tag c2.cstr_tag  ->
+      when Types.equal_constr c1 c2 ->
         let rs = lubs ps1 ps2 in
         make_pat (Tpat_construct (lid, c1, rs, None))
           p.pat_type p.pat_env

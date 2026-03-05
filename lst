@@ -1,0 +1,32 @@
+DONE f9ec868491 matching: fix some non-deterministic code generation (#14091)
+DONE 4aa98ef3eb Merge pull request #13936 from gasche/refactor-lambda-camlinternal
+Already present 9fb92d973f Track type of variables bound by `as` (#13763)
+Already present Merge pull request #13498 from ccasin/labeled-tuples
+Already present 83644b8ca0 Merge pull request #13097 from OlivierNicole/immutable-arrays
+DONE c62503c8f3 Merge branch 'minor-matching-refactor' into trunk
+DONE e9bcdc5616 Merge pull request #13467 from gasche/equal_constr
+SKIPPED 312f5bc65a Merge pull request #13466 from gasche/data_types
+  - Mechanical - too many shifts elsewhere
+DONE 9e72506ac8 Merge pull request #13154 from gasche/matching-bug-temporality-heuristic
+NOTES 8ce3e6a6c3 Merge pull request #13341 from gasche/matching-bug-partiality-warning
+  - Amusingly, backend/amd64/emit.ml is an instance of the bug fixed in the next
+    PR!
+SKIPPED 8019365458 Merge pull request #13425 from gasche/dmatchcomp
+  - Mechanical - too many shifts elsewhere
+DONE 1c124a1f7b Merge pull request #13153 from gasche/matching-bug-remove-check_partial
+DONE 0fa46d58a7 Merge pull request #13152 from gasche/matching-bug-fix-totality-3
+DONE 7c7866ebce Merge pull request #13338 from gasche/matching-bug-13076-pessimization-fix
+DONE ee2c5cfb74 Merge pull request #13342 from gasche/matching-refactor-do_compile_matching
+Already present 1b09b92c85 Merge pull request #13169 from Octachron/format_doc_for_error_messages
+DONE 4fc907d496 Merge pull request #13138 from gasche/matching-bug-propagate-mut-2
+SKIPPED 4e3c1db123 Merge pull request #12309 from avsm/effect-syntax
+  - Large impact elsewhere - doesn't seem worth speculating this on main here
+DONE 03d47fdb20 Merge pull request #13140 from ncik-roberts/afl-stability-fix
+DONE 9e912e8ad5 Merge pull request #13129 from gasche/matching-minor-refactorings
+DONE d06c6dabf2 Merge pull request #13076 from gasche/matching-bug-final-exit
+DONE b30d7d38a0 Merge pull request #13084 from gasche/matching-structure-arguments
+DONE f2329ec498 Merge pull request #13082 from gasche/matching-clarify-do_for_multiple_match
+DONE 1a798642c3 Merge pull request #13074 from gasche/matching-refactor-combine_handlers
+DONE c53ec9101d Merge pull request #12555 from gasche/matching-bug-2-fix-contexts
+DONE ed372d3645 Merge pull request #12534 from gasche/matching-document-mk_failaction
+Already present a682d5196a Merge pull request #12508 from voodoos/store-index-in-cmt-trunk

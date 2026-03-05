@@ -1135,13 +1135,15 @@ type constructor_description =
     cstr_uid: Uid.t;
    }
 
-(* Constructors are the same *)
-val equal_tag :  tag -> tag -> bool
+(* Constructors are the same: they return (structurally)-equal values
+   when applied to equal arguments. *)
+val equal_constr :
+    constructor_description ->  constructor_description -> bool
 
 (* Comparison of tags to store them in sets. *)
 val compare_tag :  tag -> tag -> int
 
-(* Constructors may be the same, given potential rebinding *)
+(* Constructors may be the same, given potential rebinding. *)
 val may_equal_constr :
     constructor_description ->  constructor_description -> bool
 

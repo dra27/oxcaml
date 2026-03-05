@@ -742,6 +742,8 @@ let equal_tag t1 t2 =
   | Null, Null -> true
   | (Ordinary _ | Extension _ | Null), _ -> false
 
+let equal_constr c1 c2 = equal_tag c1.cstr_tag c2.cstr_tag
+
 let compare_tag t1 t2 =
   match (t1, t2) with
   | Ordinary {src_index=i1}, Ordinary {src_index=i2} ->
