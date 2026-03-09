@@ -504,7 +504,7 @@ and transl_exp0 ~in_new_scope ~scopes sort e =
         let x, y = List.fold_left split_case ([], []) pat_expr_list in
         List.rev x, List.rev y
       in
-      transl_handler ~scopes ~return_sort:sort e arg
+      transl_handler ~scopes ~return_sort:sort ~body_sort:arg_sort e arg
         (Some (arg_sort, pat_expr_list, partial)) exn_pat_expr_list eff_pat_expr_list
   | Texp_try(body, pat_expr_list, []) ->
       let id, id_duid = Typecore.name_cases "exn" pat_expr_list in
@@ -514,7 +514,9 @@ and transl_exp0 ~in_new_scope ~scopes sort e =
                  (transl_cases_try ~scopes sort pat_expr_list),
                return_layout)
   | Texp_try(body, exn_pat_expr_list, eff_pat_expr_list) ->
-      transl_handler ~scopes ~return_sort:sort e body
+      (* body_sort = return_sort: try body has the same type as the overall
+         expression *)
+      transl_handler ~scopes ~return_sort:sort ~body_sort:sort e body
         None exn_pat_expr_list eff_pat_expr_list
   | Texp_unboxed_unit ->
       Lprim(Punbox_unit, [lambda_unit], of_location ~scopes e.exp_loc)
@@ -2621,13 +2623,11 @@ and transl_match ~scopes ~arg_sort ~return_sort e arg pat_expr_list partial =
        handler, Same_region, return_layout)
   ) classic static_handlers
 
-and prim_alloc_stack =
-  Pccall (Lambda.simple_prim_on_values ~name:"caml_alloc_stack" ~arity:3 ~alloc:true)
-
-and transl_handler ~scopes ~return_sort e body
+and transl_handler ~scopes ~return_sort ~body_sort e body
                    val_caselist exn_caselist eff_caselist =
   let kind = (Curried {nlocal=0}) in
   let return_layout = layout_exp return_sort e in
+  let body_layout = layout_exp body_sort body in
   let mk_param name debug_uid layout =
   { name; debug_uid; layout;
     attributes = Lambda.default_param_attribute;
@@ -2664,33 +2664,32 @@ and transl_handler ~scopes ~return_sort e body
       ~mode:alloc_heap ~ret_mode:alloc_heap
   in
   let eff_fun =
-    let param = Typecore.name_cases "eff" eff_caselist in
+    let param, param_duid = Typecore.name_cases "eff" eff_caselist in
     let cont = Ident.create_local "k" in
     let cont_tail = Ident.create_local "ktail" in
-    let eff_cases = transl_cases ~scopes ~cont eff_caselist in
+    let eff_cases = transl_cases ~scopes ~cont return_sort eff_caselist in
     let body =
-      Matching.for_handler ~scopes e.exp_loc (Lvar param) (Lvar cont)
-        (Lvar cont_tail) eff_cases
+      Matching.for_handler ~scopes ~return_layout e.exp_loc (Lvar param)
+        (Lvar cont) (Lvar cont_tail) eff_cases
     in
     lfunction ~kind
-      ~params:[(param, Pgenval); (cont, Pgenval); (cont_tail, Pgenval)]
-      ~return:Pgenval ~attr:default_function_attribute ~loc:Loc_unknown ~body
+      ~params:[mk_param param param_duid Lambda.layout_block;
+               mk_param cont Lambda.debug_uid_none Lambda.layout_block;
+               mk_param cont_tail Lambda.debug_uid_none Lambda.layout_block]
+      ~return:return_layout ~attr:default_function_attribute ~loc:Loc_unknown
+      ~body ~mode:alloc_heap ~ret_mode:alloc_heap
   in
   let (body_fun, arg) =
-    match transl_exp ~scopes body with
-    | Lapply { ap_func = fn; ap_args = [arg]; _ }
-        when is_evaluated fn && is_evaluated arg -> (fn, arg)
-    | body ->
-       let param, param_duid = Ident.create_local "param" in
-       (lfunction ~kind ~params:[param, Pgenval] ~return:Pgenval
-                  ~attr:default_function_attribute ~loc:Loc_unknown
-                  ~body,
-        Lconst(Const_base(Const_int 0)))
+    let body = transl_exp ~scopes body_sort body in
+    let param = Ident.create_local "param" in
+    (lfunction ~kind
+       ~params:[mk_param param Lambda.debug_uid_none Lambda.layout_int]
+       ~return:body_layout
+       ~attr:default_function_attribute ~loc:Loc_unknown
+       ~body ~mode:alloc_heap ~ret_mode:alloc_heap,
+     Lconst(Const_base(Const_int 0)))
   in
-  let alloc_stack =
-    Lprim(prim_alloc_stack, [val_fun; exn_fun; eff_fun], Loc_unknown)
-  in
-  Lprim(Prunstack, [alloc_stack; body_fun; arg],
+  Lprim(Pwith_stack, [val_fun; exn_fun; eff_fun; body_fun; arg],
         of_location ~scopes e.exp_loc)
 
 and transl_letop ~scopes loc env let_ ands param param_debug_uid param_sort case
@@ -2843,7 +2842,7 @@ let report_error_doc ppf = function
       fprintf ppf
         "Void detected in translation for type %a:@ Please report this error \
          to the Jane Street compilers team."
-        Printtyp.type_expr ty
+        Printtyp.Doc.type_expr ty
   | Unboxed_vector_in_array_comprehension ->
       fprintf ppf
         "Array comprehensions are not yet supported for arrays of unboxed \
