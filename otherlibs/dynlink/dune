@@ -16,6 +16,34 @@
  (with-stdout-to
   dynlink_support.ml
   (progn
+   (echo "module Misc : sig\n")
+   (echo "# 1 \"dynlink_misc.mli\"\n")
+   (cat dynlink_misc.mli)
+   (echo "end = struct\n")
+   (echo "# 1 \"dynlink_misc.ml\"\n")
+   (cat dynlink_misc.ml)
+   (echo "end\n")
+   (echo "module Identifiable : sig\n")
+   (echo "# 1 \"../../utils/identifiable.mli\"\n")
+   (cat ../../utils/identifiable.mli)
+   (echo "end = struct\n")
+   (echo "# 1 \"../../utils/identifiable.ml\"\n")
+   (cat ../../utils/identifiable.ml)
+   (echo "end\n")
+   (echo "module Int_replace_polymorphic_compare : sig\n")
+   (echo "# 1 \"../../utils/int_replace_polymorphic_compare.mli\"\n")
+   (cat ../../utils/int_replace_polymorphic_compare.mli)
+   (echo "end = struct\n")
+   (echo "# 1 \"../../utils/int_replace_polymorphic_compare.ml\"\n")
+   (cat ../../utils/int_replace_polymorphic_compare.ml)
+   (echo "end\n")
+   (echo "module Linkage_name : sig\n")
+   (echo "# 1 \"../../utils/linkage_name.mli\"\n")
+   (cat ../../utils/linkage_name.mli)
+   (echo "end = struct\n")
+   (echo "# 1 \"../../utils/linkage_name.ml\"\n")
+   (cat ../../utils/linkage_name.ml)
+   (echo "end\n")
    (echo "# 1 \"dynlink_shims.ml\"\n")
    (cat dynlink_shims.ml)
    (echo "module Cmo_format = struct\n")
@@ -39,7 +67,7 @@
   %{read:../../natdynlinkops}
   -pp
   "%{project_root}/otherlibs/dynlink/%{dep:shim.sh} %{dep:native/dynlink.ml}")
- (modules :standard \ dynlink_cmo_format dynlink_cmxs_format))
+ (modules :standard \ dynlink_cmo_format dynlink_cmxs_format dynlink_misc))
 
 (install
  (files

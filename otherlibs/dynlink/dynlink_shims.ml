@@ -31,8 +31,6 @@ module Name = struct
     let to_string t = t
   end
 
-module Linkage_name = Name
-
 module Compilation_unit = struct
   module Name = Name
 
