@@ -16,6 +16,13 @@
  (with-stdout-to
   dynlink_support.ml
   (progn
+   (echo "module Format_doc : sig\n")
+   (echo "# 1 \"../../utils/format_doc.mli\"\n")
+   (cat ../../utils/format_doc.mli)
+   (echo "end = struct\n")
+   (echo "# 1 \"../../utils/format_doc.ml\"\n")
+   (cat ../../utils/format_doc.ml)
+   (echo "end\n")
    (echo "module Misc : sig\n")
    (echo "# 1 \"dynlink_misc.mli\"\n")
    (cat dynlink_misc.mli)

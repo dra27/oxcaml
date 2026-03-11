@@ -13,3 +13,5 @@
 (**************************************************************************)
 
 val fatal_error: string -> 'a
+val fatal_errorf: ('a, Format.formatter, unit, 'b) format4 -> 'a
+val fatal_errorf_doc: ('a, Format_doc.formatter, unit, 'b) format4 -> 'a
