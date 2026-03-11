@@ -12,7 +12,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module CU = Compilation_unit
+module CU = Compilation_unit0
+module Misc = Misc0
 
 type intf =
   | Normal of CU.t * Digest.t

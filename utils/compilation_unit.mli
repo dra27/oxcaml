@@ -29,7 +29,7 @@
 
 module Name : sig
   (** The name of a compilation unit without any "-for-pack" prefix. *)
-  type t
+  type t = Compilation_unit0.Name.t
 
   (** Printing, comparison, sets, maps, etc. *)
   include Identifiable.S with type t := t
@@ -65,7 +65,7 @@ end
 module Prefix : sig
   (** A pack name prefix, as specified to "-for-pack". Such a prefix may be
       empty. *)
-  type t
+  type t = Compilation_unit0.Prefix.t
 
   (** Printing, comparison, sets, maps, etc. *)
   include Identifiable.S with type t := t
@@ -95,7 +95,7 @@ end
     with "-for-pack Baz.Bar", the corresponding value of type [t] would
     represent "Baz.Bar.Foo", with its [name] representing "Foo" and its [prefix]
     representing "Baz.Bar". *)
-type t
+type t = Compilation_unit0.t
 
 (** Printing, comparison, sets, maps, etc. *)
 include Identifiable.S with type t := t
@@ -121,7 +121,7 @@ val to_prefix : t -> Prefix.t
 (** Combines [create] and [to_prefix]. *)
 val create_child : t -> Name.t -> t
 
-type argument =
+type argument = Compilation_unit0.argument =
   { param : Name.t;
     value : t
   }
@@ -282,7 +282,7 @@ val is_instance : t -> bool
     this is an instance, throwing a fatal error otherwise. *)
 val split_instance_exn : t -> t * argument list
 
-type error = private
+type error = Compilation_unit0.error = private
   | Invalid_character of char * string
   | Bad_compilation_unit_name of string
   | Child_of_instance of { parent_name : string }
@@ -290,7 +290,8 @@ type error = private
   | Already_an_instance of { name : string }
 
 (** The exception raised by conversion functions in this module. *)
-exception Error of error
+(* exception Error = Compilation_unit0.Error *)
+(* XXX Equality, etc.? *)
 
 val get_current : unit -> t option
 

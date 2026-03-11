@@ -176,6 +176,7 @@
   binutils
   local_store
   target_system
+  compilation_unit0
   compilation_unit
   import_info
   linkage_name

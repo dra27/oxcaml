@@ -18,6 +18,7 @@
 open Dynlink_support
 open Cmo_format
 module Config = Dynlink_config
+module Compilation_unit = Compilation_unit0
 
 module Style = struct
   let inline_code = Format.pp_print_string

@@ -12,7 +12,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module CU := Compilation_unit
+module CU := Compilation_unit0
 
 (* CR mshinwell: maybe there should be a phantom type allowing to distinguish
    the .cmx case from the others. Unclear it's worth it.

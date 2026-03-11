@@ -17,6 +17,7 @@
 
 open Dynlink_support
 
+module Compilation_unit = Compilation_unit0
 module Symtable = Dynlink_symtable
 module Config = Dynlink_config
 open Cmo_format

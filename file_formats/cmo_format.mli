@@ -15,11 +15,11 @@
 
 (* Symbol table information for .cmo and .cma files *)
 
-type modname = Compilation_unit.Name.t
+type modname = Compilation_unit0.Name.t
 type crcs = (modname * Import_info.Intf.Nonalias.t option) array
 
 (* Names of compilation units as represented in CMO files *)
-type compunit = Compilation_unit.t
+type compunit = Compilation_unit0.t
 
 (* Predefined symbols as represented in CMO files *)
 
@@ -29,16 +29,16 @@ type predef =
 (* Relocation information *)
 
 type reloc_info =
-    Reloc_literal of Obj.t                  (* structured constant *)
-  | Reloc_getcompunit of Compilation_unit.t (* reference to a compunit *)
-  | Reloc_getpredef of predef (* reference to a predef *)
-  | Reloc_setcompunit of Compilation_unit.t (* definition of a compunit *)
-  | Reloc_primitive of string (* C primitive number *)
+    Reloc_literal of Obj.t                   (* structured constant *)
+  | Reloc_getcompunit of Compilation_unit0.t (* reference to a compunit *)
+  | Reloc_getpredef of predef                (* reference to a predef *)
+  | Reloc_setcompunit of Compilation_unit0.t (* definition of a compunit *)
+  | Reloc_primitive of string                (* C primitive number *)
 
 (* Descriptor for compilation units *)
 
 type compilation_unit_descr =
-  { cu_name: Compilation_unit.t;        (* Name of compilation unit *)
+  { cu_name: Compilation_unit0.t;       (* Name of compilation unit *)
     mutable cu_pos: int;                (* Absolute position in file *)
     cu_codesize: int;                   (* Size of code block *)
     cu_reloc: (reloc_info * int) list;  (* Relocation information *)
@@ -47,7 +47,7 @@ type compilation_unit_descr =
                                            parameter it implements *)
     cu_imports: crcs;                   (* Names and CRC of intfs imported *)
     cu_format: Lambda.main_module_block_format;
-    cu_required_compunits: Compilation_unit.t list;
+    cu_required_compunits: Compilation_unit0.t list;
                                         (* Compilation units whose
                                            initialization side effects
                                            must occur before this one. *)

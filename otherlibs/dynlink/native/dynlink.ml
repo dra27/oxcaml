@@ -20,6 +20,8 @@
 open Dynlink_support
 open Cmxs_format
 
+module Compilation_unit = Compilation_unit0
+module Config = Dynlink_config
 module DC = Dynlink_common
 module DT = Dynlink_types
 

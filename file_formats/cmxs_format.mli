@@ -15,7 +15,7 @@
 
 (* Format of .cmxs files *)
 
-type modname = Compilation_unit.Name.t
+type modname = Compilation_unit0.Name.t
 type crcs = (modname * Digest.t option) array
 
 (* Each .cmxs dynamically-loaded plugin contains a symbol
@@ -23,11 +23,11 @@ type crcs = (modname * Digest.t option) array
    (as an externed record) *)
 
 type dynunit = {
-  dynu_name: Compilation_unit.t;
+  dynu_name: Compilation_unit0.t;
   dynu_crc: Digest.t;
   dynu_imports_cmi: crcs;
-  dynu_imports_cmx: (Compilation_unit.t * Digest.t option) array;
-  dynu_quoted_globals: Compilation_unit.Name.t array;
+  dynu_imports_cmx: (Compilation_unit0.t * Digest.t option) array;
+  dynu_quoted_globals: Compilation_unit0.Name.t array;
   dynu_defines: string list;
 }
 
