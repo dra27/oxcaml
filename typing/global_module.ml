@@ -1,4 +1,5 @@
 module Fmt = Format_doc
+module Misc = Misc0
 
 module Parameter_name = struct
   type t = string

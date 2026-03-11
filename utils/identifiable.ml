@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module Misc = Misc0
+
 module type Formatter = sig type formatter end
 
 module Thingy (Fmt : Formatter) = struct
