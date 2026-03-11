@@ -14,14 +14,29 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module type Thing = sig
+module type Formatter = sig type formatter end
+
+module Thingy (Fmt : Formatter) = struct
+  module type T = sig
+    type t
+
+    include Hashtbl.HashedType with type t := t
+    include Map.OrderedType with type t := t
+
+    val output : out_channel -> t -> unit
+    val print : Fmt.formatter -> t -> unit
+  end
+end
+
+module type Thing = Thingy(Format).T
+
+module type Thing_doc = sig
   type t
 
   include Hashtbl.HashedType with type t := t
   include Map.OrderedType with type t := t
 
-  val output : out_channel -> t -> unit
-  val print : Format.formatter -> t -> unit
+  val doc_print : Format_doc.formatter -> t -> unit
 end
 
 module type Set = sig
@@ -252,16 +267,20 @@ module Make_tbl (T : Thing) = struct
     of_map (T_map.map f (to_map t))
 end
 
-module type S = sig
-  type t
+module Sig (Fmt : Formatter) = struct
+  module type S = sig
+    type t
 
-  module T : Thing with type t = t
-  include Thing with type t := T.t
+    module T : Thing with type t = t
+    include Thingy(Fmt).T with type t := T.t
 
-  module Set : Set with module T := T
-  module Map : Map with module T := T
-  module Tbl : Tbl with module T := T
+    module Set : Set with module T := T
+    module Map : Map with module T := T
+    module Tbl : Tbl with module T := T
+  end
 end
+
+module type S = Sig(Format).S
 
 module Make (T : Thing) = struct
   module T = T
@@ -270,4 +289,33 @@ module Make (T : Thing) = struct
   module Set = Make_set (T)
   module Map = Make_map (T)
   module Tbl = Make_tbl (T)
+end
+
+let output_of_print print =
+  let output out_channel t =
+    let ppf = Format.formatter_of_out_channel out_channel in
+    (* Effectively disable automatic wrapping because [Printf]-based code
+      doesn't expect it *)
+    Format.pp_set_margin ppf Int.max_int;
+    print ppf t;
+    (* Must flush the formatter immediately because it has a buffer separate
+      from the output channel's buffer *)
+    Format.pp_print_flush ppf ()
+  in
+  output
+
+let output_of_doc_print doc_print =
+  output_of_print (Format_doc.compat doc_print)
+
+module Make_doc (T: Thing_doc) = struct
+  let doc_print = T.doc_print
+
+  include Make(struct
+    include T
+    let print ppf x = Format_doc.compat T.doc_print ppf x
+
+    let output = output_of_doc_print T.doc_print
+  end)
+
+  let print = doc_print
 end

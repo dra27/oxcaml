@@ -849,16 +849,6 @@ val pp_nested_list :
 val print_see_manual : int list Format_doc.printer
 (** See manual section *)
 
-val output_of_print :
-  (Format.formatter -> 'a -> unit) -> out_channel -> 'a -> unit
-(** [output_of_print print] produces an output function from a pretty printer.
-    Note that naively using [Format.formatter_of_out_channel] typechecks but
-    doesn't work because it fails to flush the formatter. *)
-
-val output_of_doc_print :
-  (Format_doc.formatter -> 'a -> unit) -> out_channel -> 'a -> unit
-(** Like [output_of_print] but for [Format_doc] printers. *)
-
 val is_print_longer_than: int -> (Format.formatter -> unit) -> bool
 (** Returns [true] if the printed string is longer than the given integer. Stops
     early if so. Spaces and newlines are counted, but indentation is not. *)

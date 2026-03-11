@@ -1556,22 +1556,6 @@ let print_if ppf flag printer arg =
   if !flag then Format.fprintf ppf "%a@." printer arg;
   arg
 
-let output_of_print print =
-  let output out_channel t =
-    let ppf = Format.formatter_of_out_channel out_channel in
-    (* Effectively disable automatic wrapping because [Printf]-based code
-       doesn't expect it *)
-    Format.pp_set_margin ppf Int.max_int;
-    print ppf t;
-    (* Must flush the formatter immediately because it has a buffer separate
-       from the output channel's buffer *)
-    Format.pp_print_flush ppf ()
-  in
-  output
-
-let output_of_doc_print doc_print =
-  output_of_print (Format_doc.compat doc_print)
-
 let is_print_longer_than size p =
   let exception Limit_exceeded in
   let limit = ref size in

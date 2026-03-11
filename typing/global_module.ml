@@ -7,23 +7,17 @@ module Parameter_name = struct
 
   let to_string t = t
 
-  let doc_print = Fmt.pp_print_string
-
-  include Identifiable.Make (struct
+  include Identifiable.Make_doc (struct
     type nonrec t = t
 
     let compare = String.compare
 
     let equal a b = compare a b = 0
 
-    let print ppf x = Fmt.compat doc_print ppf x
-
-    let output = Misc.output_of_doc_print doc_print
+    let doc_print = Fmt.pp_print_string
 
     let hash = Hashtbl.hash
   end)
-
-  let print = doc_print
 end
 
 let pp_concat pp ppf list =
@@ -114,19 +108,7 @@ end = struct
   }
   and argument = t Argument.t
 
-  let rec doc_print ppf ({ head; args } : t) =
-    match args with
-    | [] ->
-        (* Preserve simple non-wrapping behaviour in atomic case *)
-        Fmt.fprintf ppf "%s" head
-    | _ ->
-        Fmt.fprintf ppf "@[<hov 1>%s%a@]"
-          head
-          (pp_concat print_arg_pair) args
-  and print_arg_pair ppf ({ param = name; value = arg } : argument) =
-    Fmt.fprintf ppf "[%a:%a]" Parameter_name.print name doc_print arg
-
-  include Identifiable.Make (struct
+  include Identifiable.Make_doc (struct
     type nonrec t = t
 
     let rec compare
@@ -142,14 +124,20 @@ end = struct
 
     let equal t1 t2 = compare t1 t2 = 0
 
-    let print ppf x = Fmt.compat doc_print ppf x
-
-    let output = Misc.output_of_doc_print doc_print
+    let rec doc_print ppf ({ head; args } : t) =
+      match args with
+      | [] ->
+          (* Preserve simple non-wrapping behaviour in atomic case *)
+          Fmt.fprintf ppf "%s" head
+      | _ ->
+          Fmt.fprintf ppf "@[<hov 1>%s%a@]"
+            head
+            (pp_concat print_arg_pair) args
+    and print_arg_pair ppf ({ param = name; value = arg } : argument) =
+      Fmt.fprintf ppf "[%a:%a]" Parameter_name.print name doc_print arg
 
     let hash = Hashtbl.hash
   end)
-
-  let print = doc_print
 
   let create head args =
     sort_and_check_uniqueness args
@@ -245,7 +233,7 @@ end = struct
   and print_hidden_pair ppf name =
     Fmt.fprintf ppf "{%a}" Parameter_name.print name
 
-  include Identifiable.Make (struct
+  include Identifiable.Make_doc (struct
     type nonrec t = t
 
     let rec compare
@@ -265,14 +253,10 @@ end = struct
 
     let equal t1 t2 = compare t1 t2 = 0
 
-    let print ppf t = Fmt.compat doc_print ppf t
-
-    let output = Misc.output_of_doc_print doc_print
+    let doc_print = doc_print
 
     let hash = Hashtbl.hash
   end)
-
-  let print = doc_print
 
   let of_parameter_name param = { head = param; hidden_args = []; visible_args = [] }
 
@@ -392,7 +376,7 @@ module Precision = struct
     | Exact -> Fmt.fprintf ppf "exact"
     | Approximate -> Fmt.fprintf ppf "approx"
 
-  let output = Misc.output_of_doc_print print
+  let output = Identifiable.output_of_doc_print print
 
   let equal t1 t2 =
     match t1, t2 with
@@ -409,7 +393,7 @@ module With_precision = struct
     | Exact -> print_t ppf t
     | Approximate -> Fmt.fprintf ppf "@[<hv 2>%a@ (approx)@]" print_t t
 
-  let output = Misc.output_of_doc_print print
+  let output = Identifiable.output_of_doc_print print
 
   exception Inconsistent
 

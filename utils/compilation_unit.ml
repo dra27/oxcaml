@@ -64,9 +64,7 @@ end = struct
      compare hidden in [List.mem], [List.assoc] etc. *)
   type t = string
 
-  let doc_print = Fmt.pp_print_string
-
-  include Identifiable.Make (struct
+  include Identifiable.Make_doc (struct
     type nonrec t = t
 
     let compare = String.compare
@@ -75,12 +73,8 @@ end = struct
 
     let hash = Hashtbl.hash
 
-    let print ppf x = Fmt.compat doc_print ppf x
-
-    let output = Misc.output_of_doc_print doc_print
+    let doc_print = Fmt.pp_print_string
   end)
-
-  let print = doc_print
 
   let isupper chr = Char.equal (Char.uppercase_ascii chr) chr
 
@@ -142,12 +136,7 @@ end = struct
      bumps of magic numbers. *)
   type t = Name.t list
 
-  let doc_print ppf p =
-    Fmt.pp_print_list
-      ~pp_sep:(fun ppf () -> Fmt.pp_print_string ppf ".")
-      Name.print ppf p
-
-  include Identifiable.Make (struct
+  include Identifiable.Make_doc (struct
     type nonrec t = t
 
     let equal = List.equal Name.equal
@@ -156,12 +145,11 @@ end = struct
 
     let hash = Hashtbl.hash
 
-    let print ppf p = Fmt.compat doc_print ppf p
-
-    let output = Misc.output_of_doc_print doc_print
+    let doc_print ppf p =
+      Fmt.pp_print_list
+        ~pp_sep:(fun ppf () -> Fmt.pp_print_string ppf ".")
+        Name.print ppf p
   end)
-
-  let print = doc_print
 
   let is_valid_character first_char c =
     match c with
@@ -475,28 +463,24 @@ let with_for_pack_prefix t for_pack_prefix =
 
 let is_packed t = not (Prefix.is_empty (for_pack_prefix t))
 
-let rec doc_print ppf t =
-  let { for_pack_prefix; name; arguments } = descr t in
-  let () =
-    if Prefix.is_empty for_pack_prefix
-    then Fmt.fprintf ppf "%a" Name.print name
-    else Fmt.fprintf ppf "%a.%a" Prefix.print for_pack_prefix Name.print name
-  in
-  ListLabels.iter ~f:(print_arg ppf) arguments
-
-and print_arg ppf { param; value } =
-  Fmt.fprintf ppf "[%a:%a]" Name.print param doc_print value
-
-include Identifiable.Make (struct
+include Identifiable.Make_doc (struct
   type nonrec t = t
 
   let compare = compare
 
   let equal x y = if x == y then true else compare x y = 0
 
-  let print ppf t = Fmt.compat doc_print ppf t
+  let rec doc_print ppf t =
+    let { for_pack_prefix; name; arguments } = descr t in
+    let () =
+      if Prefix.is_empty for_pack_prefix
+      then Fmt.fprintf ppf "%a" Name.print name
+      else Fmt.fprintf ppf "%a.%a" Prefix.print for_pack_prefix Name.print name
+    in
+    ListLabels.iter ~f:(print_arg ppf) arguments
 
-  let output = Misc.output_of_doc_print doc_print
+  and print_arg ppf { param; value } =
+    Fmt.fprintf ppf "[%a:%a]" Name.print param doc_print value
 
   let rec hash t =
     let { for_pack_prefix; name; arguments } = descr t in
@@ -507,8 +491,6 @@ include Identifiable.Make (struct
 
   and hash_arg { param; value } = Hashtbl.hash (Name.hash param, hash value)
 end)
-
-let print = doc_print
 
 let is_instance t =
   match instance_arguments t with [] -> false | _ :: _ -> true

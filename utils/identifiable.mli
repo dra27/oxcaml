@@ -21,14 +21,29 @@
 
 *)
 
-module type Thing = sig
+module type Formatter = sig type formatter end
+
+module Thingy (Fmt : Formatter) : sig
+  module type T = sig
+    type t
+
+    include Hashtbl.HashedType with type t := t
+    include Map.OrderedType with type t := t
+
+    val output : out_channel -> t -> unit
+    val print : Fmt.formatter -> t -> unit
+  end
+end
+
+module type Thing = Thingy(Format).T
+
+module type Thing_doc = sig
   type t
 
   include Hashtbl.HashedType with type t := t
   include Map.OrderedType with type t := t
 
-  val output : out_channel -> t -> unit
-  val print : Format.formatter -> t -> unit
+  val doc_print : Format_doc.formatter -> t -> unit
 end
 
 module Pair : functor (A : Thing) (B : Thing) -> Thing with type t = A.t * B.t
@@ -104,15 +119,30 @@ module type Tbl = sig
   val map : 'a t -> ('a -> 'b) -> 'b t
 end
 
-module type S = sig
-  type t
+module Sig (Fmt : Formatter) : sig
+  module type S = sig
+    type t
 
-  module T : Thing with type t = t
-  include Thing with type t := T.t
+    module T : Thing with type t = t
+    include Thingy(Fmt).T with type t := T.t
 
-  module Set : Set with module T := T
-  module Map : Map with module T := T
-  module Tbl : Tbl with module T := T
+    module Set : Set with module T := T
+    module Map : Map with module T := T
+    module Tbl : Tbl with module T := T
+  end
 end
 
+module type S = Sig(Format).S
+
+val output_of_print :
+  (Format.formatter -> 'a -> unit) -> out_channel -> 'a -> unit
+(** [output_of_print print] produces an output function from a pretty printer.
+    Note that naively using [Format.formatter_of_out_channel] typechecks but
+    doesn't work because it fails to flush the formatter. *)
+
+val output_of_doc_print :
+  (Format_doc.formatter -> 'a -> unit) -> out_channel -> 'a -> unit
+(** Like [output_of_print] but for [Format_doc] printers. *)
+
 module Make (T : Thing) : S with type t := T.t
+module Make_doc (T : Thing_doc) : Sig(Format_doc).S with type t := T.t
