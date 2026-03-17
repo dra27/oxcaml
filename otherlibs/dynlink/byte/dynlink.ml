@@ -204,14 +204,7 @@ module Bytecode = struct
           let new_error : DT.linking_error =
             match error with
             | Symtable.Undefined_global global ->
-<<<<<<< oxcaml
-              let desc = Format_doc.compat Symtable.Global.description in
-||||||| upstream-base
-              Undefined_global
-                (Format.asprintf "%a" Symtable.Global.description global)
-=======
               let desc = Symtable.Global.description in
->>>>>>> upstream-incoming
               Undefined_global (Format.asprintf "%a" desc global)
             | Symtable.Unavailable_primitive s -> Unavailable_primitive s
             | Symtable.Uninitialized_global global ->
@@ -240,7 +233,7 @@ module Bytecode = struct
               (Marshal.from_channel ic : Instruct.debug_event list)
             |]
 ||||||| upstream-base
-            [| input_value ic |]
+            [| (Compression.input_value ic : Instruct.debug_event list) |]
 =======
             [| (Compression.input_value ic : instruct_debug_event list) |]
 >>>>>>> upstream-incoming

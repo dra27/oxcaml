@@ -402,14 +402,6 @@ static void close_extern_output(struct caml_extern_state* s)
 
 static void free_extern_output(struct caml_extern_state* s)
 {
-<<<<<<< oxcaml
-  struct caml_output_block * blk, * nextblk;
-
-||||||| upstream-base
-  struct output_block * blk, * nextblk;
-
-=======
->>>>>>> upstream-incoming
   if (s->extern_userprovided_output == NULL) {
     for (struct caml_output_block *blk = s->extern_output_first, *nextblk;
          blk != NULL;
@@ -1178,12 +1170,6 @@ CAMLexport void caml_output_value_to_malloc(value v, value flags,
   int header_len;
   intnat data_len;
   char * res;
-<<<<<<< oxcaml
-  struct caml_output_block * blk, * nextblk;
-||||||| upstream-base
-  struct output_block * blk, * nextblk;
-=======
->>>>>>> upstream-incoming
   struct caml_extern_state* s = init_extern_state ();
 
   init_extern_output(s);

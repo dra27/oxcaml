@@ -220,14 +220,10 @@ CAMLextern void caml_runtime_events_resume(void);
    [0] otherwise. */
 CAMLextern int caml_runtime_events_are_active(void);
 
-<<<<<<< oxcaml
-||||||| upstream-base
-=======
 #ifdef __cplusplus
 }
 #endif
 
->>>>>>> upstream-incoming
 #ifdef CAML_INTERNALS
 
 struct runtime_events_buffer_header {

@@ -99,39 +99,19 @@ end
 module General = struct
   type view = [
     | Half_simple.view
-<<<<<<< oxcaml
     | `Var of Ident.t * string loc * Uid.t * Jkind.Sort.t * Mode.Value.l
     | `Alias of pattern * Ident.t * string loc
                 * Uid.t * Jkind.Sort.t * Mode.Value.l * Types.type_expr
-||||||| upstream-base
-    | `Var of Ident.t * string loc
-    | `Alias of pattern * Ident.t * string loc
-=======
-    | `Var of Ident.t * string loc * Uid.t
-    | `Alias of pattern * Ident.t * string loc * Uid.t * Types.type_expr
->>>>>>> upstream-incoming
   ]
   type pattern = view pattern_data
 
   let view_desc = function
     | Tpat_any ->
        `Any
-<<<<<<< oxcaml
     | Tpat_var (id, str, uid, sort, mode) ->
        `Var (id, str, uid, sort, mode)
     | Tpat_alias (p, id, str, uid, sort, mode, ty) ->
        `Alias (p, id, str, uid, sort, mode, ty)
-||||||| upstream-base
-    | Tpat_var (id, str) ->
-       `Var (id, str)
-    | Tpat_alias (p, id, str) ->
-       `Alias (p, id, str)
-=======
-    | Tpat_var (id, str, uid) ->
-       `Var (id, str, uid)
-    | Tpat_alias (p, id, str, uid, ty) ->
-       `Alias (p, id, str, uid, ty)
->>>>>>> upstream-incoming
     | Tpat_constant cst ->
        `Constant cst
     | Tpat_unboxed_unit ->
@@ -165,17 +145,9 @@ module General = struct
 
   let erase_desc = function
     | `Any -> Tpat_any
-<<<<<<< oxcaml
     | `Var (id, str, uid, sort, mode) -> Tpat_var (id, str, uid, sort, mode)
     | `Alias (p, id, str, uid, sort, mode, ty) ->
        Tpat_alias (p, id, str, uid, sort, mode, ty)
-||||||| upstream-base
-    | `Var (id, str) -> Tpat_var (id, str)
-    | `Alias (p, id, str) -> Tpat_alias (p, id, str)
-=======
-    | `Var (id, str, uid) -> Tpat_var (id, str, uid)
-    | `Alias (p, id, str, uid, ty) -> Tpat_alias (p, id, str, uid, ty)
->>>>>>> upstream-incoming
     | `Constant cst -> Tpat_constant cst
     | `Unboxed_unit -> Tpat_unboxed_unit
     | `Unboxed_bool b -> Tpat_unboxed_bool b
@@ -204,13 +176,7 @@ module General = struct
 
   let rec strip_vars (p : pattern) : Half_simple.pattern =
     match p.pat_desc with
-<<<<<<< oxcaml
     | `Alias (p, _, _, _, _, _, _) -> strip_vars (view p)
-||||||| upstream-base
-    | `Alias (p, _, _) -> strip_vars (view p)
-=======
-    | `Alias (p, _, _, _, _) -> strip_vars (view p)
->>>>>>> upstream-incoming
     | `Var _ -> { p with pat_desc = `Any }
     | #Half_simple.view as view -> { p with pat_desc = view }
 end

@@ -946,13 +946,7 @@ and slambda = lambda Slambda0.t0
 
 and rec_binding = {
   id : Ident.t;
-<<<<<<< oxcaml
   debug_uid : debug_uid;
-||||||| upstream-base
-  rkind : Value_rec_types.recursive_binding_kind;
-  def : lambda;
-=======
->>>>>>> upstream-incoming
   def : lfunction;
   (* Generic recursive bindings have been removed from Lambda in 5.2.
      [Value_rec_compiler.compile_letrec] deals with transforming generic
@@ -1141,7 +1135,6 @@ val const_unboxed_int64 : int64 -> structured_constant
 val tagged_immediate : int -> lambda
 val lambda_unit: lambda
 
-<<<<<<< oxcaml
 val of_bool : bool -> lambda
 
 (* Whether to translate the vec256 layout to #(vec128 * vec128). *)
@@ -1203,16 +1196,6 @@ val mixed_block_element_with_locality_mode_for_module :
 val dummy_constant: lambda
 val name_lambda: let_kind -> lambda -> layout -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: (lambda * layout) list -> (lambda list -> lambda) -> lambda
-||||||| upstream-base
-val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
-val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
-=======
-(** [dummy_constant] produces a plecholder value with a recognizable
-    bit pattern (currently 0xBBBB in its tagged form) *)
-val dummy_constant: lambda
-val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
-val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
->>>>>>> upstream-incoming
 
 val lfunction :
   kind:function_kind ->
@@ -1227,7 +1210,6 @@ val lfunction :
 
 val lfunction' :
   kind:function_kind ->
-<<<<<<< oxcaml
   params:lparam list ->
   return:layout ->
   body:lambda ->
@@ -1235,14 +1217,6 @@ val lfunction' :
   loc:scoped_location ->
   mode:locality_mode ->
   ret_mode:locality_mode ->
-||||||| upstream-base
-=======
-  params:(Ident.t * value_kind) list ->
-  return:value_kind ->
-  body:lambda ->
-  attr:function_attribute -> (* specified with [@inline] attribute *)
-  loc:scoped_location ->
->>>>>>> upstream-incoming
   lfunction
 
 
@@ -1337,16 +1311,10 @@ val map : (lambda -> lambda) -> lambda -> lambda
 val map_lfunction : (lambda -> lambda) -> lfunction -> lfunction
   (** Apply the given transformation on the function's body *)
 
-<<<<<<< oxcaml
 val shallow_map  :
   tail:(lambda -> lambda) ->
   non_tail:(lambda -> lambda) ->
   lambda -> lambda
-||||||| upstream-base
-val shallow_map  : (lambda -> lambda) -> lambda -> lambda
-=======
-val shallow_map  : (lambda -> lambda) -> lambda -> lambda
->>>>>>> upstream-incoming
   (** Rewrite each immediate sub-term with the function. *)
 
 val bind_with_layout:

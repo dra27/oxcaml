@@ -222,17 +222,9 @@ end = struct
     | Tpat_any
     | Tpat_var _ ->
         p
-<<<<<<< oxcaml
     | Tpat_alias (q, id, s, uid, sort, mode, ty) ->
         { p with pat_desc =
             Tpat_alias (simpl_under_orpat q, id, s, uid, sort, mode, ty) }
-||||||| upstream-base
-    | Tpat_alias (q, id, s) ->
-        { p with pat_desc = Tpat_alias (simpl_under_orpat q, id, s) }
-=======
-    | Tpat_alias (q, id, s, uid, ty) ->
-        { p with pat_desc = Tpat_alias (simpl_under_orpat q, id, s, uid, ty) }
->>>>>>> upstream-incoming
     | Tpat_or (p1, p2, o) ->
         let p1, p2 = (simpl_under_orpat p1, simpl_under_orpat p2) in
         if le_pat p1 p2 then
@@ -258,18 +250,9 @@ end = struct
       in
       match p.pat_desc with
       | `Any -> stop p `Any
-<<<<<<< oxcaml
       | `Var (id, s, uid, sort, mode) ->
         continue p (`Alias (Patterns.omega, id, s, uid, sort, mode, p.pat_type))
       | `Alias (p, id, _, duid, sort, _, _) ->
-||||||| upstream-base
-      | `Var (id, s) -> continue p (`Alias (Patterns.omega, id, s))
-      | `Alias (p, id, _) ->
-=======
-      | `Var (id, s, uid) ->
-          continue p (`Alias (Patterns.omega, id, s, uid, p.pat_type))
-      | `Alias (p, id, _, _, _) ->
->>>>>>> upstream-incoming
           aux
             ( (General.view p, patl),
               bind_alias p id duid ~arg
@@ -392,25 +375,11 @@ end = struct
       match p.pat_desc with
       | `Or (p1, p2, _) ->
           split_explode p1 aliases (split_explode p2 aliases rem)
-<<<<<<< oxcaml
       | `Alias (p, id, _, _, _, _, _) -> split_explode p (id :: aliases) rem
       | `Var (id, str, uid, sort, mode) ->
-||||||| upstream-base
-      | `Alias (p, id, _) -> split_explode p (id :: aliases) rem
-      | `Var (id, str) ->
-=======
-      | `Alias (p, id, _, _, _) -> split_explode p (id :: aliases) rem
-      | `Var (id, str, uid) ->
->>>>>>> upstream-incoming
           explode
             { p with pat_desc =
-<<<<<<< oxcaml
                 `Alias (Patterns.omega, id, str, uid, sort, mode, p.pat_type) }
-||||||| upstream-base
-            { p with pat_desc = `Alias (Patterns.omega, id, str) }
-=======
-                       `Alias (Patterns.omega, id, str, uid, p.pat_type) }
->>>>>>> upstream-incoming
             aliases rem
       | #view as view ->
           (* We are doing two things here:
@@ -697,13 +666,7 @@ end = struct
           match p.pat_desc with
           | `Or (p1, p2, _) ->
               filter_rec ((left, p1, right) :: (left, p2, right) :: rem)
-<<<<<<< oxcaml
           | `Alias (p, _, _, _, _, _, _) -> filter_rec ((left, p, right) :: rem)
-||||||| upstream-base
-          | `Alias (p, _, _) -> filter_rec ((left, p, right) :: rem)
-=======
-          | `Alias (p, _, _, _, _) -> filter_rec ((left, p, right) :: rem)
->>>>>>> upstream-incoming
           | `Var _ -> filter_rec ((left, Patterns.omega, right) :: rem)
           | #Simple.view as view -> (
               let p = { p with pat_desc = view } in
@@ -753,13 +716,7 @@ let rec flatten_pat_line size p k =
   | Tpat_tuple args -> (List.map snd args) :: k
   | Tpat_or (p1, p2, _) ->
       flatten_pat_line size p1 (flatten_pat_line size p2 k)
-<<<<<<< oxcaml
   | Tpat_alias (p, _, _, _, _, _, _) ->
-||||||| upstream-base
-  | Tpat_alias (p, _, _) ->
-=======
-  | Tpat_alias (p, _, _, _, _) ->
->>>>>>> upstream-incoming
       (* Note: we are only called from flatten_matrix,
          which is itself only ever used in places
          where variables do not matter (default environments,
@@ -867,13 +824,7 @@ end = struct
       | (p, ps) :: rem -> (
           let p = General.view p in
           match p.pat_desc with
-<<<<<<< oxcaml
           | `Alias (p, _, _, _, _, _, _) -> filter_rec ((p, ps) :: rem)
-||||||| upstream-base
-          | `Alias (p, _, _) -> filter_rec ((p, ps) :: rem)
-=======
-          | `Alias (p, _, _, _, _) -> filter_rec ((p, ps) :: rem)
->>>>>>> upstream-incoming
           | `Var _ -> filter_rec ((Patterns.omega, ps) :: rem)
           | `Or (p1, p2, _) -> filter_rec_or p1 p2 ps rem
           | #Simple.view as view -> (
@@ -1688,13 +1639,7 @@ let rec omega_like p =
   | Tpat_any
   | Tpat_var _ ->
       true
-<<<<<<< oxcaml
   | Tpat_alias (p, _, _, _, _, _, _) -> omega_like p
-||||||| upstream-base
-  | Tpat_alias (p, _, _) -> omega_like p
-=======
-  | Tpat_alias (p, _, _, _, _) -> omega_like p
->>>>>>> upstream-incoming
   | Tpat_or (p1, p2, _) -> omega_like p1 || omega_like p2
   | _ -> false
 
@@ -2116,19 +2061,9 @@ and precompile_or (cls : Simple.clause list) ors args def k =
               (* variables bound in the or-pattern
                  that are used in the orpm actions *)
               Typedtree.pat_bound_idents_full orp
-<<<<<<< oxcaml
               |> List.filter (fun (id, _, _, _, _) -> Ident.Set.mem id pm_fv)
               |> List.map (fun (id, _, ty, uid, id_sort) ->
                   (id, uid, Typeopt.layout orp.pat_env orp.pat_loc id_sort ty))
-||||||| upstream-base
-              |> List.filter (fun (id, _, _) -> Ident.Set.mem id pm_fv)
-              |> List.map (fun (id, _, ty) ->
-                     (id, Typeopt.value_kind orp.pat_env ty))
-=======
-              |> List.filter (fun (id, _, _, _) -> Ident.Set.mem id pm_fv)
-              |> List.map (fun (id, _, ty, _) ->
-                     (id, Typeopt.value_kind orp.pat_env ty))
->>>>>>> upstream-incoming
             in
             let or_num = next_raise_count () in
             let new_patl = Patterns.omega_list patl in
@@ -3817,113 +3752,6 @@ let mk_failaction_neg arg_partial ctx def =
       | None -> (None, Jumps.empty Total)
       | Some (lam, jumps) -> (Some lam, jumps)
 
-<<<<<<< oxcaml
-(* In line with the article and simpler than before *)
-let mk_failaction_pos partial seen ctx defs =
-  let rec scan_def env to_test defs =
-    match (to_test, Default_environment.pop defs) with
-    | [], _
-    | _, None ->
-        List.fold_left
-          (fun (klist, jumps) (i, pats) ->
-            let action = Lstaticraise (i, []) in
-            let klist =
-              List.fold_right
-                (fun pat r -> (get_key_constr pat, action) :: r)
-                pats klist
-            and jumps =
-              Jumps.add i (Context.lub (list_as_pat pats) ctx) jumps
-            in
-            (klist, jumps))
-          ([], Jumps.empty) env
-    | _, Some ((idef, pss), rem) -> (
-        let now, later =
-          List.partition (fun (_p, p_ctx) -> Context.matches p_ctx pss) to_test
-        in
-        match now with
-        | [] -> scan_def env to_test rem
-        | _ -> scan_def ((idef, List.map fst now) :: env) later rem
-      )
-  in
-  let fail_pats = complete_pats_constrs seen in
-  if List.length fail_pats < !Clflags.match_context_rows then (
-    let fail, jmps =
-      scan_def []
-        (List.map (fun pat -> (pat, Context.lub pat ctx)) fail_pats)
-        defs
-    in
-    debugf
-      "@,@[<v 2>COMBINE (mk_failaction_pos %a)@,\
-           %a@,\
-           @[<v 2>FAIL PATTERNS:@,\
-             %a@]@,\
-           @[<v 2>POSITIVE JUMPS:@,\
-             %a@]\
-           @]"
-      pp_partial partial
-      Default_environment.pp defs
-      (Format.pp_print_list ~pp_sep:Format.pp_print_cut
-         Printpat.Compat.pretty_pat) fail_pats
-      Jumps.pp jmps
-    ;
-    (None, fail, jmps)
-  ) else (
-    (* Too many non-matched constructors -> reduced information *)
-    let fail, jumps = mk_failaction_neg partial ctx defs in
-||||||| upstream-base
-(* In line with the article and simpler than before *)
-let mk_failaction_pos partial seen ctx defs =
-  let rec scan_def env to_test defs =
-    match (to_test, Default_environment.pop defs) with
-    | [], _
-    | _, None ->
-        List.fold_left
-          (fun (klist, jumps) (i, pats) ->
-            let action = Lstaticraise (i, []) in
-            let klist =
-              List.fold_right
-                (fun pat r -> (get_key_constr pat, action) :: r)
-                pats klist
-            and jumps =
-              Jumps.add i (Context.lub (list_as_pat pats) ctx) jumps
-            in
-            (klist, jumps))
-          ([], Jumps.empty) env
-    | _, Some ((idef, pss), rem) -> (
-        let now, later =
-          List.partition (fun (_p, p_ctx) -> Context.matches p_ctx pss) to_test
-        in
-        match now with
-        | [] -> scan_def env to_test rem
-        | _ -> scan_def ((idef, List.map fst now) :: env) later rem
-      )
-  in
-  let fail_pats = complete_pats_constrs seen in
-  if List.length fail_pats < !Clflags.match_context_rows then (
-    let fail, jmps =
-      scan_def []
-        (List.map (fun pat -> (pat, Context.lub pat ctx)) fail_pats)
-        defs
-    in
-    debugf
-      "@,@[<v 2>COMBINE (mk_failaction_pos %a)@,\
-           %a@,\
-           @[<v 2>FAIL PATTERNS:@,\
-             %a@]@,\
-           @[<v 2>POSITIVE JUMPS:@,\
-             %a@]\
-           @]"
-      pp_partial partial
-      Default_environment.pp defs
-      (Format.pp_print_list ~pp_sep:Format.pp_print_cut
-         Printpat.pretty_pat) fail_pats
-      Jumps.pp jmps
-    ;
-    (None, fail, jmps)
-  ) else (
-    (* Too many non-matched constructors -> reduced information *)
-    let fail, jumps = mk_failaction_neg partial ctx defs in
-=======
 (* In [mk_failaction_pos partial seen ctx defs],
    - [partial] indicates whether the current switch
      is exhaustive
@@ -3962,7 +3790,6 @@ let mk_failaction_pos arg_partial seen ctx defs =
   if List.length input_fail_pats >= !Clflags.match_context_rows then (
     (* Too many non-matched constructors -> reduced information. *)
     let fail, jumps = mk_failaction_neg arg_partial ctx defs in
->>>>>>> upstream-incoming
     debugf
       "@,@[<v 2>COMBINE (mk_failaction_pos)@,\
            %a@,\
@@ -5107,16 +4934,8 @@ let rec comp_match_handlers layout comp_fun partial ctx first_match next_matches
 let rec name_pattern default = function
   | ((pat, _), _) :: rem -> (
       match pat.pat_desc with
-<<<<<<< oxcaml
       | Tpat_var (id, _, uid, _, _) -> id, uid
       | Tpat_alias (_, id, _, uid, _, _, _) -> id, uid
-||||||| upstream-base
-      | Tpat_var (id, _) -> id
-      | Tpat_alias (_, id, _) -> id
-=======
-      | Tpat_var (id, _, _) -> id
-      | Tpat_alias (_, id, _, _, _) -> id
->>>>>>> upstream-incoming
       | _ -> name_pattern default rem
     )
   | _ -> Ident.create_local default, Lambda.debug_uid_none
@@ -6275,14 +6094,8 @@ let for_let ~scopes ~arg_sort ~return_layout loc param mutable_flag pat body =
       (* This eliminates a useless variable (and stack slot in bytecode)
          for "let _ = ...". See #6865. *)
       Lsequence (param, body)
-<<<<<<< oxcaml
   | Tpat_var (id, _, duid, _, _)
   | Tpat_alias ({ pat_desc = Tpat_any }, id, _, duid, _, _, _) ->
-||||||| upstream-base
-  | Tpat_var (id, _) | Tpat_alias ({ pat_desc = Tpat_any }, id, _) ->
-=======
-  | Tpat_var (id, _, _) | Tpat_alias ({ pat_desc = Tpat_any }, id, _, _, _) ->
->>>>>>> upstream-incoming
       (* Fast path, and keep track of simple bindings to unboxable numbers.
 
          Note: the (Tpat_alias (Tpat_any, id)) case needs to be
@@ -6301,23 +6114,11 @@ let for_let ~scopes ~arg_sort ~return_layout loc param mutable_flag pat body =
       let catch_ids = pat_bound_idents_full pat in
       let ids_with_kinds =
         List.map
-<<<<<<< oxcaml
           (fun (id, _, typ, uid, sort) ->
              (id, uid, Typeopt.layout pat.pat_env pat.pat_loc sort typ))
-||||||| upstream-base
-          (fun (id, _, typ) -> (id, Typeopt.value_kind pat.pat_env typ))
-=======
-          (fun (id, _, typ, _) -> (id, Typeopt.value_kind pat.pat_env typ))
->>>>>>> upstream-incoming
           catch_ids
       in
-<<<<<<< oxcaml
       let ids = List.map (fun (id, _, _, _, _) -> id) catch_ids in
-||||||| upstream-base
-      let ids = List.map (fun (id, _, _) -> id) catch_ids in
-=======
-      let ids = List.map (fun (id, _, _, _) -> id) catch_ids in
->>>>>>> upstream-incoming
       let bind =
         map_return (assign_pat ~scopes return_layout opt nraise ids loc pat
                       arg_sort)

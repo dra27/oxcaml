@@ -217,17 +217,12 @@ val report_type_mismatch :
   string -> string -> string ->
   Env.t ->
   type_mismatch Format_doc.printer
-<<<<<<< oxcaml
 
 val report_modality_sub_error :
   string -> string -> Format_doc.formatter -> Mode.Modality.error -> unit
 
 val report_mode_sub_error :
   string -> string -> Format_doc.formatter -> Mode.Value.error -> unit
-||||||| upstream-base
-  Format.formatter -> type_mismatch -> unit
-=======
->>>>>>> upstream-incoming
 
 val report_extension_constructor_mismatch :
   string -> string -> string ->

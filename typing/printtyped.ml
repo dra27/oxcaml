@@ -493,19 +493,11 @@ and pattern : type k . _ -> _ -> k general_pattern -> unit = fun i ppf x ->
   List.iter (pattern_extra i ppf) x.pat_extra;
   match x.pat_desc with
   | Tpat_any -> line i ppf "Tpat_any\n";
-<<<<<<< oxcaml
   | Tpat_var (s,_,_,sort,m) ->
       line i ppf "Tpat_var \"%a\"\n" fmt_ident s;
       line i ppf "sort %a\n" fmt_sort sort;
       value_mode i ppf m
   | Tpat_alias (p, s,_,_,sort,m,_) ->
-||||||| upstream-base
-  | Tpat_var (s,_) -> line i ppf "Tpat_var \"%a\"\n" fmt_ident s;
-  | Tpat_alias (p, s,_) ->
-=======
-  | Tpat_var (s,_,_) -> line i ppf "Tpat_var \"%a\"\n" fmt_ident s;
-  | Tpat_alias (p, s,_,_,_) ->
->>>>>>> upstream-incoming
       line i ppf "Tpat_alias \"%a\"\n" fmt_ident s;
       line i ppf "sort %a\n" fmt_sort sort;
       value_mode i ppf m;

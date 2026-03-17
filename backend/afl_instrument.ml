@@ -104,7 +104,7 @@ and instrument = function
   | Cconst_int _ | Cconst_natint _ | Cconst_float32 _ | Cconst_float _
   | Cconst_vec128 _ | Cconst_vec256 _ | Cconst_vec512 _ | Cconst_symbol _
   | Cvar _ | Cinvalid _ as c -> c
-||||||| upstream-base:asmcomp/afl_instrument.ml
+||||||| upstream-base
   | Cconst_int _ | Cconst_natint _ | Cconst_float _
   | Cconst_symbol _ | Creturn_addr
   | Cvar _ as c -> c
@@ -112,7 +112,7 @@ and instrument = function
   | Cconst_int _ | Cconst_natint _ | Cconst_float _
   | Cconst_symbol _ | Creturn_addr
   | Cvar _ | Cvar_mut _ as c -> c
->>>>>>> upstream-incoming:asmcomp/afl_instrument.ml
+>>>>>>> upstream-incoming
 
 let instrument_function c dbg =
   with_afl_logging c dbg

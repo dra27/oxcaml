@@ -991,13 +991,7 @@ and slambda = lambda SL.t0
 
 and rec_binding = {
   id : Ident.t;
-<<<<<<< oxcaml
   debug_uid : debug_uid;
-||||||| upstream-base
-  rkind : Value_rec_types.recursive_binding_kind;
-  def : lambda;
-=======
->>>>>>> upstream-incoming
   def : lfunction;
 }
 
@@ -1147,7 +1141,6 @@ let unboxed_nativeint =
 
 let const_unit = const_int 0
 
-<<<<<<< oxcaml
 let dummy_constant = tagged_immediate (0xBBBB / 2)
 
 let array_index_to_layout = function
@@ -1190,26 +1183,15 @@ let const_scalar (kind : locality_mode Scalar.Integral.t) n =
     | Naked (Boxable (Int64 _)) -> const_unboxed_int64 (Int64.of_int n)
     | Naked (Boxable (Nativeint _)) ->
       const_unboxed_nativeint (Nativeint.of_int n))
-||||||| upstream-base
-=======
-let dummy_constant = Lconst (const_int (0xBBBB / 2))
->>>>>>> upstream-incoming
 
 let max_arity () =
   if !Clflags.native_code then 126 else max_int
   (* 126 = 127 (the maximal number of parameters supported in C--)
            - 1 (the hidden parameter containing the environment) *)
 
-<<<<<<< oxcaml
 let lfunction' ~kind ~params ~return ~body ~attr ~loc ~mode ~ret_mode =
   assert (List.length params > 0);
-||||||| upstream-base
-let lfunction ~kind ~params ~return ~body ~attr ~loc =
-=======
-let lfunction' ~kind ~params ~return ~body ~attr ~loc =
->>>>>>> upstream-incoming
   assert (List.length params <= max_arity ());
-<<<<<<< oxcaml
   (* A curried function type with n parameters has n arrows. Of these,
      the first [n-nlocal] have return mode Heap, while the remainder
      have return mode Local, except possibly the final one.
@@ -1235,14 +1217,6 @@ let lfunction' ~kind ~params ~return ~body ~attr ~loc =
 
 let lfunction ~kind ~params ~return ~body ~attr ~loc ~mode ~ret_mode =
   Lfunction (lfunction' ~kind ~params ~return ~body ~attr ~loc ~mode ~ret_mode)
-||||||| upstream-base
-  Lfunction { kind; params; return; body; attr; loc }
-=======
-  { kind; params; return; body; attr; loc }
-
-let lfunction ~kind ~params ~return ~body ~attr ~loc =
-  Lfunction (lfunction' ~kind ~params ~return ~body ~attr ~loc)
->>>>>>> upstream-incoming
 
 let lambda_unit = Lconst const_unit
 
@@ -1940,30 +1914,12 @@ let build_substs update_env ?(freshen_bound_variables = false) s =
                       ap_args = subst_list s l ap.ap_args}
     | Lfunction lf ->
         Lfunction (subst_lfun s l lf)
-<<<<<<< oxcaml
     | Llet(str, k, id, duid, arg, body) ->
         let id, duid, l' = bind id duid l in
         Llet(str, k, id, duid, subst s l arg, subst s l' body)
     | Lmutlet(k, id, duid, arg, body) ->
         let id, duid, l' = bind id duid l in
         Lmutlet(k, id, duid, subst s l arg, subst s l' body)
-||||||| upstream-base
-        let params, l' = bind_many lf.params l in
-        Lfunction {lf with params; body = subst s l' lf.body}
-    | Llet(str, k, id, arg, body) ->
-        let id, l' = bind id l in
-        Llet(str, k, id, subst s l arg, subst s l' body)
-    | Lmutlet(k, id, arg, body) ->
-        let id, l' = bind id l in
-        Lmutlet(k, id, subst s l arg, subst s l' body)
-=======
-    | Llet(str, k, id, arg, body) ->
-        let id, l' = bind id l in
-        Llet(str, k, id, subst s l arg, subst s l' body)
-    | Lmutlet(k, id, arg, body) ->
-        let id, l' = bind id l in
-        Lmutlet(k, id, subst s l arg, subst s l' body)
->>>>>>> upstream-incoming
     | Lletrec(decl, body) ->
         let decl, l' = bind_rec decl l in
         Lletrec(List.map (subst_decl s l') decl, subst s l' body)
@@ -2055,13 +2011,7 @@ let build_substs update_env ?(freshen_bound_variables = false) s =
   and subst_list s l li = List.map (subst s l) li
   and subst_decl s l decl = { decl with def = subst_lfun s l decl.def }
   and subst_lfun s l lf =
-<<<<<<< oxcaml
     let params, l' = bind_params lf.params l in
-||||||| upstream-base
-  and subst_decl s l decl = { decl with def = subst s l decl.def }
-=======
-    let params, l' = bind_many lf.params l in
->>>>>>> upstream-incoming
     { lf with params; body = subst s l' lf.body }
   and subst_case s l (key, case) = (key, subst s l case)
   and subst_strcase s l (key, case) = (key, subst s l case)
@@ -2089,20 +2039,6 @@ let duplicate_function =
      (fun _ _ env -> env)
      ~freshen_bound_variables:true
      Ident.Map.empty).subst_lfunction
-<<<<<<< oxcaml
-||||||| upstream-base
-let duplicate lam =
-  subst
-    (fun _ _ env -> env)
-    ~freshen_bound_variables:true
-    Ident.Map.empty
-    lam
-=======
-
-let map_lfunction f { kind; params; return; body; attr; loc } =
-  let body = f body in
-  { kind; params; return; body; attr; loc }
->>>>>>> upstream-incoming
 
 let map_lfunction f { kind; params; return; body; attr; loc;
                       mode; ret_mode } =
@@ -2130,39 +2066,19 @@ let shallow_map ~tail ~non_tail:f = function
       }
   | Lfunction lfun ->
       Lfunction (map_lfunction f lfun)
-<<<<<<< oxcaml
   | Llet (str, layout, v, v_duid, e1, e2) ->
       Llet (str, layout, v, v_duid, f e1, tail e2)
   | Lmutlet (layout, v, v_duid, e1, e2) ->
       Lmutlet (layout, v, v_duid, f e1, tail e2)
-||||||| upstream-base
-  | Lfunction { kind; params; return; body; attr; loc; } ->
-      Lfunction { kind; params; return; body = f body; attr; loc; }
-  | Llet (str, k, v, e1, e2) ->
-      Llet (str, k, v, f e1, f e2)
-  | Lmutlet (k, v, e1, e2) ->
-      Lmutlet (k, v, f e1, f e2)
-=======
-  | Llet (str, k, v, e1, e2) ->
-      Llet (str, k, v, f e1, f e2)
-  | Lmutlet (k, v, e1, e2) ->
-      Lmutlet (k, v, f e1, f e2)
->>>>>>> upstream-incoming
   | Lletrec (idel, e2) ->
       Lletrec
         (List.map (fun rb ->
              { rb with def = map_lfunction f rb.def })
             idel,
-<<<<<<< oxcaml
          tail e2)
   | Lprim (Psequand as p, [l1; l2], loc)
   | Lprim (Psequor as p, [l1; l2], loc) ->
       Lprim(p, [f l1; tail l2], loc)
-||||||| upstream-base
-      Lletrec (List.map (fun rb -> { rb with def = f rb.def }) idel, f e2)
-=======
-         f e2)
->>>>>>> upstream-incoming
   | Lprim (p, el, loc) ->
       Lprim (p, List.map f el, loc)
   | Lswitch (e, sw, loc, layout) ->

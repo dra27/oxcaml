@@ -17,13 +17,13 @@
 open! Int_replace_polymorphic_compare
 
 <<<<<<< oxcaml:backend/cmm_invariants.ml
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
 module Int = Numbers.Int
 =======
 module V = Backend_var
 module VP = Backend_var.With_provenance
 module Int = Numbers.Int
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
 
 (* Check a number of invariants around continuation and variable uses *)
 
@@ -59,12 +59,12 @@ end = struct
   type t = {
 <<<<<<< oxcaml:backend/cmm_invariants.ml
     bound_handlers : int Static_label.Map.t;
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
     bound_handlers : int Int.Map.t;
 =======
     bound_handlers : int Int.Map.t;
     bound_variables : mutability V.Map.t;
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
   }
 
   type error =
@@ -73,14 +73,14 @@ end = struct
     | Wrong_arguments_number of
 <<<<<<< oxcaml:backend/cmm_invariants.ml
         { cont: Static_label.t; handler_args: int; jump_args: int; }
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
         { cont: int; handler_args: int; jump_args: int; }
 =======
         { cont: int; handler_args: int; jump_args: int; }
     | Unbound_variable of { var : V.t; mut : mutability }
     | Wrong_mutability of
         { var : V.t; binding_mut : mutability; use_mut : mutability }
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
 
   module Error = struct
     type t = error
@@ -118,12 +118,12 @@ end = struct
     {
 <<<<<<< oxcaml:backend/cmm_invariants.ml
       bound_handlers = Static_label.Map.empty;
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
       bound_handlers = Int.Map.empty;
 =======
       bound_handlers = Int.Map.empty;
       bound_variables = V.Map.empty;
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
     }
 
   let handler t ~cont ~arg_num =
@@ -132,7 +132,7 @@ end = struct
     state.all_handlers <- Static_label.Set.add cont state.all_handlers;
     let bound_handlers = Static_label.Map.add cont arg_num t.bound_handlers in
     { bound_handlers; }
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
     if Int.Set.mem cont state.all_handlers then multiple_handler cont;
     state.all_handlers <- Int.Set.add cont state.all_handlers;
     let bound_handlers = Int.Map.add cont arg_num t.bound_handlers in
@@ -142,7 +142,7 @@ end = struct
     state.all_handlers <- Int.Set.add cont state.all_handlers;
     let bound_handlers = Int.Map.add cont arg_num t.bound_handlers in
     { t with bound_handlers; }
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
 
   let jump t ~exit_label ~arg_num =
     match (exit_label : Cmm.exit_label) with
@@ -224,17 +224,17 @@ let rec check env (expr : Cmm.expression) =
   | Cconst_int _ | Cconst_natint _ | Cconst_float32 _ | Cconst_float _
   | Cconst_symbol _ | Cconst_vec128 _ | Cconst_vec256 _ | Cconst_vec512 _
   | Cvar _ | Cinvalid _ ->
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
   | Cconst_int _ | Cconst_natint _ | Cconst_float _ | Cconst_symbol _
   | Cvar _ | Creturn_addr ->
 =======
   | Cconst_int _ | Cconst_natint _ | Cconst_float _ | Cconst_symbol _
   | Creturn_addr ->
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
     ()
 <<<<<<< oxcaml:backend/cmm_invariants.ml
   | Clet (_, expr, body) ->
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
   | Clet (_, expr, body)
   | Clet_mut (_, _, expr, body) ->
 =======
@@ -243,7 +243,7 @@ let rec check env (expr : Cmm.expression) =
   | Cvar_mut id ->
     Env.use_var env id Mutable
   | Clet (id, expr, body) ->
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
     check env expr;
     check (Env.bind_var env (VP.var id) Immutable) body
   | Clet_mut (id, _, expr, body) ->
@@ -252,14 +252,14 @@ let rec check env (expr : Cmm.expression) =
   | Cphantom_let (_, _, expr) ->
     check env expr
 <<<<<<< oxcaml:backend/cmm_invariants.ml
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
   | Cassign (_, expr) ->
     check env expr
 =======
   | Cassign (id, expr) ->
     Env.use_var env id Mutable;
     check env expr
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
   | Ctuple exprs ->
     List.iter (check env) exprs
   | Cop (_, args, _) ->
@@ -292,7 +292,7 @@ let rec check env (expr : Cmm.expression) =
     List.iter (fun Cmm.{body = handler; _} -> check env_handler handler) handlers
   | Cexit (exit_label, args, _trap_actions) ->
     Env.jump env ~exit_label ~arg_num:(List.length args)
-||||||| upstream-base:asmcomp/cmm_invariants.ml
+||||||| upstream-base
     List.iter (fun (_, _, handler, _) -> check env_handler handler) handlers
   | Cexit (cont, args) ->
     Env.jump env ~cont ~arg_num:(List.length args)
@@ -317,7 +317,7 @@ let rec check env (expr : Cmm.expression) =
        not reported as an error. *)
     check env body;
     check (Env.bind_var env (VP.var id) Immutable) handler
->>>>>>> upstream-incoming:asmcomp/cmm_invariants.ml
+>>>>>>> upstream-incoming
 
 let run ppf (fundecl : Cmm.fundecl) =
   let env = Env.bind_params (Env.init ()) fundecl.fun_args in

@@ -109,12 +109,8 @@ module type Compiler_options = sig
   val _as_argument_for : string -> unit
   val _as_parameter : unit -> unit
   val _binannot : unit -> unit
-<<<<<<< oxcaml
   val _binannot_cms : unit -> unit
   val _shape_format : string -> unit
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
   val _binannot_occurrences : unit -> unit
   val _c : unit -> unit
   val _cc : string -> unit

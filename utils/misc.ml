@@ -1403,15 +1403,10 @@ module Style = struct
     pp_close_stag ppf ()
 
   let inline_code ppf s = as_inline_code Format_doc.pp_print_string ppf s
-<<<<<<< oxcaml
+  let hint ppf = Format_doc.fprintf ppf "@{<hint>Hint@}"
 
   let as_clflag flag printer ppf x =
     Format_doc.fprintf ppf "@{<inline_code>%s %a@}" flag printer x
-||||||| upstream-base
-  let inline_code ppf s = as_inline_code Format.pp_print_string ppf s
-=======
-  let hint ppf = Format_doc.fprintf ppf "@{<hint>Hint@}"
->>>>>>> upstream-incoming
 
   (* either prints the tag of [s] or delegates to [or_else] *)
   let mark_open_tag ~or_else s =
@@ -1525,27 +1520,6 @@ let spellcheck env name =
   let env = List.sort_uniq (fun s1 s2 -> String.compare s2 s1) env in
   fst (List.fold_left (compare name) ([], max_int) env)
 
-<<<<<<< oxcaml
-
-let did_you_mean ppf get_choices =
-  let open Format_doc in
-  (* flush now to get the error report early, in the (unheard of) case
-     where the search in the get_choices function would take a bit of
-     time; in the worst case, the user has seen the error, she can
-     interrupt the process before the spell-checking terminates. *)
-  fprintf ppf "@?";
-  match get_choices () with
-  | [] -> ()
-||||||| upstream-base
-let did_you_mean ppf get_choices =
-  (* flush now to get the error report early, in the (unheard of) case
-     where the search in the get_choices function would take a bit of
-     time; in the worst case, the user has seen the error, she can
-     interrupt the process before the spell-checking terminates. *)
-  Format.fprintf ppf "@?";
-  match get_choices () with
-  | [] -> ()
-=======
 let align_hint ~prefix ~main ~hint =
     let prefix_shift = String.length prefix in
     Format_doc.Doc.align_prefix2 (main,prefix_shift) (hint,0)
@@ -1566,28 +1540,14 @@ let did_you_mean ?(pp=Style.inline_code) choices =
   let open Format_doc in
   match choices with
   | [] -> None
->>>>>>> upstream-incoming
   | choices ->
     let rest, last = split_last choices in
-<<<<<<< oxcaml
-     fprintf ppf "@\n@[@{<hint>Hint@}: Did you mean %a%s%a?@]"
-       (pp_print_list ~pp_sep:comma Style.inline_code) rest
-       (if rest = [] then "" else " or ")
-       Style.inline_code last
-||||||| upstream-base
-    let comma ppf () = Format.fprintf ppf ", " in
-     Format.fprintf ppf "@\n@{<hint>Hint@}: Did you mean %a%s%a?@?"
-       (Format.pp_print_list ~pp_sep:comma Style.inline_code) rest
-       (if rest = [] then "" else " or ")
-       Style.inline_code last
-=======
     Some (doc_printf
             "@[@{<hint>Hint@}: @{<ralign>Did you mean @}%a%s%a?@]"
             (pp_print_list ~pp_sep:comma pp) rest
             (if rest = [] then "" else " or ")
             pp last
       )
->>>>>>> upstream-incoming
 
 module Error_style = struct
   type setting =
@@ -1636,7 +1596,6 @@ let delete_eol_spaces src =
   let stop = loop 0 0 in
   Bytes.sub_string dst 0 stop
 
-<<<<<<< oxcaml
 let pp_two_columns ?(sep = "|") ?max_lines ppf (lines: (string * string) list) =
   let left_column_size =
     List.fold_left (fun acc (s, _) -> Int.max acc (String.length s)) 0 lines in
@@ -1789,30 +1748,6 @@ let pp_table ppf (columns : (string * string list) list) =
     print_separator ppf table_width
   done
 
-||||||| upstream-base
-let pp_two_columns ?(sep = "|") ?max_lines ppf (lines: (string * string) list) =
-  let left_column_size =
-    List.fold_left (fun acc (s, _) -> Int.max acc (String.length s)) 0 lines in
-  let lines_nb = List.length lines in
-  let ellipsed_first, ellipsed_last =
-    match max_lines with
-    | Some max_lines when lines_nb > max_lines ->
-        let printed_lines = max_lines - 1 in (* the ellipsis uses one line *)
-        let lines_before = printed_lines / 2 + printed_lines mod 2 in
-        let lines_after = printed_lines / 2 in
-        (lines_before, lines_nb - lines_after - 1)
-    | _ -> (-1, -1)
-  in
-  Format.fprintf ppf "@[<v>";
-  List.iteri (fun k (line_l, line_r) ->
-    if k = ellipsed_first then Format.fprintf ppf "...@,";
-    if ellipsed_first <= k && k <= ellipsed_last then ()
-    else Format.fprintf ppf "%*s %s %s@," left_column_size line_l sep line_r
-  ) lines;
-  Format.fprintf ppf "@]"
-
-=======
->>>>>>> upstream-incoming
 (* showing configuration and configuration variables *)
 let show_config_and_exit () =
   Config.print_config stdout;
@@ -1879,7 +1814,6 @@ let print_if ppf flag printer arg =
   if !flag then Format.fprintf ppf "%a@." printer arg;
   arg
 
-<<<<<<< oxcaml
 let output_of_print print =
   let output out_channel t =
     let ppf = Format.formatter_of_out_channel out_channel in
@@ -1933,9 +1867,6 @@ let to_string_of_print print =
   in
   to_string
 
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 
 type filepath = string
 

@@ -832,10 +832,6 @@ static void domain_create(uintnat initial_minor_heap_wsize,
 
 <<<<<<< oxcaml
 ||||||| upstream-base
-  s->unique_id = fresh_domain_unique_id();
-  s->running = 1;
-  atomic_fetch_add(&caml_num_domains_running, 1);
-
   /* Note: until we take d->domain_lock, the domain_state may still be
    * shared with a domain which is terminating (see
    * domain_terminate). */
@@ -896,8 +892,7 @@ static void domain_create(uintnat initial_minor_heap_wsize,
   }
 ||||||| upstream-base
   domain_state->id = d->id;
-  domain_state->unique_id = d->interruptor.unique_id;
-  CAMLassert(!d->interruptor.interrupt_pending);
+  CAMLassert(!s->interrupt_pending);
 =======
   CAMLassert(!interruptor_has_pending(s));
 >>>>>>> upstream-incoming
@@ -961,6 +956,10 @@ static void domain_create(uintnat initial_minor_heap_wsize,
   d->running = 1;
   (void)caml_atomic_counter_incr(&caml_num_domains_running);
 ||||||| upstream-base
+  s->unique_id = fresh_domain_unique_id();
+  domain_state->unique_id = s->unique_id;
+  s->running = 1;
+  atomic_fetch_add(&caml_num_domains_running, 1);
 =======
   s->unique_id = fresh_domain_unique_id();
   domain_state->unique_id = s->unique_id;
@@ -1807,17 +1806,8 @@ static void* domain_thread_func(void* v)
 #endif
 
   domain_create(caml_params->init_minor_heap_wsz, p->parent->state);
-<<<<<<< oxcaml
-||||||| upstream-base
-
-  if (!domain_self) {
-    caml_fatal_error("Failed to create domain");
-  }
-
-=======
   if (domain_self)
     domain_self->tid = pthread_self();
->>>>>>> upstream-incoming
 
   /* this domain is now part of the STW participant set */
   p->newdom = domain_self;
@@ -2524,7 +2514,6 @@ void caml_reset_young_limit(caml_domain_state * dom_st)
      long-running C code (that may regularly poll with
      caml_process_pending_actions), we want to force a query of all
      callbacks at every minor collection or major slice (similarly to
-<<<<<<< oxcaml
      the OCaml behaviour).
 
      We don't need to check for internally triggered pending actions
@@ -2532,18 +2521,6 @@ void caml_reset_young_limit(caml_domain_state * dom_st)
      action_pending if needed. */
   if (caml_check_pending_signals() || Caml_state->requested_external_interrupt)
     caml_set_action_pending(dom_st);
-||||||| upstream-base
-  /* We might be here due to a recently-recorded signal, so we
-     need to remember that we must run signal handlers. In
-     addition, in the case of long-running C code (that may
-     regularly poll with caml_process_pending_actions), we want to
-     force a query of all callbacks at every minor collection or
-     major slice (similarly to the OCaml behaviour). */
-  caml_set_action_pending(dom_st);
-=======
-     the OCaml behaviour). */
-  caml_set_action_pending(dom_st);
->>>>>>> upstream-incoming
 }
 
 void caml_update_young_limit_after_c_call(caml_domain_state * dom_st)
@@ -2859,6 +2836,7 @@ void caml_domain_terminate(bool last)
 
       CAMLassert (domain_self->backup_thread_running);
       domain_self->backup_thread_running = 0;
+
 =======
       /* Signal the interruptor condition variable
          because the backup thread may be waiting on it. */
@@ -2924,15 +2902,17 @@ void caml_domain_terminate(bool last)
   caml_free_intern_state();
   caml_free_extern_state();
   caml_teardown_major_gc();
-<<<<<<< oxcaml
 
+<<<<<<< oxcaml
   caml_dynamic_delete_thread(domain_state->dynamic_bindings);
   domain_state->dynamic_bindings = NULL;
-||||||| upstream-base
-  CAML_EV_LIFECYCLE(EV_DOMAIN_TERMINATE, getpid());
-=======
->>>>>>> upstream-incoming
 
+  caml_teardown_shared_heap(domain_state->shared_heap);
+  domain_state->shared_heap = 0;
+||||||| upstream-base
+  caml_teardown_shared_heap(domain_state->shared_heap);
+  domain_state->shared_heap = 0;
+=======
   /* At this point, we know that the shared heap has been orphaned,
      except if [last], if we are the last domain. In that case we
      finalise all unswept objects and orphan the shared heap now. */
@@ -2950,6 +2930,7 @@ void caml_domain_terminate(bool last)
 
   caml_free_shared_heap(domain_state->shared_heap);
   domain_state->shared_heap = NULL;
+>>>>>>> upstream-incoming
   caml_free_minor_tables(domain_state->minor_tables);
   domain_state->minor_tables = NULL;
 
@@ -3158,18 +3139,6 @@ CAMLprim value caml_domain_tls_set(value t)
 CAMLprim value caml_domain_tls_get(value unused)
 {
   return domain_root_get(&Caml_state->tls_state);
-}
-
-CAMLprim value caml_domain_dls_compare_and_set(value old, value new)
-{
-  CAMLnoalloc;
-  value current = Caml_state->dls_root;
-  if (current == old) {
-    caml_modify_generational_global_root(&Caml_state->dls_root, new);
-    return Val_true;
-  } else {
-    return Val_false;
-  }
 }
 
 CAMLprim value caml_recommended_domain_count(value unused)

@@ -887,13 +887,8 @@ static intnat pool_sweep(struct caml_heap_state* local, pool** plist,
   return work;
 }
 
-<<<<<<< oxcaml
 /* Sweep one large block. Returns the block's size. */
 
-||||||| upstream-base
-CAMLno_tsan /* Disable TSan reports from this function (see #11040) */
-=======
->>>>>>> upstream-incoming
 static intnat large_alloc_sweep(struct caml_heap_state* local) {
   value* p;
   header_t hd;

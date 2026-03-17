@@ -62,13 +62,13 @@ let match_expect_extension (ext : Parsetree.extension) =
               [ None, a
 <<<<<<< oxcaml:oxcaml/testsuite/tools/expectcommon.ml
               ; None, { pexp_desc = Pexp_construct
-||||||| upstream-base:testsuite/tools/expect.ml
+||||||| upstream-base
               [ a
               ; { pexp_desc = Pexp_construct
 =======
               ; None,
                 { pexp_desc = Pexp_construct
->>>>>>> upstream-incoming:testsuite/tools/expect.ml
+>>>>>>> upstream-incoming
                                 ({ txt = Lident "Principal"; _ }, Some b) }
               ] ->
             (string_constant a, string_constant b)
@@ -208,7 +208,7 @@ function
 
 <<<<<<< oxcaml:oxcaml/testsuite/tools/expectcommon.ml
 let eval_expect_file _fname ~file_contents ~execute_phrase =
-||||||| upstream-base:testsuite/tools/expect.ml
+||||||| upstream-base
 let eval_expect_file _fname ~file_contents =
 =======
 
@@ -219,7 +219,7 @@ let visible_inline_code () =
   set_styles { default with inline_code }
 
 let eval_expect_file _fname ~file_contents =
->>>>>>> upstream-incoming:testsuite/tools/expect.ml
+>>>>>>> upstream-incoming
   Warnings.reset_fatal ();
   let chunks, trailing_code =
     parse_contents ~fname:"" file_contents |> split_chunks

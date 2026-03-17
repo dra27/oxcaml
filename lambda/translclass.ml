@@ -360,16 +360,8 @@ let create_object cl obj init =
 
 let name_pattern default p =
   match p.pat_desc with
-<<<<<<< oxcaml
   | Tpat_var (id, _, _, _, _) -> id
   | Tpat_alias(_, id, _, _, _, _, _) -> id
-||||||| upstream-base
-  | Tpat_var (id, _) -> id
-  | Tpat_alias(_, id, _) -> id
-=======
-  | Tpat_var (id, _, _) -> id
-  | Tpat_alias(_, id, _, _, _) -> id
->>>>>>> upstream-incoming
   | _ -> Ident.create_local default
 
 (*
@@ -812,8 +804,9 @@ let rec build_class_lets ~scopes cl =
           Translcore.transl_let ~scopes ~return_layout rec_flag defs lam,
           rkind)
 ||||||| upstream-base
-      (env, fun x ->
-          Translcore.transl_let ~scopes rec_flag defs (wrap x))
+      (env, fun lam_and_kind ->
+          let lam, rkind = wrap lam_and_kind in
+          Translcore.transl_let ~scopes rec_flag defs lam, rkind)
 =======
       (env, fun lam_and_kind ->
           let lam, rkind = wrap lam_and_kind in
@@ -825,13 +818,7 @@ let rec build_class_lets ~scopes cl =
       build_class_lets ~scopes cl
 >>>>>>> upstream-incoming
   | _ ->
-<<<<<<< oxcaml
       (cl.cl_env, fun _ lam_and_kind -> lam_and_kind)
-||||||| upstream-base
-      (cl.cl_env, fun x -> x)
-=======
-      (cl.cl_env, fun lam_and_kind -> lam_and_kind)
->>>>>>> upstream-incoming
 
 let rec get_class_meths cl =
   match cl.cl_desc with
@@ -1290,18 +1277,11 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                    mkappl (Lvar obj_init, [lambda_unit], layout_function)))
   in
   (* Simplest case: an object defined at toplevel (ids=[]) *)
-<<<<<<< oxcaml
   if top && ids = [] then llets layout_table (ltable cla (ldirect obj_init), Dynamic) else
-||||||| upstream-base
-  if top && ids = [] then llets (ltable cla (ldirect obj_init)) else
-=======
-  if top && ids = [] then llets (ltable cla (ldirect obj_init), Dynamic) else
->>>>>>> upstream-incoming
 
   let concrete = (vflag = Concrete)
   and lclass mk_lam_and_kind =
     let cl_init, _ =
-<<<<<<< oxcaml
       llets layout_function
         (Lambda.lfunction
            ~kind:(Curried {nlocal=0})
@@ -1317,39 +1297,11 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
     let lam, rkind = mk_lam_and_kind (free_variables cl_init) in
     Llet(Strict, layout_function, class_init, class_init_duid, cl_init, lam),
     rkind
-||||||| upstream-base
-  and lclass lam =
-    let cl_init = llets (Lambda.lfunction
-                           ~kind:Curried
-                           ~attr:default_function_attribute
-                           ~loc:Loc_unknown
-                           ~return:Pgenval
-                           ~params:[cla, Pgenval] ~body:cl_init) in
-    Llet(Strict, Pgenval, class_init, cl_init, lam (free_variables cl_init))
-=======
-      llets (Lambda.lfunction
-               ~kind:Curried
-               ~attr:default_function_attribute
-               ~loc:Loc_unknown
-               ~return:Pgenval
-               ~params:[cla, Pgenval]
-               ~body:cl_init,
-            Dynamic (* Placeholder, real kind is computed in [lbody] below *))
-    in
-    let lam, rkind = mk_lam_and_kind (free_variables cl_init) in
-    Llet(Strict, Pgenval, class_init, cl_init, lam), rkind
->>>>>>> upstream-incoming
   and lbody fv =
     if List.for_all (fun id -> not (Ident.Set.mem id fv)) ids then
       (* Not recursive: can use make_class directly *)
       mkappl (oo_prim "make_class",[transl_meth_list pub_meths;
-<<<<<<< oxcaml
                                     Lvar class_init], layout_block),
-||||||| upstream-base
-                                    Lvar class_init])
-=======
-                                    Lvar class_init]),
->>>>>>> upstream-incoming
       Dynamic
     else
       (* Recursive: need to have an actual allocation for let rec compilation
@@ -1369,7 +1321,6 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
       Lprim(Pmakeblock(0, Immutable, None),
             [mkappl (Lvar env_init, [lambda_unit]);
              Lvar class_init; Lvar env_init; lambda_unit],
-            Loc_unknown))))
 =======
       mkappl (oo_prim "init_class", [Lvar table]),
       Lprim(Pmakeblock(0, Immutable, None),
@@ -1403,7 +1354,6 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                           ~return:Pgenval
                           ~params:[cla, Pgenval] ~body:cl_init;
            lambda_unit; lenvs],
-         Loc_unknown)
 =======
                           ~return:Pgenval
                           ~params:[cla, Pgenval] ~body:cl_init;
@@ -1449,14 +1399,7 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
       (List.rev inh_init)
   in
   let make_envs (lam, rkind) =
-<<<<<<< oxcaml
     Llet(StrictOpt, layout_block, envs, envs_duid,
-||||||| upstream-base
-  let make_envs lam =
-    Llet(StrictOpt, Pgenval, envs,
-=======
-    Llet(StrictOpt, Pgenval, envs,
->>>>>>> upstream-incoming
          (if linh_envs = [] then lenv else
          Lprim(Pmakeblock(0, Immutable, All_value, alloc_heap),
                lenv :: linh_envs, Loc_unknown)),
@@ -1523,7 +1466,6 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
          so that the program's behaviour does not change between runs *)
       lupdate_cache
     else
-<<<<<<< oxcaml
       Lifthenelse(lfield cached 0, lambda_unit, lupdate_cache, layout_unit) in
   let lcache (lam, rkind) =
     let lam = Lsequence (lcheck_cache, lam) in
@@ -1540,42 +1482,12 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
     lam, rkind
   in
   llets layout_block (
-||||||| upstream-base
-      Lifthenelse(lfield cached 0, lambda_unit, lupdate_cache) in
-  llets (
-=======
-      Lifthenelse(lfield cached 0, lambda_unit, lupdate_cache) in
-  let lcache (lam, rkind) =
-    let lam = Lsequence (lcheck_cache, lam) in
-    let lam =
-      if inh_keys = []
-      then Llet(Alias, Pgenval, cached, Lvar tables, lam)
-      else
-        Llet(Strict, Pgenval, cached,
-             mkappl (oo_prim "lookup_tables",
-                     [Lvar tables; Lprim(Pmakeblock(0, Immutable, None),
-                                         inh_keys, Loc_unknown)]),
-             lam)
-    in
-    lam, rkind
-  in
-  llets (
->>>>>>> upstream-incoming
   lcache (
   make_envs (
   if ids = []
-<<<<<<< oxcaml
   then mkappl (lfield cached 0, [lenvs], layout_obj), Dynamic
   else
     Lprim(Pmakeblock(0, Immutable, All_value, alloc_heap),
-||||||| upstream-base
-  if ids = [] then mkappl (lfield cached 0, [lenvs]) else
-  Lprim(Pmakeblock(0, Immutable, None),
-=======
-  then mkappl (lfield cached 0, [lenvs]), Dynamic
-  else
-    Lprim(Pmakeblock(0, Immutable, None),
->>>>>>> upstream-incoming
         (if concrete then
           [mkappl (lfield cached 0, [lenvs], layout_obj);
            lfield cached 1;

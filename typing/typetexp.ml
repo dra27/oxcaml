@@ -1544,12 +1544,16 @@ and transl_type_aux env ~row_context ~aliased ~policy mode styp =
   | Ptyp_package (p, l) ->
       let loc = styp.ptyp_loc in
       let l = sort_constraints_no_duplicates loc env l in
-      let mty = create_package_mty loc p l in
+      let mty = Ast_helper.Mty.mk ~loc (Pmty_ident p) in
+      let mty = TyVarEnv.with_local_scope (fun () -> !transl_modtype env mty) in
+      let ptys =
+        List.map (fun (s, pty) -> s, transl_type env ~policy ~row_context pty) l
+      in
       let mty =
-        TyVarEnv.with_local_scope (fun () -> !transl_modtype env mty) in
-      let ptys = List.map (fun (s, pty) ->
-                             s, transl_type env ~policy ~row_context pty
-                          ) l in
+        if ptys <> [] then
+          !check_package_with_type_constraints loc env mty.mty_type ptys
+        else mty.mty_type
+      in
       let path = !transl_modtype_longident loc env p.txt in
       let ty = newty (Tpackage (path,
                        List.map (fun (s, cty) -> (s.txt, cty.ctyp_type)) ptys))
@@ -1569,22 +1573,10 @@ and transl_type_aux env ~row_context ~aliased ~policy mode styp =
 >>>>>>> upstream-incoming
       in
       ctyp (Ttyp_package {
-<<<<<<< oxcaml
-            pack_path = path;
-            pack_type = mty;
-            pack_fields = ptys;
-            pack_txt = p;
-||||||| upstream-base
-            pack_path = path;
-            pack_type = mty.mty_type;
-            pack_fields = ptys;
-            pack_txt = p;
-=======
             tpt_path = path;
             tpt_type = mty;
             tpt_cstrs = ptys;
             tpt_txt = ptyp.ppt_path;
->>>>>>> upstream-incoming
            }) ty
   | Ptyp_open (mod_ident, t) ->
       let path, new_env =
@@ -2112,24 +2104,11 @@ let transl_type_scheme env styp =
 (* Error report *)
 
 open Format_doc
-<<<<<<< oxcaml
-open Printtyp
-||||||| upstream-base
-open Format
-open Printtyp
-=======
 open Printtyp.Doc
->>>>>>> upstream-incoming
 module Style = Misc.Style
 let pp_tag ppf t = fprintf ppf "`%s" t
-<<<<<<< oxcaml
-let pp_type ppf ty = Style.as_inline_code !Oprint.out_type ppf ty
-||||||| upstream-base
-let pp_tag ppf t = Format.fprintf ppf "`%s" t
-=======
 let pp_out_type ppf ty = Style.as_inline_code !Oprint.out_type ppf ty
 let pp_type ppf ty = Style.as_inline_code Printtyp.Doc.type_expr ppf ty
->>>>>>> upstream-incoming
 
 <<<<<<< oxcaml
 let report_unbound_variable_reason ppf = function
@@ -2151,8 +2130,7 @@ let report_error_doc env ppf =
         Style.inline_code "_";
       report_unbound_variable_reason ppf reason
 ||||||| upstream-base
-
-let report_error env ppf = function
+let report_error_doc env ppf = function
   | Unbound_type_variable (name, in_scope_names) ->
     fprintf ppf "The type variable %a is unbound in this type declaration.@ %a"
       Style.inline_code name
@@ -2182,53 +2160,22 @@ let report_error_doc loc env = function
          but is here applied to %i argument(s)"
         (Style.as_inline_code longident) lid expected provided
   | Bound_type_variable name ->
-<<<<<<< oxcaml
-      fprintf ppf "Already bound type parameter %a"
-||||||| upstream-base
-      fprintf ppf "Already bound type parameter %a"
-        (Style.as_inline_code Pprintast.tyvar) name
-=======
       Location.errorf ~loc "Already bound type parameter %a"
->>>>>>> upstream-incoming
         (Style.as_inline_code Pprintast.Doc.tyvar) name
   | Recursive_type ->
       Location.errorf ~loc "This type is recursive"
   | Type_mismatch trace ->
       let msg = Format_doc.Doc.msg in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf Env.empty trace
-        (msg "This type")
-        (msg "should be an instance of type")
-||||||| upstream-base
-      Printtyp.report_unification_error ppf Env.empty trace
-        (function ppf ->
-           fprintf ppf "This type")
-        (function ppf ->
-           fprintf ppf "should be an instance of type")
-=======
       Location.errorf ~loc "%t" @@ fun ppf ->
         Errortrace_report.unification ppf Env.empty trace
           (msg "This type")
           (msg "should be an instance of type")
->>>>>>> upstream-incoming
   | Alias_type_mismatch trace ->
       let msg = Format_doc.Doc.msg in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf Env.empty trace
-        (msg "This alias is bound to type")
-        (msg "but is used as an instance of type")
-||||||| upstream-base
-      Printtyp.report_unification_error ppf Env.empty trace
-        (function ppf ->
-           fprintf ppf "This alias is bound to type")
-        (function ppf ->
-           fprintf ppf "but is used as an instance of type")
-=======
       Location.errorf ~loc "%t" @@ fun ppf ->
         Errortrace_report.unification ppf Env.empty trace
           (msg "This alias is bound to type")
           (msg "but is used as an instance of type")
->>>>>>> upstream-incoming
   | Present_has_conjunction l ->
       Location.errorf ~loc "The present constructor %a has a conjunctive type"
         Style.inline_code l
@@ -2333,7 +2280,7 @@ let report_error_doc loc env = function
   | Cannot_quantify (name, v) ->
       fprintf ppf
         "@[<hov>The universal type variable %a cannot be generalized:@ "
-        (Style.as_inline_code Pprintast.tyvar) name;
+        (Style.as_inline_code Pprintast.Doc.tyvar) name;
       if Btype.is_Tvar v then
         fprintf ppf "it escapes its scope"
       else if Btype.is_Tunivar v then
@@ -2446,17 +2393,17 @@ let () =
   Location.register_error_of_exn
     (function
       | Error (loc, env, err) ->
-<<<<<<< oxcaml
-        Some (Location.error_of_printer ~loc (report_error_doc env) err)
-||||||| upstream-base
-        Some (Location.error_of_printer ~loc (report_error env) err)
-=======
         Some (report_error_doc loc env err)
->>>>>>> upstream-incoming
       | Error_forward err ->
         Some err
       | _ ->
         None
     )
+<<<<<<< oxcaml
 
 let report_error = Format_doc.compat1 report_error_doc
+||||||| upstream-base
+
+let report_error env = Format_doc.compat (report_error_doc env)
+=======
+>>>>>>> upstream-incoming

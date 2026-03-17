@@ -813,37 +813,12 @@ CAMLprim value caml_runtime_events_user_write(
     value record = Field(event_type, 0);
     value serializer = Field(record, 0);
 
-<<<<<<< oxcaml
-    res = caml_callback2_exn(serializer, write_buffer, event_content);
-
-    if (Is_exception_result(res)) {
-      res = Extract_exception(res);
-      caml_raise(res);
-    }
-||||||| upstream-base
-    caml_plat_lock(&write_buffer_lock);
-
-    if (write_buffer == Val_none) {
-      write_buffer = caml_alloc_string(RUNTIME_EVENTS_MAX_MSG_LENGTH);
-      caml_register_generational_global_root(&write_buffer);
-    }
-
-    res = caml_callback2_exn(serializer, write_buffer, event_content);
-
-    if (Is_exception_result(res)) {
-      caml_plat_unlock(&write_buffer_lock);
-
-      res = Extract_exception(res);
-      caml_raise(res);
-    }
-=======
     res = caml_callback2(serializer, write_buffer, event_content);
 
     /* Need to check whether the ring is active again as the ring might
      * potentially have been destroyed during the callback. */
     if ( !ring_is_active() )
       CAMLreturn(Val_unit);
->>>>>>> upstream-incoming
 
     /* Need to check whether the ring is active again as the ring might
      * potentially have been destroyed during the callback. */

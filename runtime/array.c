@@ -371,7 +371,7 @@ CAMLprim value caml_make_local_unboxed_float64_vect(value len)
 static value make_array_gen(value len, value init, int local)
 ||||||| upstream-base
 /* [len] is a [value] representing number of words or floats */
-CAMLprim value caml_make_vect(value len, value init)
+CAMLprim value caml_array_make(value len, value init)
 =======
 CAMLprim value caml_floatarray_make_unboxed(intnat size, double init)
 {
@@ -674,13 +674,8 @@ CAMLprim value caml_array_make(value len, value init)
 
 /* [len] is a [value] representing number of floats */
 /* [ int -> float array ] */
-<<<<<<< oxcaml
 /* This function is named "create" (not "make") because it does not take an
    init value. See the comment above caml_array_make for more details. */
-||||||| upstream-base
-CAMLprim value caml_make_float_vect(value len)
-=======
->>>>>>> upstream-incoming
 CAMLprim value caml_array_create_float(value len)
 {
 #ifdef FLAT_FLOAT_ARRAY
@@ -896,13 +891,7 @@ CAMLprim value caml_make_untagged_int_vect_bytecode(value len)
    boxed floats and returns the corresponding flat-allocated [float array].
    In all other cases, it just returns its argument unchanged.
 */
-<<<<<<< oxcaml
 static value uniform_array_gen(value init, int local)
-||||||| upstream-base
-CAMLprim value caml_make_array(value init)
-=======
-CAMLprim value caml_array_of_uniform_array(value init)
->>>>>>> upstream-incoming
 {
 #ifdef FLAT_FLOAT_ARRAY
   CAMLparam1 (init);
@@ -941,7 +930,6 @@ CAMLprim value caml_array_of_uniform_array(value init)
 #endif
 }
 
-<<<<<<< oxcaml
 CAMLprim value caml_array_of_uniform_array(value init)
 {
   return uniform_array_gen(init, 0);
@@ -979,28 +967,6 @@ CAMLprim value caml_make_array_local(value init)
 {
   return caml_array_of_uniform_array_local(init);
 }
-||||||| upstream-base
-=======
-
-/* #13003: previous names for array-creation primitives,
-   kept for backward-compatibility only. */
-
-CAMLprim value caml_make_vect(value len, value init)
-{
-  return caml_array_make(len, init);
-}
-
-CAMLprim value caml_make_float_vect(value len)
-{
-  return caml_array_create_float(len);
-}
-
-CAMLprim value caml_make_array(value array)
-{
-  return caml_array_of_uniform_array(array);
-}
-
->>>>>>> upstream-incoming
 
 /* Blitting */
 

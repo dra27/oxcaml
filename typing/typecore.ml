@@ -1420,12 +1420,7 @@ type pattern_variable =
     pv_loc: Location.t;
     pv_kind: pattern_variable_kind;
     pv_attributes: attributes;
-<<<<<<< oxcaml
     pv_sort: Jkind_types.Sort.t;
-||||||| upstream-base
-=======
-    pv_uid : Uid.t;
->>>>>>> upstream-incoming
   }
 
 type module_variable =
@@ -1644,32 +1639,17 @@ let enter_variable ?(is_module=false) ?(is_as_variable=false) tps loc name mode
     end else
       Ident.create_local name.txt
   in
-<<<<<<< oxcaml
-  let pv_uid = Uid.mk ~current_unit:(Env.get_unit_name ()) in
-||||||| upstream-base
-=======
   let pv_uid = Uid.mk ~current_unit:(Env.get_current_unit ()) in
->>>>>>> upstream-incoming
   tps.tps_pattern_variables <-
     {pv_id = id;
      pv_mode = mode;
      pv_kind = kind;
      pv_type = ty;
      pv_loc = loc;
-<<<<<<< oxcaml
-     pv_as_var = is_as_variable;
+     pv_kind = if is_as_variable then As_var else Std_var;
      pv_attributes = attrs;
      pv_uid;
      pv_sort = sort} :: tps.tps_pattern_variables;
-||||||| upstream-base
-     pv_as_var = is_as_variable;
-     pv_attributes = attrs} :: tps.tps_pattern_variables;
-  id
-=======
-     pv_kind = if is_as_variable then As_var else Std_var;
-     pv_attributes = attrs;
-     pv_uid} :: tps.tps_pattern_variables;
->>>>>>> upstream-incoming
   id, pv_uid
 
 let sort_pattern_variables vs =
@@ -1782,13 +1762,7 @@ and build_as_type_aux (env : Env.t) p ~mode =
     ty, mode
   in
   match p.pat_desc with
-<<<<<<< oxcaml
     Tpat_alias(p1,_, _, _, _, _, _) -> build_as_type_and_mode env p1 ~mode
-||||||| upstream-base
-    Tpat_alias(p1,_, _) -> build_as_type env p1
-=======
-    Tpat_alias(p1,_, _, _, _) -> build_as_type env p1
->>>>>>> upstream-incoming
   | Tpat_tuple pl ->
       let labeled_tyl =
         List.map (fun (label, p) -> label, build_as_type env p) pl in
@@ -2329,26 +2303,11 @@ let solve_Ppat_construct tps (penv : Pattern_env.t) loc constr no_existentials
           if not (fully_generic t1 && fully_generic t2) then
             let msg =
               Format_doc.doc_printf
-<<<<<<< oxcaml
-                "typing this pattern requires considering@ %a@ and@ %a@ as \
-                equal.@,\
-                But the knowledge of these types"
-                    Printtyp.type_expr t1
-                    Printtyp.type_expr t2
-||||||| upstream-base
-              Format.asprintf
-                "typing this pattern requires considering@ %a@ and@ %a@ as \
-                equal.@,\
-                But the knowledge of these types"
-                    Printtyp.type_expr t1
-                    Printtyp.type_expr t2
-=======
                 "typing this pattern requires considering@ @[%a@]@ and@ \
                  @[%a@]@ as@ equal.@ \
                  But@ the@ knowledge@ of@ these@ types"
                     (Style.as_inline_code Printtyp.Doc.type_expr) t1
                     (Style.as_inline_code Printtyp.Doc.type_expr) t2
->>>>>>> upstream-incoming
             in
             Location.prerr_warning loc (Warnings.Not_principal msg);
             raise Warn_only_once)
@@ -2758,18 +2717,10 @@ end) = struct
     if Warnings.is_active (Ambiguous_name ([],[],false,"")) then begin
       Out_type.Ident_conflicts.reset ();
       let paths = ambiguous_types env lbl rest in
-<<<<<<< oxcaml
-      let expansion =
-        Format_doc.asprintf "%t" Printtyp.Conflicts.print_explanations in
-||||||| upstream-base
-      let expansion =
-        Format.asprintf "%t" Printtyp.Conflicts.print_explanations in
-=======
       let expansion = match Out_type.Ident_conflicts.err_msg () with
         | None -> ""
         | Some msg -> Format_doc.(asprintf "%a" pp_doc) msg
       in
->>>>>>> upstream-incoming
       if paths <> [] then
         warn lid.loc
           (Warnings.Ambiguous_name ([Longident.last lid.txt],
@@ -2787,14 +2738,8 @@ end) = struct
     if Warnings.is_active (Name_out_of_scope ("", Name "")) then begin
       let path_s =
         Printtyp.wrap_printing_env ~error:true env
-<<<<<<< oxcaml
-          (fun () -> Format_doc.asprintf "%a" Printtyp.type_path tpath) in
-||||||| upstream-base
-          (fun () -> Printtyp.string_of_path tpath) in
-=======
           (fun () -> Format_doc.asprintf "%a" Printtyp.Doc.type_path tpath)
       in
->>>>>>> upstream-incoming
       warn lid.loc
         (Warnings.Name_out_of_scope (path_s, Name (Longident.last lid.txt)))
     end
@@ -3087,14 +3032,8 @@ let disambiguate_sort_lid_a_list
   (* These ambiguity check warnings could probably use [ambiguity] *)
   if !w_pr then
     Location.prerr_warning loc
-<<<<<<< oxcaml
       (not_principal "this type-based %s disambiguation"
          (record_form_to_string record_form))
-||||||| upstream-base
-      (Warnings.Not_principal "this type-based record disambiguation")
-=======
-      (not_principal  "this type-based record disambiguation")
->>>>>>> upstream-incoming
   else begin
     match List.rev !w_amb with
       (_,types,ex)::_ as amb ->
@@ -3617,7 +3556,6 @@ and type_pat_aux
         pat_unique_barrier = Unique_barrier.not_computed () }
   | Ppat_var name ->
       let ty = instance expected_ty in
-<<<<<<< oxcaml
       let alloc_mode =
         cross_left !!penv expected_ty alloc_mode.mode
       in
@@ -3633,19 +3571,8 @@ and type_pat_aux
       let id, uid =
         enter_variable tps loc name mode ~kind ty sp.ppat_attributes sort
       in
-||||||| upstream-base
-      let id = enter_variable tps loc name ty sp.ppat_attributes in
-=======
-      let id, uid = enter_variable tps loc name ty sp.ppat_attributes in
->>>>>>> upstream-incoming
       rvp {
-<<<<<<< oxcaml
         pat_desc = Tpat_var (id, name, uid, sort, alloc_mode);
-||||||| upstream-base
-        pat_desc = Tpat_var (id, name);
-=======
-        pat_desc = Tpat_var (id, name, uid);
->>>>>>> upstream-incoming
         pat_loc = loc; pat_extra=[];
         pat_type = ty;
         pat_attributes = sp.ppat_attributes;
@@ -3668,27 +3595,13 @@ and type_pat_aux
           (* We're able to pass ~is_module:true here without an error because
              [Ppat_unpack] is a case identified by [may_contain_modules]. See
              the comment on [may_contain_modules]. *)
-<<<<<<< oxcaml
           let sort = Jkind.Sort.(of_const Const.for_module) in
           let id, uid =
             enter_variable tps loc v alloc_mode.mode t ~is_module:true
               ~kind:(Val_reg sort) sp.ppat_attributes sort
-||||||| upstream-base
-          let id =
-            enter_variable tps loc v t ~is_module:true sp.ppat_attributes
-=======
-          let id, uid =
-            enter_variable tps loc v t ~is_module:true sp.ppat_attributes
->>>>>>> upstream-incoming
           in
           rvp {
-<<<<<<< oxcaml
             pat_desc = Tpat_var (id, v, uid, sort, alloc_mode.mode);
-||||||| upstream-base
-            pat_desc = Tpat_var (id, v);
-=======
-            pat_desc = Tpat_var (id, v, uid);
->>>>>>> upstream-incoming
             pat_loc = sp.ppat_loc;
             pat_extra=[Tpat_unpack, loc, sp.ppat_attributes];
             pat_type = t;
@@ -3696,38 +3609,7 @@ and type_pat_aux
             pat_env = !!penv;
             pat_unique_barrier = Unique_barrier.not_computed () }
       end
-<<<<<<< oxcaml
-||||||| upstream-base
-  | Ppat_constraint(
-      {ppat_desc=Ppat_var name; ppat_loc=lloc; ppat_attributes = attrs},
-      ({ptyp_desc=Ptyp_poly _} as sty)) ->
-      (* explicitly polymorphic type *)
-      let cty, ty, ty' =
-        solve_Ppat_poly_constraint tps !!penv lloc sty expected_ty in
-      let id = enter_variable tps lloc name ty' attrs in
-      rvp { pat_desc = Tpat_var (id, name);
-            pat_loc = lloc;
-            pat_extra = [Tpat_constraint cty, loc, sp.ppat_attributes];
-            pat_type = ty;
-            pat_attributes = [];
-            pat_env = !!penv }
-=======
-  | Ppat_constraint(
-      {ppat_desc=Ppat_var name; ppat_loc=lloc; ppat_attributes = attrs},
-      ({ptyp_desc=Ptyp_poly _} as sty)) ->
-      (* explicitly polymorphic type *)
-      let cty, ty, ty' =
-        solve_Ppat_poly_constraint tps !!penv lloc sty expected_ty in
-      let id, uid = enter_variable tps lloc name ty' attrs in
-      rvp { pat_desc = Tpat_var (id, name, uid);
-            pat_loc = lloc;
-            pat_extra = [Tpat_constraint cty, loc, sp.ppat_attributes];
-            pat_type = ty;
-            pat_attributes = [];
-            pat_env = !!penv }
->>>>>>> upstream-incoming
   | Ppat_alias(sq, name) ->
-<<<<<<< oxcaml
       let q = type_pat tps Value sq expected_ty sort in
       let ty_var, mode = solve_Ppat_alias ~mode:alloc_mode.mode !!penv q in
       let mode = cross_left !!penv expected_ty mode in
@@ -3735,27 +3617,8 @@ and type_pat_aux
         enter_variable ~is_as_variable:true
           ~kind:(Val_reg sort) tps name.loc name mode
           ty_var sp.ppat_attributes sort
-||||||| upstream-base
-      let q = type_pat tps Value sq expected_ty in
-      let ty_var = solve_Ppat_alias !!penv q in
-      let id =
-        enter_variable
-          ~is_as_variable:true tps name.loc name ty_var sp.ppat_attributes
-=======
-      let q = type_pat tps Value sq expected_ty in
-      let ty_var = solve_Ppat_alias !!penv q in
-      let id, uid =
-        enter_variable
-          ~is_as_variable:true tps name.loc name ty_var sp.ppat_attributes
->>>>>>> upstream-incoming
       in
-<<<<<<< oxcaml
       rvp { pat_desc = Tpat_alias(q, id, name, uid, sort, mode, ty_var);
-||||||| upstream-base
-      rvp { pat_desc = Tpat_alias(q, id, name);
-=======
-      rvp { pat_desc = Tpat_alias(q, id, name, uid, ty_var);
->>>>>>> upstream-incoming
             pat_loc = loc; pat_extra=[];
             pat_type = q.pat_type;
             pat_attributes = sp.ppat_attributes;
@@ -4273,7 +4136,6 @@ and type_pat_aux
         pat_unique_barrier = Unique_barrier.not_computed () }
   | Ppat_constraint(sp_constrained, sty, ms) ->
       (* Pretend separate = true *)
-<<<<<<< oxcaml
       begin match sty with
       | Some sty ->
         let type_modes = Typemode.transl_alloc_mode ms in
@@ -4292,40 +4154,6 @@ and type_pat_aux
         { p with pat_type = ty; pat_extra = extra::p.pat_extra }
       | None ->
         type_pat ~alloc_mode tps category sp_constrained expected_ty sort
-||||||| upstream-base
-      let cty, ty, expected_ty' =
-        solve_Ppat_constraint tps loc !!penv sty expected_ty in
-      let p = type_pat tps category sp expected_ty' in
-      let extra = (Tpat_constraint cty, loc, sp.ppat_attributes) in
-      begin match category, (p : k general_pattern) with
-      | Value, {pat_desc = Tpat_var (id,s); _} ->
-          { p with
-            pat_type = ty;
-            pat_desc =
-            Tpat_alias
-              ({p with pat_desc = Tpat_any; pat_attributes = []}, id,s);
-            pat_extra = [extra];
-          }
-      | _, p ->
-          { p with pat_type = ty; pat_extra = extra::p.pat_extra }
-=======
-      let cty, ty, expected_ty' =
-        solve_Ppat_constraint tps loc !!penv sty expected_ty in
-      let p = type_pat tps category sp expected_ty' in
-      let extra = (Tpat_constraint cty, loc, sp.ppat_attributes) in
-      begin match category, (p : k general_pattern) with
-      | Value, {pat_desc = Tpat_var (id,s,uid); _} ->
-          { p with
-            pat_type = ty;
-            pat_desc =
-            Tpat_alias
-              ({p with pat_desc = Tpat_any; pat_attributes = []},
-               id, s, uid, ty);
-            pat_extra = [extra];
-          }
-      | _, p ->
-          { p with pat_type = ty; pat_extra = extra::p.pat_extra }
->>>>>>> upstream-incoming
       end
   | Ppat_type lid ->
       let (path, p) = build_or_pat !!penv loc lid in
@@ -4376,12 +4204,12 @@ let type_pattern
 ||||||| upstream-base
 let add_pattern_variables ?check ?check_as env pv =
   List.fold_right
-    (fun {pv_id; pv_type; pv_loc; pv_as_var; pv_attributes} env ->
+    (fun {pv_id; pv_type; pv_loc; pv_as_var; pv_attributes; pv_uid} env ->
        let check = if pv_as_var then check_as else check in
        Env.add_value ?check pv_id
          {val_type = pv_type; val_kind = Val_reg; Types.val_loc = pv_loc;
           val_attributes = pv_attributes;
-          val_uid = Uid.mk ~current_unit:(Env.get_unit_name ());
+          val_uid = pv_uid;
          } env
     )
     pv env
@@ -4929,7 +4757,6 @@ let rec check_counter_example_pat
           in
           check_rec ~info:(decrease 5) tp expected_ty k
       end
-<<<<<<< oxcaml
   | Tpat_alias (p, _, _, _, _, _, _) -> check_rec ~info p expected_ty k
   | Tpat_unboxed_unit ->
       Language_extension.assert_enabled ~loc Layouts Language_extension.Stable;
@@ -4941,11 +4768,6 @@ let rec check_counter_example_pat
       k @@
       solve_expected
         (mp (Tpat_unboxed_bool b) ~pat_type:(instance Predef.type_unboxed_bool))
-||||||| upstream-base
-  | Tpat_alias (p, _, _) -> check_rec ~info p expected_ty k
-=======
-  | Tpat_alias (p, _, _, _, _) -> check_rec ~info p expected_ty k
->>>>>>> upstream-incoming
   | Tpat_constant cst ->
       let cst = constant_or_raise !!penv loc (Untypeast.constant cst) in
       k @@ solve_expected (mp (Tpat_constant cst) ~pat_type:(type_constant cst))
@@ -6932,16 +6754,8 @@ let rec name_pattern default = function
           Shape.Uid.internal_not_actually_unique
   | p :: rem ->
     match p.pat_desc with
-<<<<<<< oxcaml
       Tpat_var (id, _, uid, _, _) -> id, uid
     | Tpat_alias(_, id, _, uid, _, _, _) -> id, uid
-||||||| upstream-base
-      Tpat_var (id, _) -> id
-    | Tpat_alias(_, id, _) -> id
-=======
-      Tpat_var (id, _, _) -> id
-    | Tpat_alias(_, id, _, _, _) -> id
->>>>>>> upstream-incoming
     | _ -> name_pattern default rem
 
 let name_cases default lst =
@@ -7866,7 +7680,7 @@ and type_expect_
       | Tconstr(path, _, _) when Path.same path fmt6_path ->
         if !Clflags.principal && get_level ty_exp <> generic_level then
           Location.prerr_warning loc
-            (Warnings.Not_principal "this coercion to format6");
+            (not_principal "this coercion to format6");
         true
       | _ -> false
     in
@@ -9138,18 +8952,11 @@ and type_expect_
             if !Clflags.principal && get_level typ <> generic_level then
               Location.prerr_warning loc
                 (not_principal "this use of a polymorphic method");
-<<<<<<< oxcaml
             instance_poly tl ty,
             Some (
               Texp_inspected_type (Polymorphic_parameter (
                 Method (met, Ctype.instance ~partial:true typ))),
               loc, [])
-||||||| upstream-base
-                (Warnings.Not_principal "this use of a polymorphic method");
-            snd (instance_poly ~fixed:false tl ty)
-=======
-            snd (instance_poly ~fixed:false tl ty)
->>>>>>> upstream-incoming
         | Tvar _ ->
             let ty' = newvar (Jkind.Builtin.value ~why:Object_field) in
             unify env (instance typ) (newty(Tpoly(ty',[])));
@@ -9273,12 +9080,7 @@ and type_expect_
                 | _ -> Mp_present
               in
               let scope = create_scope () in
-<<<<<<< oxcaml
-              let md_uid = Uid.mk ~current_unit:(Env.get_unit_name ()) in
-||||||| upstream-base
-=======
               let md_uid = Uid.mk ~current_unit:(Env.get_current_unit ()) in
->>>>>>> upstream-incoming
               let md_shape = Shape.set_uid_if_none md_shape md_uid in
               let md =
                 { md_type = modl.mod_type; md_attributes = [];
@@ -9323,16 +9125,9 @@ and type_expect_
         exp_env = env }
   | Pexp_letexception(cd, sbody) ->
       let (cd, newenv, _shape) = Typedecl.transl_exception env cd in
-<<<<<<< oxcaml
       let body =
         type_expect newenv expected_mode sbody ty_expected_explained
       in
-||||||| upstream-base
-      let (cd, newenv) = Typedecl.transl_exception env cd in
-      let body = type_expect newenv sbody ty_expected_explained in
-=======
-      let body = type_expect newenv sbody ty_expected_explained in
->>>>>>> upstream-incoming
       re {
         exp_desc = Texp_letexception(cd, body);
         exp_loc = loc; exp_extra = [];
@@ -9507,7 +9302,7 @@ and type_expect_
                 < Btype.generic_level
             then
               Location.prerr_warning loc
-                (Warnings.Not_principal "this module packing");
+                (not_principal "this module packing");
             (p, fl)
         | Tvar _ ->
             raise (Error (loc, env, Cannot_infer_signature))
@@ -11678,19 +11473,10 @@ and type_argument ?explanation ?recarg ~overwrite env (mode : expected_mode) sar
             val_uid = Uid.mk ~current_unit:(Env.get_current_unit ());
           }
         in
-<<<<<<< oxcaml
         let exp_env = Env.add_value ~mode id desc env in
         let uu = unique_use ~loc:sarg.pexp_loc ~env mode mode in
         {pat_desc = Tpat_var (id, mknoloc name, desc.val_uid, sort,
           Value.disallow_right mode);
-||||||| upstream-base
-        let exp_env = Env.add_value id desc env in
-        {pat_desc = Tpat_var (id, mknoloc name); pat_type = ty;pat_extra=[];
-=======
-        let exp_env = Env.add_value id desc env in
-        {pat_desc =
-          Tpat_var (id, mknoloc name, desc.val_uid);
->>>>>>> upstream-incoming
          pat_type = ty;
          pat_extra=[];
          pat_attributes = [];
@@ -11767,7 +11553,6 @@ and type_argument ?explanation ?recarg ~overwrite env (mode : expected_mode) sar
       if warn then Location.prerr_warning texp.exp_loc
           (Warnings.Non_principal_labels "eliminated omittable argument");
       (* let-expand to have side effects *)
-<<<<<<< oxcaml
       let let_pat, let_var =
         var_pair ~mode:exp_mode "arg" texp.exp_type arg_sort
       in
@@ -11786,23 +11571,6 @@ and type_argument ?explanation ?recarg ~overwrite env (mode : expected_mode) sar
                           }],
                          func let_var) }
       end
-||||||| upstream-base
-      let let_pat, let_var = var_pair "arg" texp.exp_type in
-      re { texp with exp_type = ty_fun; exp_desc =
-           Texp_let (Nonrecursive,
-                     [{vb_pat=let_pat; vb_expr=texp; vb_attributes=[];
-                       vb_loc=Location.none; vb_rec_kind = Not_recursive;
-                      }],
-                     func let_var) }
-=======
-      let let_pat, let_var = var_pair "arg" texp.exp_type in
-      re { texp with exp_type = ty_fun; exp_desc =
-           Texp_let (Nonrecursive,
-                     [{vb_pat=let_pat; vb_expr=texp; vb_attributes=[];
-                       vb_loc=Location.none; vb_rec_kind = Dynamic;
-                      }],
-                     func let_var) }
->>>>>>> upstream-incoming
       end
   | None ->
       let mode = expect_mode_cross env ty_expected' mode in
@@ -12044,7 +11812,7 @@ and type_application env app_loc expected_mode position_and_mode
             (fun () -> type_argument env sarg ty ty0)
           else begin
             may_warn sarg.pexp_loc
-              (Warnings.Not_principal "using an optional argument here");
+              (not_principal "using an optional argument here");
             (fun () -> option_some env (type_argument env sarg
                                           (extract_option_type env ty)
                                           (extract_option_type env ty0)))
@@ -12083,7 +11851,7 @@ and type_application env app_loc expected_mode position_and_mode
             | Some (l', sarg, commuted, remaining_sargs) ->
                 if commuted then begin
                   may_warn sarg.pexp_loc
-                    (Warnings.Not_principal "commuting this argument")
+                    (not_principal "commuting this argument")
                 end;
                 if not optional && is_optional l' then
                   Location.prerr_warning sarg.pexp_loc
@@ -13599,14 +13367,7 @@ and type_let ?check ?check_strict ?(force_toplevel = false)
       (fun ((p, _), (e, _)) pvb ->
 >>>>>>> upstream-incoming
         (* vb_rec_kind will be computed later for recursive bindings *)
-<<<<<<< oxcaml
         {vb_pat=p; vb_expr=e; vb_sort = s; vb_attributes=pvb.pvb_attributes;
-||||||| upstream-base
-        {vb_pat=p; vb_expr=e; vb_attributes=pvb.pvb_attributes;
-         vb_loc=pvb.pvb_loc; vb_rec_kind = Not_recursive;
-=======
-        {vb_pat=p; vb_expr=e; vb_attributes=pvb.pvb_attributes;
->>>>>>> upstream-incoming
          vb_loc=pvb.pvb_loc; vb_rec_kind = Dynamic;
         })
       l spat_sexp_list
@@ -13615,12 +13376,6 @@ and type_let ?check ?check_strict ?(force_toplevel = false)
     List.iter
       (fun {vb_pat=pat} -> match pat.pat_desc with
            Tpat_var _ -> ()
-<<<<<<< oxcaml
-||||||| upstream-base
-         | Tpat_alias ({pat_desc=Tpat_any}, _, _) -> ()
-=======
-         | Tpat_alias ({pat_desc=Tpat_any}, _, _, _, _) -> ()
->>>>>>> upstream-incoming
          | _ -> raise(Error(pat.pat_loc, env, Illegal_letrec_pat)))
       l;
   List.iter (fun vb ->
@@ -14698,7 +14453,6 @@ let report_type_expected_explanation expl =
   | Error_message_attr msg ->
       doc_printf "@\n@[%s@]" msg
 
-<<<<<<< oxcaml
 let escaping_submode_reason_hint =
   function
   (* TODO: generalize this to other axis as well *)
@@ -14738,10 +14492,6 @@ let escaping_submode_reason_hint =
     end
   | Constructor _ | Other -> []
 
-||||||| upstream-base
-let report_type_expected_explanation_opt expl ppf =
-=======
->>>>>>> upstream-incoming
 let report_type_expected_explanation_opt expl =
   match expl with
   | None -> Format_doc.Doc.empty
@@ -14754,24 +14504,6 @@ let report_unification_error ~loc ?sub env err
       ?type_expected_explanation txt1 txt2
   ) ()
 
-<<<<<<< oxcaml
-let report_this_function ppf funct =
-  match Typedtree.nominal_exp_doc Printtyp.longident funct with
-  | None -> Fmt.fprintf ppf "This function"
-  | Some name ->
-    Fmt.fprintf ppf "The function %a"
-      (Style.as_inline_code Fmt.pp_doc) name
-
-||||||| upstream-base
-let report_this_function ppf funct =
-  if Typedtree.exp_is_nominal funct then
-    let pexp = Untypeast.untype_expression funct in
-    Format.fprintf ppf "The function %a"
-      (Style.as_inline_code Pprintast.expression) pexp
-  else Format.fprintf ppf "This function"
-
-=======
->>>>>>> upstream-incoming
 let report_too_many_arg_error ~funct ~func_ty ~previous_arg_loc
     ~extra_arg_loc ~returns_unit loc =
   let open Location in
@@ -14805,8 +14537,6 @@ let report_too_many_arg_error ~funct ~func_ty ~previous_arg_loc
       semicolon @
       [msg ~loc:extra_arg_loc "This extra argument is not expected."]
     )
-
-let msg = Fmt.doc_printf
 
 let msg = Fmt.doc_printf
 
@@ -14887,11 +14617,8 @@ let report_error ~loc env =
              (record_form_to_string record_form)
              (Style.as_inline_code longident) lid)
 ||||||| upstream-base
-        (function ppf ->
-           fprintf ppf "The record field %a@ belongs to the type"
+        (msg "The record field %a@ belongs to the type"
                    (Style.as_inline_code longident) lid)
-        (function ppf ->
-           fprintf ppf "but is mixed here with fields of type")
 =======
         (msg "The record field %a@ belongs to the type" quoted_longident lid)
 >>>>>>> upstream-incoming
@@ -14923,16 +14650,7 @@ let report_error ~loc env =
       report_unification_error ~loc ~sub env err
         ~type_expected_explanation:
           (report_type_expected_explanation_opt explanation)
-<<<<<<< oxcaml
-        (msg "This expression has type")
-||||||| upstream-base
-        (function ppf ->
-           fprintf ppf "This expression has type")
-        (function ppf ->
-           fprintf ppf "but an expression was expected of type");
-=======
         (msg "%a" (report_this_pexp_has_type None) exp)
->>>>>>> upstream-incoming
         (msg "but an expression was expected of type");
   | Function_arity_type_clash {
       syntactic_arity; type_constraint; trace = { trace };
@@ -15024,51 +14742,6 @@ let report_error ~loc env =
       Location.errorf ~loc "The record field %a is not mutable"
         quoted_longident lid
   | Wrong_name (eorp, ty_expected, { type_path; kind; name; valid_names; }) ->
-<<<<<<< oxcaml
-      Location.error_of_printer ~loc (fun ppf () ->
-        Printtyp.wrap_printing_env ~error:true env (fun () ->
-          let { ty; explanation } = ty_expected in
-          if Path.is_constructor_typath type_path then begin
-            fprintf ppf
-              "@[The field %a is not part of the record \
-               argument for the %a constructor@]"
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
-          end else begin
-            fprintf ppf
-              "@[@[<2>%s type@ %a%a@]@ \
-               There is no %s %a within type %a@]"
-              eorp (Style.as_inline_code Printtyp.type_expr) ty
-              pp_doc (report_type_expected_explanation_opt explanation)
-              (Datatype_kind.label_name kind)
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
-          end;
-          spellcheck ppf name.txt valid_names
-      )) ()
-||||||| upstream-base
-      Location.error_of_printer ~loc (fun ppf () ->
-        Printtyp.wrap_printing_env ~error:true env (fun () ->
-          let { ty; explanation } = ty_expected in
-          if Path.is_constructor_typath type_path then begin
-            fprintf ppf
-              "@[The field %a is not part of the record \
-               argument for the %a constructor@]"
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
-          end else begin
-            fprintf ppf
-              "@[@[<2>%s type@ %a%t@]@ \
-               There is no %s %a within type %a@]"
-              eorp (Style.as_inline_code Printtyp.type_expr) ty
-              (report_type_expected_explanation_opt explanation)
-              (Datatype_kind.label_name kind)
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
-          end;
-          spellcheck ppf name.txt valid_names
-      )) ()
-=======
      Printtyp.wrap_printing_env ~error:true env (fun () ->
          let { ty; explanation } = ty_expected in
          if Path.is_constructor_typath type_path then
@@ -15098,31 +14771,9 @@ let report_error ~loc env =
            in
            Location.errorf ~loc ~sub "%t%a" intro pp_doc main
        )
->>>>>>> upstream-incoming
   | Name_type_mismatch (kind, lid, tp, tpl) ->
       let type_name = Datatype_kind.type_name kind in
       let name = Datatype_kind.label_name kind in
-<<<<<<< oxcaml
-      Location.error_of_printer ~loc (fun ppf () ->
-        Printtyp.report_ambiguous_type_error ppf env tp tpl
-          (msg "The %s %a@ belongs to the %s type"
-               name (Style.as_inline_code longident) lid
-              type_name)
-          (msg "The %s %a@ belongs to one of the following %s types:"
-               name (Style.as_inline_code longident) lid type_name)
-||||||| upstream-base
-      Location.error_of_printer ~loc (fun ppf () ->
-        Printtyp.report_ambiguous_type_error ppf env tp tpl
-          (function ppf ->
-             fprintf ppf "The %s %a@ belongs to the %s type"
-               name (Style.as_inline_code longident) lid
-              type_name)
-          (function ppf ->
-             fprintf ppf "The %s %a@ belongs to one of the following %s types:"
-               name (Style.as_inline_code longident) lid type_name)
-          (function ppf ->
-             fprintf ppf "but a %s was expected belonging to the %s type"
-=======
       let pr = match kind with
         | Datatype_kind.Record -> quoted_longident
         | Datatype_kind.Variant -> quoted_constr
@@ -15133,16 +14784,9 @@ let report_error ~loc env =
                name pr lid type_name)
           (msg "The %s %a@ belongs to one of the following %s types:"
                name pr lid type_name)
->>>>>>> upstream-incoming
           (msg "but a %s was expected belonging to the %s type"
                name type_name)
-<<<<<<< oxcaml
-        ) ()
-||||||| upstream-base
-      ) ()
-=======
         )
->>>>>>> upstream-incoming
   | Invalid_format msg ->
       Location.errorf ~loc "%s" msg
   | Not_an_object (ty, explanation) ->
@@ -15173,7 +14817,7 @@ let report_error ~loc env =
       fprintf ppf "This expression is not an object;@ \
                    it has type %a"
         (Style.as_inline_code Printtyp.type_expr) ty;
-      report_type_expected_explanation_opt explanation ppf
+      pp_doc ppf @@ report_type_expected_explanation_opt explanation
     ) ()
 =======
     Location.errorf ~loc
@@ -15247,32 +14891,15 @@ let report_error ~loc env =
             )
           in
         Printtyp.report_unification_error ppf env err
-          intro
-          (Fmt.doc_printf "but is here used with type");
-        if b then
-          fprintf ppf
-            ".@.@[<hov>This simple coercion was not fully general.@ \
-             @{<hint>Hint@}: Consider using a fully explicit coercion@ \
-             of the form: %a@]"
-            Style.inline_code "(foo : ty1 :> ty2)"
-      ) ()
 ||||||| upstream-base
       Location.error_of_printer ~loc (fun ppf () ->
+          let intro =
+            let ty_exp = Printtyp.prepare_expansion ty_exp in
+            doc_printf "This expression cannot be coerced to type@;<1 2>%a;@ \
+                        it has type"
+              (Style.as_inline_code @@ Printtyp.type_expansion Type) ty_exp
+          in
         Printtyp.report_unification_error ppf env err
-          (function ppf ->
-             let ty_exp = Printtyp.prepare_expansion ty_exp in
-             fprintf ppf "This expression cannot be coerced to type@;<1 2>%a;@ \
-                          it has type"
-             (Style.as_inline_code @@ Printtyp.type_expansion Type) ty_exp)
-          (function ppf ->
-             fprintf ppf "but is here used with type");
-        if b then
-          fprintf ppf
-            ".@.@[<hov>This simple coercion was not fully general.@ \
-             @{<hint>Hint@}: Consider using a fully explicit coercion@ \
-             of the form: %a@]"
-            Style.inline_code "(foo : ty1 :> ty2)"
-      ) ()
 =======
      let intro =
        let ty_exp = Out_type.prepare_expansion ty_exp in
@@ -15282,6 +14909,7 @@ let report_error ~loc env =
      in
       Location.errorf ~loc "%t" (fun ppf ->
         Errortrace_report.unification ppf env err
+>>>>>>> upstream-incoming
           intro
           (Fmt.Doc.msg "but is here used with type")
         )
@@ -15294,7 +14922,6 @@ let report_error ~loc env =
                  Style.inline_code "(foo : ty1 :> ty2)"
              ]
          )
->>>>>>> upstream-incoming
   | Not_a_function (ty, explanation) ->
       Location.errorf ~loc
         "This expression should not be a function,@ \
@@ -15332,14 +14959,7 @@ let report_error ~loc env =
       in
       Location.errorf ~loc
         "@[<v>@[<2>This function should have type@ %a%a@]@,\
-<<<<<<< oxcaml
          @[but its first argument is %a@ instead of %s%a@]%t@]"
-||||||| upstream-base
-        "@[<v>@[<2>This function should have type@ %a%t@]@,\
-         @[but its first argument is %a@ instead of %s%a@]@]"
-=======
-         @[but its first argument is %a@ instead of %s%a@]@]"
->>>>>>> upstream-incoming
         (Style.as_inline_code Printtyp.type_expr) expected_type
         pp_doc (report_type_expected_explanation_opt explanation)
         (label ~long:true) got
@@ -15632,7 +15252,6 @@ let report_error ~loc env =
          the expected type is@ %a%a"
         ctx sort (Style.as_inline_code Printtyp.type_expr) ty
         pp_doc (report_type_expected_explanation_opt explanation)
-<<<<<<< oxcaml
   | Wrong_expected_record_boxing(ctx, P record_form, ty) ->
       let ctx, explanation =
         match ctx with
@@ -15650,12 +15269,6 @@ let report_error ~loc env =
         actual ctx expected (Style.as_inline_code Printtyp.type_expr) ty
         pp_doc (report_type_expected_explanation_opt explanation)
   | Expr_not_a_record_type (P record_form, ty) ->
-||||||| upstream-base
-        (report_type_expected_explanation_opt explanation)
-  | Expr_not_a_record_type ty ->
-=======
-  | Expr_not_a_record_type ty ->
->>>>>>> upstream-incoming
       Location.errorf ~loc
         "This expression has type %a@ \
          which is not a %s type."

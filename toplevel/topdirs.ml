@@ -419,14 +419,14 @@ let find_printer lid =
   | exception Not_found ->
     let report ppf =
       fprintf ppf "Unbound value %a.@."
-        Printtyp.longident lid
+        Printtyp.Compat.longident lid
     in Error report
   | (path, desc) ->
     match match_printer_type desc with
     | None ->
       let report ppf =
         fprintf ppf "%a has the wrong type for a printing function.@."
-          Printtyp.longident lid
+          Printtyp.Compat.longident lid
       in Error report
     | Some kind -> Ok (path, kind)
 
@@ -454,21 +454,7 @@ let install_printer_by_kind path kind =
 let remove_installed_printer path =
   match remove_printer path with
   | () -> Ok ()
-<<<<<<< oxcaml
-  | exception Not_found ->
-    let report ppf =
-      fprintf ppf "The printer named %a is not installed.@."
-        Printtyp.Compat.path path
-    in Error report
-||||||| upstream-base
-  | exception Not_found ->
-    let report ppf =
-      fprintf ppf "The printer named %a is not installed.@."
-        Printtyp.path path
-    in Error report
-=======
   | exception Not_found -> Error (`No_active_printer path)
->>>>>>> upstream-incoming
 
 let dir_install_printer ppf lid =
   match Topprinters.find_printer !toplevel_env lid with
@@ -535,13 +521,13 @@ let show_prim to_sig ppf lid =
       | Longident.Lident s -> s
       | Longident.Ldot (_,{ txt = s; _ }) -> s
       | Longident.Lapply _ ->
-          fprintf ppf "Invalid path %a@." Printtyp.Compat.longident lid;
+          fprintf ppf "Invalid path %a@." Printtyp.longident lid;
           raise Exit
     in
     let id = Ident.create_persistent s in
     let sg = to_sig env loc id lid in
     Printtyp.wrap_printing_env ~error:false env
-      (fun () -> fprintf ppf "@[%a@]@." Printtyp.Compat.signature sg)
+      (fun () -> fprintf ppf "@[%a@]@." Printtyp.signature sg)
   with
   | Not_found ->
       fprintf ppf "@[Unknown element.@]@."

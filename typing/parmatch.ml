@@ -63,15 +63,9 @@ let omega_list = Patterns.omega_list
 let extra_pat =
   make_pat
     (Tpat_var (Ident.create_local "+", mknoloc "+",
-<<<<<<< oxcaml
       Uid.internal_not_actually_unique,
       Jkind.Sort.(of_const Const.for_boxed_variant),
       Mode.Value.disallow_right Mode.Value.max))
-||||||| upstream-base
-    (Tpat_var (Ident.create_local "+", mknoloc "+"))
-=======
-      Uid.internal_not_actually_unique))
->>>>>>> upstream-incoming
     Ctype.none Env.empty
 
 
@@ -370,16 +364,8 @@ module Compat
   | ((Tpat_any|Tpat_var _),_)
   | (_,(Tpat_any|Tpat_var _)) -> true
 (* Structural induction *)
-<<<<<<< oxcaml
   | Tpat_alias (p,_,_,_,_,_,_),_      -> compat p q
   | _,Tpat_alias (q,_,_,_,_,_,_)      -> compat p q
-||||||| upstream-base
-  | Tpat_alias (p,_,_),_      -> compat p q
-  | _,Tpat_alias (q,_,_)      -> compat p q
-=======
-  | Tpat_alias (p,_,_,_,_),_      -> compat p q
-  | _,Tpat_alias (q,_,_,_,_)      -> compat p q
->>>>>>> upstream-incoming
   | Tpat_or (p1,p2,_),_ ->
       (compat p1 q || compat p2 q)
   | _,Tpat_or (q1,q2,_) ->
@@ -1205,15 +1191,9 @@ let build_other ext env =
           make_pat
             (Tpat_var (Ident.create_local "*extension*",
                        {txt="*extension*"; loc = d.pat_loc},
-<<<<<<< oxcaml
                        Uid.internal_not_actually_unique,
                        Jkind.Sort.(of_const Const.for_constructor),
                        Mode.Value.disallow_right Mode.Value.max))
-||||||| upstream-base
-                       {txt="*extension*"; loc = d.pat_loc}))
-=======
-                       Uid.internal_not_actually_unique))
->>>>>>> upstream-incoming
             Ctype.none Env.empty
       | Construct _ ->
           begin match ext with
@@ -1407,17 +1387,9 @@ let build_other ext env =
 
 let rec has_instance p = match p.pat_desc with
   | Tpat_variant (l,_,r) when is_absent l r -> false
-<<<<<<< oxcaml
   | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_unboxed_unit
   | Tpat_unboxed_bool _ | Tpat_variant (_,None,_) -> true
   | Tpat_alias (p,_,_,_,_,_,_) | Tpat_variant (_,Some p,_) -> has_instance p
-||||||| upstream-base
-  | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_,None,_) -> true
-  | Tpat_alias (p,_,_) | Tpat_variant (_,Some p,_) -> has_instance p
-=======
-  | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_,None,_) -> true
-  | Tpat_alias (p,_,_,_,_) | Tpat_variant (_,Some p,_) -> has_instance p
->>>>>>> upstream-incoming
   | Tpat_or (p1,p2,_) -> has_instance p1 || has_instance p2
 <<<<<<< oxcaml
   | Tpat_construct (_,_,ps, _) | Tpat_array (_, _, ps) ->
@@ -1894,13 +1866,7 @@ let is_var_column rs =
 (* Standard or-args for left-to-right matching *)
 let rec or_args p = match p.pat_desc with
 | Tpat_or (p1,p2,_) -> p1,p2
-<<<<<<< oxcaml
 | Tpat_alias (p,_,_,_,_,_,_)  -> or_args p
-||||||| upstream-base
-| Tpat_alias (p,_,_)  -> or_args p
-=======
-| Tpat_alias (p,_,_,_,_)  -> or_args p
->>>>>>> upstream-incoming
 | _                 -> assert false
 
 (* Just remove current column *)
@@ -2080,16 +2046,8 @@ and every_both pss qs q1 q2 =
 let rec le_pat p q =
   match (p.pat_desc, q.pat_desc) with
   | (Tpat_var _|Tpat_any),_ -> true
-<<<<<<< oxcaml
   | Tpat_alias(p,_,_,_,_,_,_), _ -> le_pat p q
   | _, Tpat_alias(q,_,_,_,_,_,_) -> le_pat p q
-||||||| upstream-base
-  | Tpat_alias(p,_,_), _ -> le_pat p q
-  | _, Tpat_alias(q,_,_) -> le_pat p q
-=======
-  | Tpat_alias(p,_,_,_,_), _ -> le_pat p q
-  | _, Tpat_alias(q,_,_,_,_) -> le_pat p q
->>>>>>> upstream-incoming
   | Tpat_constant(c1), Tpat_constant(c2) -> const_compare c1 c2 = 0
   | Tpat_construct(_,c1,ps,_), Tpat_construct(_,c2,qs,_) ->
       Data_types.equal_constr c1 c2 && le_pats ps qs
@@ -2165,16 +2123,8 @@ let get_mins le ps =
 *)
 
 let rec lub p q = match p.pat_desc,q.pat_desc with
-<<<<<<< oxcaml
 | Tpat_alias (p,_,_,_,_,_,_),_      -> lub p q
 | _,Tpat_alias (q,_,_,_,_,_,_)      -> lub p q
-||||||| upstream-base
-| Tpat_alias (p,_,_),_      -> lub p q
-| _,Tpat_alias (q,_,_)      -> lub p q
-=======
-| Tpat_alias (p,_,_,_,_),_      -> lub p q
-| _,Tpat_alias (q,_,_,_,_)      -> lub p q
->>>>>>> upstream-incoming
 | (Tpat_any|Tpat_var _),_ -> q
 | _,(Tpat_any|Tpat_var _) -> p
 | Tpat_or (p1,p2,_),_     -> orlub p1 p2 q
@@ -2334,13 +2284,7 @@ let rec initial_only_guarded = function
 let contains_extension pat =
   exists_pattern
     (function
-<<<<<<< oxcaml
      | {pat_desc=Tpat_var (_, {txt="*extension*"}, _, _, _)} -> true
-||||||| upstream-base
-     | {pat_desc=Tpat_var (_, {txt="*extension*"})} -> true
-=======
-     | {pat_desc=Tpat_var (_, {txt="*extension*"}, _)} -> true
->>>>>>> upstream-incoming
      | _ -> false)
     pat
 
@@ -2367,21 +2311,6 @@ let do_check_partial ~pred loc casel pss = match pss with
     match counter_examples () with
     | Seq.Nil -> Total
     | Seq.Cons (v, _rest) ->
-<<<<<<< oxcaml
-      if Warnings.is_active (Warnings.Partial_match "") then begin
-        let errmsg =
-          try
-            let buf = Buffer.create 16 in
-            let fmt = Format.formatter_of_buffer buf in
-            Format.fprintf fmt "%a@?" Printpat.Compat.pretty_pat v;
-||||||| upstream-base
-      if Warnings.is_active (Warnings.Partial_match "") then begin
-        let errmsg =
-          try
-            let buf = Buffer.create 16 in
-            let fmt = Format.formatter_of_buffer buf in
-            Format.fprintf fmt "%a@?" Printpat.pretty_pat v;
-=======
       if Warnings.is_active (Warnings.Partial_match Format_doc.Doc.empty) then
         begin
           let errmsg =
@@ -2389,7 +2318,6 @@ let do_check_partial ~pred loc casel pss = match pss with
             let fmt = Format_doc.formatter doc in
             Format_doc.fprintf fmt "@[<v>%a"
               (Misc.Style.as_inline_code Printpat.top_pretty) v;
->>>>>>> upstream-incoming
             if do_match (initial_only_guarded casel) [v] then
               Format_doc.fprintf fmt
                 "@,(However, some guarded clause may match this value.)";
@@ -2455,17 +2383,11 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
     List.fold_left
       (fun r (_, _, p) -> collect_paths_from_pat r p)
       r lps
-<<<<<<< oxcaml
 | Tpat_record_unboxed_product (lps,_) ->
     List.fold_left
       (fun r (_, _, p) -> collect_paths_from_pat r p)
       r lps
 | Tpat_variant (_, Some p, _) | Tpat_alias (p,_,_,_,_,_,_) ->
-||||||| upstream-base
-| Tpat_variant (_, Some p, _) | Tpat_alias (p,_,_) -> collect_paths_from_pat r p
-=======
-| Tpat_variant (_, Some p, _) | Tpat_alias (p,_,_,_,_) ->
->>>>>>> upstream-incoming
     collect_paths_from_pat r p
 | Tpat_or (p1,p2,_) ->
     collect_paths_from_pat (collect_paths_from_pat r p1) p2
@@ -2622,13 +2544,7 @@ let inactive ~partial pat =
         | Tpat_construct (_, _, ps, _) | Tpat_array (Immutable, ps) ->
 >>>>>>> upstream-incoming
             List.for_all (fun p -> loop p) ps
-<<<<<<< oxcaml
         | Tpat_alias (p,_,_,_,_,_,_) | Tpat_variant (_, Some p, _) ->
-||||||| upstream-base
-        | Tpat_alias (p,_,_) | Tpat_variant (_, Some p, _) ->
-=======
-        | Tpat_alias (p,_,_,_,_) | Tpat_variant (_, Some p, _) ->
->>>>>>> upstream-incoming
             loop p
         | Tpat_record (ldps,_) ->
             List.for_all
@@ -2757,21 +2673,9 @@ type amb_row = { row : pattern list ; varsets : Ident.Set.t list; }
 let simplify_head_amb_pat head_bound_variables varsets ~add_column p ps k =
   let rec simpl head_bound_variables varsets p ps k =
     match (Patterns.General.view p).pat_desc with
-<<<<<<< oxcaml
     | `Alias (p,x,_,_,_,_,_) ->
-||||||| upstream-base
-    | `Alias (p,x,_) ->
-=======
-    | `Alias (p,x,_,_,_) ->
->>>>>>> upstream-incoming
       simpl (Ident.Set.add x head_bound_variables) varsets p ps k
-<<<<<<< oxcaml
     | `Var (x, _, _, _, _) ->
-||||||| upstream-base
-    | `Var (x, _) ->
-=======
-    | `Var (x,_,_) ->
->>>>>>> upstream-incoming
       simpl (Ident.Set.add x head_bound_variables) varsets Patterns.omega ps k
     | `Or (p1,p2,_) ->
       simpl head_bound_variables varsets p1 ps

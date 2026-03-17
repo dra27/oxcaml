@@ -1347,19 +1347,19 @@ update_major_slice_work(intnat howmuch,
                    (uintnat)heap_words);
   caml_gc_message (0x40, "allocated_words = %"
                          ARCH_INTNAT_PRINTF_FORMAT "u\n",
-                   dom_st->allocated_words);
+                   my_alloc_count);
   caml_gc_message (0x40, "alloc work-to-do = %"
                          ARCH_INTNAT_PRINTF_FORMAT "d\n",
                    alloc_work);
   caml_gc_message (0x40, "dependent_words = %"
                          ARCH_INTNAT_PRINTF_FORMAT "u\n",
-                   dom_st->dependent_allocated);
+                   my_dependent_count);
   caml_gc_message (0x40, "dependent work-to-do = %"
                          ARCH_INTNAT_PRINTF_FORMAT "d\n",
                    dependent_work);
   caml_gc_message (0x40, "extra_heap_resources = %"
                          ARCH_INTNAT_PRINTF_FORMAT "uu\n",
-                   (uintnat) (dom_st->extra_heap_resources * 1000000));
+                   (uintnat) (my_extra_count * 1000000));
   caml_gc_message (0x40, "extra work-to-do = %"
                          ARCH_INTNAT_PRINTF_FORMAT "d\n",
                    extra_work);
@@ -1503,7 +1503,7 @@ update_major_slice_work(intnat howmuch,
               " %"ARCH_INTNAT_PRINTF_FORMAT "d slice budget"
               ,
               caml_gc_phase_char(may_access_gc_phase),
-              (uintnat)heap_words, dom_st->allocated_words,
+              (uintnat)heap_words, my_alloc_count,
               alloc_work, dependent_work, extra_work,
               atomic_load (&work_counter),
               atomic_load (&work_counter) > atomic_load (&alloc_counter)
@@ -1936,21 +1936,6 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
-<<<<<<< oxcaml
-static CAMLno_tsan
-#if defined(WITH_THREAD_SANITIZER)
-Caml_noinline
-#endif
-value volatile_load_uninstrumented(volatile value* p) {
-  return *p;
-}
-
-||||||| upstream-base
-CAMLno_tsan /* Loads from locations in the OCaml heap can cause false alarms in
-               TSan when these locations are concurrently written to by
-               caml_modify (see comment inside the function). */
-=======
->>>>>>> upstream-incoming
 Caml_noinline static intnat do_some_marking(struct mark_stack* stk,
                                             intnat budget)
 {
@@ -2062,19 +2047,6 @@ again:
     for (; me.start < scan_end; me.start++) {
       CAMLassert(budget >= 0);
 
-<<<<<<< oxcaml
-      /* This load may race with a concurrent caml_modify. It does not
-         constitute a data race as this is a volatile load. However, TSan will
-         wrongly see a race here (see section 3.2 of comment in tsan.c). We
-         therefore make sure it is never TSan-instrumented. */
-||||||| upstream-base
-      /* This load may race with a concurrent caml_modify. It does not
-         constitute a data race as this is a volatile load. However, TSan will
-         wrongly see a race here (see section 3.2 of comment in tsan.c). Hence
-         the TSan-silencing of the present function. */
-      value child = *me.start;
-=======
->>>>>>> upstream-incoming
       value child = volatile_load_uninstrumented(me.start);
 
       budget--;

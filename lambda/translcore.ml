@@ -311,16 +311,8 @@ let fuse_method_arity (parent : fusable_function) : fusable_function =
 
 let rec iter_exn_names f pat =
   match pat.pat_desc with
-<<<<<<< oxcaml
   | Tpat_var (id, _, _, _, _) -> f id
   | Tpat_alias (p, id, _, _, _, _, _) ->
-||||||| upstream-base
-  | Tpat_var (id, _) -> f id
-  | Tpat_alias (p, id, _) ->
-=======
-  | Tpat_var (id, _, _) -> f id
-  | Tpat_alias (p, id, _, _, _) ->
->>>>>>> upstream-incoming
       f id;
       iter_exn_names f p
   | _ -> ()
@@ -2410,15 +2402,7 @@ and transl_let ~scopes ~return_layout ?(add_regions=false) ?(in_structure=false)
       let idlist =
         List.map
           (fun {vb_pat=pat} -> match pat.pat_desc with
-<<<<<<< oxcaml
               Tpat_var (id,_,uid,_,_) -> id, uid
-||||||| upstream-base
-              Tpat_var (id,_) -> id
-            | Tpat_alias ({pat_desc=Tpat_any}, id,_) -> id
-=======
-              Tpat_var (id,_,_) -> id
-            | Tpat_alias ({pat_desc=Tpat_any}, id,_,_,_) -> id
->>>>>>> upstream-incoming
             | _ -> assert false)
         pat_expr_list in
       let transl_case
@@ -2428,19 +2412,12 @@ and transl_let ~scopes ~return_layout ?(add_regions=false) ?(in_structure=false)
         let def =
           transl_bound_exp ~scopes ~in_structure vb_pat vb_sort expr vb_loc vb_attributes
         in
-<<<<<<< oxcaml
         let def =
           if add_regions then maybe_region_exp vb_sort expr def else def
         in
         ( id, id_duid, rkind, def ) in
-||||||| upstream-base
-        { id; rkind; def } in
-=======
-        ( id, rkind, def ) in
->>>>>>> upstream-incoming
       let lam_bds = List.map2 transl_case pat_expr_list idlist in
       fun body -> Value_rec_compiler.compile_letrec lam_bds body
-<<<<<<< oxcaml
 
 and transl_letmutable ~scopes ~return_layout
       {vb_pat=pat; vb_expr=expr; vb_attributes=attr; vb_loc; vb_sort} body =
@@ -2450,10 +2427,6 @@ and transl_letmutable ~scopes ~return_layout
   in
   Matching.for_let ~scopes ~return_layout ~arg_sort pat.pat_loc lam Mutable
     pat body
-||||||| upstream-base
-      fun body -> Lletrec(lam_bds, body)
-=======
->>>>>>> upstream-incoming
 
 and transl_setinstvar ~scopes loc self var expr =
   let ptr_or_imm, _ = maybe_pointer expr in
@@ -2905,22 +2878,10 @@ and transl_match ~scopes e arg pat_expr_list partial =
         (* Simplif doesn't like it if binders are not uniq, so we make sure to
            use different names in the value and the exception branches. *)
         let ids_full = Typedtree.pat_bound_idents_full pv in
-<<<<<<< oxcaml
         let ids = List.map (fun (id, _, _, _, _) -> id) ids_full in
-||||||| upstream-base
-        let ids = List.map (fun (id, _, _) -> id) ids_full in
-=======
-        let ids = List.map (fun (id, _, _, _) -> id) ids_full in
->>>>>>> upstream-incoming
         let ids_kinds =
-<<<<<<< oxcaml
           List.map (fun (id, {Location.loc; _}, ty, duid, s) ->
             id, duid, Typeopt.layout pv.pat_env loc s ty)
-||||||| upstream-base
-          List.map (fun (id, _, ty) -> id, Typeopt.value_kind pv.pat_env ty)
-=======
-          List.map (fun (id, _, ty, _) -> id, Typeopt.value_kind pv.pat_env ty)
->>>>>>> upstream-incoming
             ids_full
         in
         let vids = List.map Ident.rename ids in

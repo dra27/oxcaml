@@ -17,14 +17,7 @@
 
 open Asttypes
 open Typedtree
-<<<<<<< oxcaml
-open Types
-||||||| upstream-base
-open Types
-open Format
-=======
 open Data_types
->>>>>>> upstream-incoming
 open Format_doc
 
 let is_cons = function
@@ -101,13 +94,7 @@ let rec pretty_val : type k . _ -> k general_pattern -> _ = fun ppf v ->
   in
   match v.pat_desc with
   | Tpat_any -> fprintf ppf "_"
-<<<<<<< oxcaml
   | Tpat_var (x,_,_,_,_) -> fprintf ppf "%s" (Ident.name x)
-||||||| upstream-base
-  | Tpat_var (x,_) -> fprintf ppf "%s" (Ident.name x)
-=======
-  | Tpat_var (x,_,_) -> fprintf ppf "%s" (Ident.name x)
->>>>>>> upstream-incoming
   | Tpat_constant c -> fprintf ppf "%s" (pretty_const c)
   | Tpat_unboxed_unit -> fprintf ppf "#()"
   | Tpat_unboxed_bool b -> fprintf ppf "#%a" bool b
@@ -189,14 +176,7 @@ let rec pretty_val : type k . _ -> k general_pattern -> _ = fun ppf v ->
 >>>>>>> upstream-incoming
   | Tpat_lazy v ->
       fprintf ppf "@[<2>lazy@ %a@]" pretty_arg v
-<<<<<<< oxcaml
   | Tpat_alias (v, x, _, _, _, _, _) ->
-||||||| upstream-base
-  | Tpat_alias (v, x,_) ->
-      fprintf ppf "@[(%a@ as %a)@]" pretty_val v Ident.print x
-=======
-  | Tpat_alias (v, x,_,_,_) ->
->>>>>>> upstream-incoming
       fprintf ppf "@[(%a@ as %a)@]" pretty_val v Ident.doc_print x
   | Tpat_value v ->
       fprintf ppf "%a" pretty_val (v :> pattern)

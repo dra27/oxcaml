@@ -68,12 +68,7 @@ type cmt_infos = {
   cmt_uid_to_decl : item_declaration Shape.Uid.Tbl.t;
   cmt_impl_shape : Shape.t option; (* None for mli *)
   cmt_ident_occurrences :
-<<<<<<< oxcaml
     (Longident.t Location.loc * Shape_reduce.result) array
-||||||| upstream-base
-=======
-    (Longident.t Location.loc * Shape_reduce.result) list
->>>>>>> upstream-incoming
 }
 
 type error =
@@ -132,7 +127,6 @@ val need_to_clear_env : bool
 ||||||| upstream-base
 val record_value_dependency:
   Types.value_description -> Types.value_description -> unit
-
 =======
 >>>>>>> upstream-incoming
 

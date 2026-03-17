@@ -1129,25 +1129,6 @@ let message = function
         Style.inline_code {|\r|}
         Style.inline_code {|\\|}
   | Implicit_public_methods l ->
-<<<<<<< oxcaml
-      "the following private methods were made public implicitly:\n "
-      ^ String.concat " " l ^ "."
-  | Unerasable_optional_argument -> "this optional argument cannot be erased."
-  | Undeclared_virtual_method m -> "the virtual method "^m^" is not declared."
-  | Not_principal msg ->
-      Format_doc.asprintf "%a is not principal."
-        Format_doc.pp_doc msg
-  | Non_principal_labels s -> s^" without principality."
-  | Ignored_extra_argument -> "this argument will not be used by the function."
-||||||| upstream-base
-      "the following private methods were made public implicitly:\n "
-      ^ String.concat " " l ^ "."
-  | Unerasable_optional_argument -> "this optional argument cannot be erased."
-  | Undeclared_virtual_method m -> "the virtual method "^m^" is not declared."
-  | Not_principal s -> s^" is not principal."
-  | Non_principal_labels s -> s^" without principality."
-  | Ignored_extra_argument -> "this argument will not be used by the function."
-=======
       msg
         "the following private methods@ were@ made@ public@ \
          implicitly:@;<1 2>%a."
@@ -1162,7 +1143,6 @@ let message = function
   | Non_principal_labels s -> msg "%s without principality." s
   | Ignored_extra_argument ->
       msg "this argument will not be used by the function."
->>>>>>> upstream-incoming
   | Nonreturning_statement ->
 <<<<<<< oxcaml
       "this statement never returns (or has an unsound type.)"
@@ -1353,25 +1333,11 @@ let message = function
         (if b then "tailcall" else "non-tailcall")
   | Fragile_literal_pattern ->
       let[@manual.ref "ss:warn52"] ref_manual = [ 13; 5; 3 ] in
-<<<<<<< oxcaml
-      Format.asprintf
-        "Code should not depend on the actual values of\n\
-         this constructor's arguments. They are only for information\n\
-         and may change in future versions. %a"
-        (Format_doc.compat Misc.print_see_manual) ref_manual
-||||||| upstream-base
-      Format.asprintf
-        "Code should not depend on the actual values of\n\
-         this constructor's arguments. They are only for information\n\
-         and may change in future versions. %a"
-        Misc.print_see_manual ref_manual
-=======
       msg
         "Code should not depend@ on@ the@ actual@ values of@ \
          this@ constructor's arguments.@ @[They are only for@ information@ \
          and@ may@ change@ in@ future versions.@ %a@]"
         Misc.print_see_manual ref_manual
->>>>>>> upstream-incoming
   | Unreachable_case ->
       msg "this match case is unreachable.@ \
            Consider replacing it with a refutation case %a"
@@ -1420,7 +1386,7 @@ let message = function
          %s.\n\
          Only the first match will be used to evaluate the guard expression.\n\
          %a"
-        vars_explanation Misc.print_see_manual ref_manual
+        vars_explanation (Format_doc.compat Misc.print_see_manual) ref_manual
   | No_cmx_file name ->
       Printf.sprintf
         "no cmx file was found in path for module %s, \

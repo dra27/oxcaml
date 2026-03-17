@@ -975,13 +975,6 @@ let link ~ppf_dump objfiles output_name =
 
 (* Error report *)
 
-<<<<<<< oxcaml
-||||||| upstream-base
-open Format
-module Style = Misc.Style
-=======
-module Style = Misc.Style
->>>>>>> upstream-incoming
 open Format_doc
 
 let report_error_doc ppf = function
@@ -1004,15 +997,12 @@ let report_error_doc ppf = function
     fprintf ppf
       "Missing implementation for module %a which is required by quote"
       CU.Name.print_as_inline_code impl
-
-let report_error = Format_doc.compat report_error_doc
 ||||||| upstream-base
-let report_error ppf = function
   | File_not_found name ->
       fprintf ppf "Cannot find file %a" Style.inline_code name
   | Not_an_object_file name ->
       fprintf ppf "The file %a is not a compilation unit description"
-        (Style.as_inline_code Location.print_filename) name
+        Location.Doc.quoted_filename name
   | Missing_implementations l ->
      let print_references ppf = function
        | [] -> ()
@@ -1032,26 +1022,26 @@ let report_error ppf = function
       fprintf ppf
        "@[<hov>Files %a@ and %a@ make inconsistent assumptions \
               over interface %a@]"
-       (Style.as_inline_code Location.print_filename) file1
-       (Style.as_inline_code Location.print_filename) file2
+       Location.Doc.quoted_filename file1
+       Location.Doc.quoted_filename file2
        Style.inline_code intf
   | Inconsistent_implementation(intf, file1, file2) ->
       fprintf ppf
        "@[<hov>Files %a@ and %a@ make inconsistent assumptions \
               over implementation %a@]"
-       (Style.as_inline_code Location.print_filename) file1
-       (Style.as_inline_code Location.print_filename) file2
+       Location.Doc.quoted_filename file1
+       Location.Doc.quoted_filename file2
        Style.inline_code intf
   | Assembler_error file ->
       fprintf ppf "Error while assembling %a"
-        (Style.as_inline_code Location.print_filename) file
+        Location.Doc.quoted_filename file
   | Linking_error exitcode ->
       fprintf ppf "Error during linking (exit code %d)" exitcode
   | Multiple_definition(modname, file1, file2) ->
       fprintf ppf
         "@[<hov>Files %a@ and %a@ both define a module named %a@]"
-        (Style.as_inline_code Location.print_filename) file1
-        (Style.as_inline_code Location.print_filename) file2
+        Location.Doc.quoted_filename file1
+        Location.Doc.quoted_filename file2
         Style.inline_code modname
   | Missing_cmx(filename, name) ->
       fprintf ppf
@@ -1060,13 +1050,20 @@ let report_error ppf = function
          which was produced by %a.@ \
          Please recompile %a@ with the correct %a option@ \
          so that %a@ is found.@]"
-        (Style.as_inline_code Location.print_filename) filename
+        Location.Doc.quoted_filename filename
         Style.inline_code ".cmx"
         Style.inline_code name
         Style.inline_code "ocamlopt -for-pack"
-        (Style.as_inline_code Location.print_filename) filename
+        Location.Doc.quoted_filename filename
         Style.inline_code "-I"
         Style.inline_code (name^".cmx")
+
+let () =
+  Location.register_error_of_exn
+    (function
+      | Error err -> Some (Location.error_of_printer_file report_error_doc err)
+      | _ -> None
+    )
 =======
   | File_not_found name ->
       fprintf ppf "Cannot find file %a" Style.inline_code name
@@ -1108,20 +1105,23 @@ let report_error ppf = function
         Style.inline_code (name^".cmx")
   | Link_error e ->
       Linkdeps.report_error_doc ~print_filename:Location.Doc.filename ppf e
->>>>>>> upstream-incoming
 
 let () =
+  Location.register_error_of_exn
+    (function
+      | Error err -> Some (Location.error_of_printer_file report_error_doc err)
+      | _ -> None
+    )
+>>>>>>> upstream-incoming
+
+let report_error = Format_doc.compat report_error_doc
+
 <<<<<<< oxcaml
+let () =
   Location.register_error_of_exn (function
     | Error err -> Some (Location.error_of_printer_file report_error_doc err)
     | _ -> None)
 ||||||| upstream-base
-  Location.register_error_of_exn
-    (function
-      | Error err -> Some (Location.error_of_printer_file report_error err)
-      | _ -> None
-    )
-
 let reset () =
   Cmi_consistbl.clear crc_interfaces;
   Cmx_consistbl.clear crc_implementations;
@@ -1132,14 +1132,6 @@ let reset () =
   lib_ccobjs := [];
   lib_ccopts := []
 =======
-  Location.register_error_of_exn
-    (function
-      | Error err -> Some (Location.error_of_printer_file report_error_doc err)
-      | _ -> None
-    )
-
-let report_error = Format_doc.compat report_error_doc
-
 let reset () =
   Cmi_consistbl.clear crc_interfaces;
   Cmx_consistbl.clear crc_implementations;

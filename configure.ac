@@ -298,31 +298,15 @@ AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
 AC_SUBST([cclibs])
 AC_SUBST([native_ldflags])
-<<<<<<< oxcaml
-AC_SUBST([zstd_libs])
-AC_SUBST([ocamlc_cflags])
-AC_SUBST([ocamlc_cppflags])
-||||||| upstream-base
-AC_SUBST([ocamlc_cflags])
-AC_SUBST([ocamlc_cppflags])
-=======
 AC_SUBST([with_nonexecstack_note])
 AC_SUBST([zstd_libs])
 AC_SUBST([bytecode_cflags])
 AC_SUBST([bytecode_cppflags])
->>>>>>> upstream-incoming
 AC_SUBST([flexdll_source_dir])
 AC_SUBST([bootstrapping_flexdll])
 AC_SUBST([flexdll_dir])
-<<<<<<< oxcaml
-AC_SUBST([flexlink_flags])
-||||||| upstream-base
-AC_SUBST([flexlink_flags])
-AC_SUBST([long_shebang])
-=======
 AC_SUBST([winpthreads_source_dir])
 AC_SUBST([winpthreads_source_include_dir])
->>>>>>> upstream-incoming
 AC_SUBST([shebangscripts])
 AC_SUBST([AR])
 AC_SUBST([mklib])
@@ -428,7 +412,6 @@ AC_SUBST([ocaml_libdir])
 AC_SUBST([TARGET_LIBDIR])
 AC_SUBST([QS])
 AC_SUBST([ar_supports_response_files])
-AC_SUBST([target_bindir])
 
 ## Generated files
 
@@ -760,7 +743,9 @@ AC_ARG_WITH([target-bindir],
 ||||||| upstream-base
 AC_ARG_WITH([target-bindir],
   [AS_HELP_STRING([--with-target-bindir],
-    [location of binary programs on target system])])
+    [location of the runtime binaries on the target system])],
+  [target_bindir=$withval],
+  [target_bindir=''])
 =======
 AC_ARG_VAR([TARGET_BINDIR],
   [location of the runtime binaries on the target system])
@@ -768,14 +753,6 @@ AC_ARG_VAR([TARGET_BINDIR],
 AC_ARG_VAR([TARGET_LIBDIR],
   [location of the libraries on the target system, to be used for dynlink;
   defaults to the value of libdir])
-
-AC_ARG_WITH([target-sh],
-  [AS_HELP_STRING([--with-target-sh],
-    [location of Posix sh on the target system])],
-  [AS_IF([test x"$withval" = 'xno'],
-    [target_launch_method='exe'],
-    [target_launch_method="$withval"])],
-  [target_launch_method=''])
 >>>>>>> upstream-incoming
 
 AC_ARG_WITH([target-sh],
@@ -867,15 +844,9 @@ AC_ARG_WITH([winpthreads-msvc],
 
 AC_ARG_WITH([zstd],
   [AS_HELP_STRING([--without-zstd],
-<<<<<<< oxcaml
     [disable compression of compilation artefacts])],
   [],
   [with_zstd='no'])
-||||||| upstream-base
-    [disable compression of marshaled data])])
-=======
-    [disable compression of compilation artefacts])])
->>>>>>> upstream-incoming
 
 AS_IF([test x"$enable_unix_lib" = "xno"],
   [AS_IF([test x"$enable_ocamldebug" = "xyes"],
@@ -1136,37 +1107,6 @@ AC_SYS_INTERPRETER
 shebangscripts=false
 launch_method='exe'
 AS_IF([test "x$interpval" = "xyes"],
-<<<<<<< oxcaml
-  [AS_CASE([$host],
-    [*-cygwin],
-      [# Cygwin supports shebangs, which we use for the compiler itself, but
-      # partially for legacy, and partially so that executables can be easily
-      # run from outside Cygwin, the executables ocamlc and ocamlopt produce do
-      # not use shebang scripts
-      shebangscripts=true
-      launch_method='sh'
-      AS_IF([test x"$target_launch_method" = 'x'],
-        [target_launch_method='exe'])],
-    [*-*-mingw32*|*-pc-windows], [],
-||||||| upstream-base
-long_shebang=false
-AS_IF(
-  [test "x$interpval" = "xyes"],
-    [AS_CASE([$host],
-      [*-cygwin|*-*-mingw32*|*-pc-windows],
-        [shebangscripts=false],
-      [shebangscripts=true
-       prev_exec_prefix="$exec_prefix"
-       AS_IF([test "x$exec_prefix" = "xNONE"],[exec_prefix="$prefix"])
-       eval "expanded_bindir=\"$bindir\""
-       exec_prefix="$prev_exec_prefix"
-       # Assume maximum shebang is 128 chars; less #!, /ocamlrun, an optional
-       # 1 char suffix and the \0 leaving 115 characters
-       AS_IF([test "${#expanded_bindir}" -gt 115],[long_shebang=true])
-      ]
-    )],
-  [shebangscripts=false]
-=======
   [AS_CASE([$target],
     [*-cygwin],
       [# Cygwin supports shebangs, which we use for the compiler itself, but
@@ -1178,7 +1118,6 @@ AS_IF(
       AS_IF([test x"$target_launch_method" = 'x'],
         [target_launch_method='exe'])],
     [*-w64-mingw32*|*-pc-windows], [],
->>>>>>> upstream-incoming
     [shebangscripts=true
     launch_method='sh']
   )]
@@ -1190,33 +1129,6 @@ AS_IF(
 AC_CONFIG_COMMANDS([shebang],
   [printf '%s\n%s\000\n' "$launch_method" "$ocaml_bindir" \
     > stdlib/runtime.info
-<<<<<<< oxcaml
-  printf '%s\n%s\000\n' "$target_launch_method" "$target_bindir" \
-    > stdlib/target_runtime.info],
-dnl These declarations are put in a here-document in configure, so the command
-dnl in '$(...)' _is_ evaluated as the content is written to config.status (by
-dnl standard interpretation of a here-document). The sed commands quote any
-dnl nefarious single quotes which may appear in any of the strings.
-  [launch_method='$(echo "$launch_method" | sed -e "s/'/'\"'\"'/g")'
-  target_launch_method=\
-'$(echo "$target_launch_method" | sed -e "s/'/'\"'\"'/g")'
-  ocaml_bindir='$(echo "$ocaml_bindir" | sed -e "s/'/'\"'\"'/g")'
-  target_bindir='$(echo "$target_bindir" | sed -e "s/'/'\"'\"'/g")'])
-
-# Are we building a cross-compiler
-
-AS_IF(
-  [test x"$host" = x"$target"],
-    [cross_compiler=false],
-    [cross_compiler=true])
-||||||| upstream-base
-# Are we building a cross-compiler
-
-AS_IF(
-  [test x"$host" = x"$target"],
-    [cross_compiler=false],
-    [cross_compiler=true])
-=======
   printf '%s\n%s\000\n' "$target_launch_method" "$TARGET_BINDIR" \
     > stdlib/target_runtime.info],
 dnl These declarations are put in a here-document in configure, so the command
@@ -1228,7 +1140,6 @@ dnl nefarious single quotes which may appear in any of the strings.
 '$(echo "$target_launch_method" | sed -e "s/'/'\"'\"'/g")'
   ocaml_bindir='$(echo "$ocaml_bindir" | sed -e "s/'/'\"'\"'/g")'
   TARGET_BINDIR='$(echo "$TARGET_BINDIR" | sed -e "s/'/'\"'\"'/g")'])
->>>>>>> upstream-incoming
 
 # Checks for programs
 
@@ -1499,13 +1410,7 @@ AS_CASE([$flexdll_source_dir,$supports_shared_libraries,$flexlink,$target],
 
 mkexe_cmd_exp="$CC"
 
-<<<<<<< oxcaml
-AS_CASE([$ocaml_cc_vendor,$host],
-||||||| upstream-base
-AS_CASE([$ocaml_cv_cc_vendor,$host],
-=======
 AS_CASE([$ocaml_cc_vendor,$target],
->>>>>>> upstream-incoming
   [*,x86_64-*-darwin*],
     [oc_ldflags='-Wl,-no_compact_unwind';
     AC_DEFINE([HAS_ARCH_CODE32], [1])],
@@ -1787,13 +1692,7 @@ AS_IF([test x"$enable_shared" != "xno"],
     [[*-*-linux*|*-*-freebsd[3-9]*|*-*-freebsd[1-9][0-9]*\
     |*-*-openbsd*|*-*-netbsd*|*-*-dragonfly*|*-*-gnu*|*-*-haiku*]],
       [sharedlib_cflags="-fPIC"
-<<<<<<< oxcaml
-       AS_CASE([$ocaml_cc_vendor,$host],
-||||||| upstream-base
-       AS_CASE([$ocaml_cv_cc_vendor,$host],
-=======
        AS_CASE([$ocaml_cc_vendor,$target],
->>>>>>> upstream-incoming
          [gcc-*,powerpc-*-linux*],
            [mkdll_flags='-shared -mbss-plt'],
          [[*,i[3456]86-*]],
@@ -1828,12 +1727,7 @@ AS_CASE([$target],
 
 # Disable control flow integrity
 
-<<<<<<< oxcaml
-AS_CASE([$host],
-||||||| upstream-base
-=======
 AS_CASE([$target],
->>>>>>> upstream-incoming
   [[*-*-openbsd7.[4-9]|*-*-openbsd[89].*]],
     [oc_ldflags="$oc_ldflags -Wl,-z,nobtcfi"
      natdynlinkopts="$natdynlinkopts -Wl,-z,nobtcfi"])
@@ -1878,13 +1772,7 @@ AS_IF([test x"$supports_shared_libraries" = 'xtrue'],
     [x86_64-*-gnu*], [natdynlink=true])])
 
 # Try to work around the Skylake/Kaby Lake processor bug.
-<<<<<<< oxcaml
-AS_CASE(["$ocaml_cc_vendor,$host"],
-||||||| upstream-base
-AS_CASE(["$ocaml_cv_cc_vendor,$host"],
-=======
 AS_CASE(["$ocaml_cc_vendor,$target"],
->>>>>>> upstream-incoming
   [*gcc*,x86_64-*|*gcc*,i686-*],
     [AX_CHECK_COMPILE_FLAG([-fno-tree-vrp],
       [internal_cflags="$internal_cflags -fno-tree-vrp"], [],
@@ -2065,13 +1953,7 @@ AS_IF([$cross_compiler],
   [AC_CHECK_TARGET_TOOL([DIRECT_LD],[ld],[false])],
   [AC_CHECK_TOOL([DIRECT_LD],[ld])])
 AS_IF([test -z "$PARTIALLD"],
-<<<<<<< oxcaml
-  [AS_CASE(["$host,$ocaml_cc_vendor"],
-||||||| upstream-base
-  [AS_CASE(["$host,$ocaml_cv_cc_vendor"],
-=======
   [AS_CASE(["$target,$ocaml_cc_vendor"],
->>>>>>> upstream-incoming
     [x86_64-*-darwin*,gcc-*], [PACKLD_FLAGS=' -arch x86_64'],
     [powerpc64le*-*-linux*,gcc-*], [PACKLD_FLAGS=' -m elf64lppc'],
     [powerpc*-*-linux*,gcc-*],
@@ -2228,38 +2110,8 @@ AS_IF([$has_c99_float_ops],
   # unimplemented in Cygwin64)
   OCAML_C99_CHECK_FMA],
   [AS_IF([test x"$enable_imprecise_c99_float_ops" != "xyes" ],
-<<<<<<< oxcaml
-    [AS_CASE([$enable_imprecise_c99_float_ops,$ocaml_cc_vendor],
-      [no,*], [hard_error=true],
-      [,msvc-*], [AS_IF([test "${ocaml_cc_vendor#msvc-}" -lt 1800 ],
-        [hard_error=false],
-        [hard_error=true])],
-      [hard_error=true])
-     AS_IF([test x"$hard_error" = 'xtrue'],
-       [AC_MSG_ERROR(m4_normalize([
-         C99 float ops unavailable, enable replacements
-         with --enable-imprecise-c99-float-ops]))],
-       [AC_MSG_WARN(m4_normalize([
-         C99 float ops unavailable, replacements enabled
-         (ancient Visual Studio)]))])])])
-||||||| upstream-base
-    [AS_CASE([$enable_imprecise_c99_float_ops,$ocaml_cv_cc_vendor],
-      [no,*], [hard_error=true],
-      [,msvc-*], [AS_IF([test "${ocaml_cv_cc_vendor#msvc-}" -lt 1800 ],
-        [hard_error=false],
-        [hard_error=true])],
-      [hard_error=true])
-     AS_IF([test x"$hard_error" = 'xtrue'],
-       [AC_MSG_ERROR(m4_normalize([
-         C99 float ops unavailable, enable replacements
-         with --enable-imprecise-c99-float-ops]))],
-       [AC_MSG_WARN(m4_normalize([
-         C99 float ops unavailable, replacements enabled
-         (ancient Visual Studio)]))])])])
-=======
     [AC_MSG_ERROR(m4_normalize([C99 float ops unavailable, enable replacements
     with --enable-imprecise-c99-float-ops]))])])
->>>>>>> upstream-incoming
 
 ## getentropy
 AC_CHECK_FUNC([getentropy], [AC_DEFINE([HAS_GETENTROPY], [1])])
@@ -2437,14 +2289,7 @@ AS_IF([$tsan],
   AS_CASE([$ocaml_cc_vendor],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
       [],
-<<<<<<< oxcaml
-    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])
-||||||| upstream-base
-    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])
-  AS_CASE([$ocaml_cv_cc_vendor],
-=======
     [tsan_cflags="$tsan_cflags -Wno-tsan"])
->>>>>>> upstream-incoming
   AS_CASE([$ocaml_cc_vendor],
     [gcc*],
       [tsan_distinguish_volatile_cflags="--param=tsan-distinguish-volatile=1"],
@@ -2774,16 +2619,8 @@ AC_CHECK_HEADER([sys/mman.h],
 AC_CHECK_FUNC([pwrite], [AC_DEFINE([HAS_PWRITE], [1])])
 
 ## -fdebug-prefix-map support by the C compiler
-<<<<<<< oxcaml
-AS_CASE([$ocaml_cc_vendor,$host],
-  [*,*-*-mingw32*], [cc_has_debug_prefix_map=false],
-||||||| upstream-base
-AS_CASE([$ocaml_cv_cc_vendor,$host],
-  [*,*-*-mingw32*], [cc_has_debug_prefix_map=false],
-=======
 AS_CASE([$ocaml_cc_vendor,$target],
   [*,*-w64-mingw32*], [cc_has_debug_prefix_map=false],
->>>>>>> upstream-incoming
   [*,*-pc-windows], [cc_has_debug_prefix_map=false],
   [xlc*,powerpc-ibm-aix*], [cc_has_debug_prefix_map=false],
   [sunc*,sparc-sun-*], [cc_has_debug_prefix_map=false],
@@ -2956,44 +2793,6 @@ AS_IF([test x"$with_zstd" != "xno"],
 AS_CASE([$target],
   [*-w64-mingw32*|*-pc-windows],
     [check_zstd_runs=$target_runnable],
-  [check_zstd_runs=false])
-
-AS_IF([test x"$zstd_status" = "xok"],[
-  AC_MSG_CHECKING([whether programs can be linked with zstd])
-  OCAML_CC_SAVE_VARIABLES
-  LIBS="$LIBS $zstd_libs"
-  CFLAGS="$CFLAGS $zstd_flags"
-  AC_LINK_IFELSE(
-    [AC_LANG_SOURCE([[
-#include <zstd.h>
-int main(void) {
-  return (ZSTD_versionNumber() == 0);
-}
-    ]])],
-    [AC_MSG_RESULT([yes])
-    AC_MSG_CHECKING([whether programs linked with zstd can execute])
-    AS_IF([$check_zstd_runs],
-      [AS_IF([ac_fn_c_try_run LINENO],
-        [AC_MSG_RESULT([yes])],
-        [AC_MSG_RESULT([no])
-        zstd_libs=''
-        zstd_flags=''
-        zstd_status=\
-"programs linked with zstd do not appear to be executable."])],
-      [AC_MSG_RESULT([skipped])])],
-    [AC_MSG_RESULT([no])
-    zstd_libs=''
-    zstd_flags=''
-    zstd_status="zstd found, but programs cannot be linked with it."])
-  OCAML_CC_RESTORE_VARIABLES])
-
-# When building the mingw-w64 port in Cygwin, it is very easy to have the
-# library available, but not have the DLL in PATH. This then causes the build to
-# fail as soon as ocamlrun is first executed. This check avoids automatically
-# enabling zstd when the resulting executable doesn't actually work.
-AS_CASE([$host],
-  [*-w64-mingw32*|*-pc-windows],
-    [check_zstd_runs=$host_runnable],
   [check_zstd_runs=false])
 
 AS_IF([test x"$zstd_status" = "xok"],[
@@ -3237,7 +3036,7 @@ AS_IF([test x"$enable_frame_pointers" = "xyes" -o x"$enable_address_sanitizer" =
       AC_MSG_NOTICE([using frame pointers])],
 ||||||| upstream-base
 AS_IF([test x"$enable_frame_pointers" = "xyes"],
-  [AS_CASE(["$host,$ocaml_cv_cc_vendor"],
+  [AS_CASE(["$host,$ocaml_cc_vendor"],
     [x86_64-*-linux*,gcc-*|x86_64-*-linux*,clang-*],
       [common_cflags="$common_cflags -g  -fno-omit-frame-pointer"
       frame_pointers=true
@@ -3731,12 +3530,7 @@ AC_CONFIG_COMMANDS_PRE([
   eval "exec_prefix=\"$exec_prefix\""
   eval "ocaml_bindir=\"$bindir\""
   eval "ocaml_libdir=\"$libdir\""
-<<<<<<< oxcaml
-  AS_IF([test x"$target_bindir" = 'x'],[target_bindir="$ocaml_bindir"])
-||||||| upstream-base
-=======
   AS_IF([test x"$TARGET_BINDIR" = 'x'],[TARGET_BINDIR="$ocaml_bindir"])
->>>>>>> upstream-incoming
   AS_IF([test x"$target_launch_method" = 'x'],
     [target_launch_method="$launch_method"])
   prefix="$saved_prefix"

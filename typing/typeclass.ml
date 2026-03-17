@@ -18,12 +18,7 @@ open Asttypes
 open Path
 open Types
 open Typetexp
-<<<<<<< oxcaml
 open Mode
-||||||| upstream-base
-open Format
-=======
->>>>>>> upstream-incoming
 
 
 type 'a class_info = {
@@ -1524,7 +1519,6 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
         Typecore.type_let In_class_def val_env Immutable rec_flag sdefs in
       let (vals, met_env) =
         List.fold_right
-<<<<<<< oxcaml
           (fun (id, modes_and_sorts, _) (vals, met_env) ->
              List.iter
                (fun (loc, mode, sort) ->
@@ -1535,11 +1529,6 @@ and class_expr_aux cl_num val_env met_env virt self_scope scl =
                                  Non_value_let_binding (Ident.name id, sort)))
                )
                modes_and_sorts;
-||||||| upstream-base
-          (fun (id, _id_loc, _typ) (vals, met_env) ->
-=======
-          (fun (id, _id_loc, _typ, _uid) (vals, met_env) ->
->>>>>>> upstream-incoming
              let path = Pident id in
              (* do not mark the value as used *)
              let vd = Env.find_value path val_env
@@ -2007,19 +1996,11 @@ let final_decl env define_class
   | Some reason ->
       let printer =
         if define_class
-<<<<<<< oxcaml
-        then Format_doc.doc_printf "%a" (Printtyp.class_declaration id) clty
-        else Format_doc.doc_printf "%a" (Printtyp.cltype_declaration id) cltydef
-||||||| upstream-base
-        then function ppf -> Printtyp.class_declaration id ppf clty
-        else function ppf -> Printtyp.cltype_declaration id ppf cltydef
-=======
         then
           Format_doc.doc_printf "%a" (Printtyp.Doc.class_declaration id) clty
         else
           Format_doc.doc_printf "%a"
             (Printtyp.Doc.cltype_declaration id) cltydef
->>>>>>> upstream-incoming
       in
       raise(Error(cl.pci_loc, env, Unbound_type_var(printer, reason)))
   end;
@@ -2284,12 +2265,7 @@ module Style=Misc.Style
 module Printtyp = Printtyp.Doc
 
 let out_type ppf t = Style.as_inline_code !Oprint.out_type ppf t
-<<<<<<< oxcaml
-||||||| upstream-base
-let report_error env ppf =
-=======
 let quoted_type ppf t = Style.as_inline_code Printtyp.type_expr ppf t
->>>>>>> upstream-incoming
 
 let report_error_doc env ppf =
   let pp_args ppf args =
@@ -2302,31 +2278,13 @@ let report_error_doc env ppf =
   | Unconsistent_constraint err ->
       let msg = Format_doc.Doc.msg in
       fprintf ppf "@[<v>The class constraints are not consistent.@ ";
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-      Printtyp.report_unification_error ppf env err
-        (fun ppf -> fprintf ppf "Type")
-        (fun ppf -> fprintf ppf "is not compatible with type");
-=======
       Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
         (msg "Type")
         (msg "is not compatible with type");
       fprintf ppf "@]"
   | Field_type_mismatch (k, m, err) ->
       let msg  = Format_doc.doc_printf in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-      Printtyp.report_unification_error ppf env err
-        (function ppf ->
-           fprintf ppf "The %s %a@ has type" k Style.inline_code m)
-        (function ppf ->
-           fprintf ppf "but is expected to have type")
-=======
       Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
         (msg "The %s %a@ has type" k Style.inline_code m)
         (msg "but is expected to have type")
   | Unexpected_field (ty, lab) ->
@@ -2366,33 +2324,12 @@ let report_error_doc env ppf =
       Out_type.prepare_for_printing [abbrev; actual; expected];
       fprintf ppf "@[The abbreviation@ %a@ expands to type@ %a@ \
        but is used with type@ %a@]"
-<<<<<<< oxcaml
-        out_type (Printtyp.tree_of_typexp Type abbrev)
-        out_type (Printtyp.tree_of_typexp Type actual)
-        out_type (Printtyp.tree_of_typexp Type expected)
-||||||| upstream-base
-        (Style.as_inline_code !Oprint.out_type)
-        (Printtyp.tree_of_typexp Type abbrev)
-        (Style.as_inline_code !Oprint.out_type)
-        (Printtyp.tree_of_typexp Type actual)
-        (Style.as_inline_code !Oprint.out_type)
-        (Printtyp.tree_of_typexp Type expected)
-=======
         out_type (Out_type.tree_of_typexp Type abbrev)
         out_type (Out_type.tree_of_typexp Type actual)
         out_type (Out_type.tree_of_typexp Type expected)
->>>>>>> upstream-incoming
   | Constructor_type_mismatch (c, err) ->
       let msg = Format_doc.doc_printf in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-      Printtyp.report_unification_error ppf env err
-        (function ppf ->
-           fprintf ppf "The expression %a has type"
-=======
       Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
         (msg "The expression %a has type"
              Style.inline_code ("new " ^ c)
         )
@@ -2423,17 +2360,7 @@ let report_error_doc env ppf =
         (Style.as_inline_code Printtyp.longident) lid expected provided
   | Parameter_mismatch err ->
       let msg = Format_doc.Doc.msg in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-      Printtyp.report_unification_error ppf env err
-        (function ppf ->
-           fprintf ppf "The type parameter")
-        (function ppf ->
-           fprintf ppf "does not meet its constraint: it should be")
-=======
       Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
         (msg  "The type parameter")
         (msg "does not meet its constraint: it should be")
   | Bad_parameters (id, params, cstrs) ->
@@ -2466,30 +2393,13 @@ let report_error_doc env ppf =
           | Type_variable -> ty0
           | Row_variable -> Btype.newgenty(Tobject(ty0, ref None))
         in
-<<<<<<< oxcaml
-        Printtyp.add_type_to_preparation meth_ty;
-        Printtyp.add_type_to_preparation ty1;
-||||||| upstream-base
-        Printtyp.add_type_to_preparation meth_ty;
-        Printtyp.add_type_to_preparation ty1;
-        let pp_type ppf ty = Style.as_inline_code !Oprint.out_type ppf ty in
-=======
         Out_type.add_type_to_preparation meth_ty;
         Out_type.add_type_to_preparation ty1;
->>>>>>> upstream-incoming
         fprintf ppf
           "The method %a@ has type@;<1 2>%a@ where@ %a@ is unbound"
           Style.inline_code meth
-<<<<<<< oxcaml
-          out_type (Printtyp.tree_of_typexp Type meth_ty)
-          out_type (Printtyp.tree_of_typexp Type ty0)
-||||||| upstream-base
-          pp_type (Printtyp.tree_of_typexp Type meth_ty)
-          pp_type (Printtyp.tree_of_typexp Type ty0)
-=======
           out_type (Out_type.tree_of_typexp Type meth_ty)
           out_type (Out_type.tree_of_typexp Type ty0)
->>>>>>> upstream-incoming
       in
       fprintf ppf
         "@[<v>@[Some type variables are unbound in this type:@;<1 2>%a@]@ \
@@ -2519,31 +2429,13 @@ let report_error_doc env ppf =
         "@[The type of this class,@ %a,@ \
            contains non-collapsible conjunctive types in constraints.@ %t@]"
         (Style.as_inline_code @@ Printtyp.class_declaration id) clty
-<<<<<<< oxcaml
-        (fun ppf -> Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-        (fun ppf -> Printtyp.report_unification_error ppf env err
-            (fun ppf -> fprintf ppf "Type")
-            (fun ppf -> fprintf ppf "is not compatible with type")
-=======
         (fun ppf -> Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
             (msg "Type")
             (msg "is not compatible with type")
         )
   | Self_clash err ->
       let msg = Format_doc.Doc.msg in
-<<<<<<< oxcaml
-      Printtyp.report_unification_error ppf env err
-||||||| upstream-base
-      Printtyp.report_unification_error ppf env err
-        (function ppf ->
-           fprintf ppf "This object is expected to have type")
-        (function ppf ->
-           fprintf ppf "but actually has type")
-=======
       Errortrace_report.unification ppf env err
->>>>>>> upstream-incoming
         (msg "This object is expected to have type")
         (msg "but actually has type")
   | Mutability_mismatch (_lab, mut) ->

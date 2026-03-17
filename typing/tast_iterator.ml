@@ -119,13 +119,7 @@ let module_type_declaration sub x =
   Option.iter (sub.module_type sub) x.mtd_type
 
 let module_declaration sub md =
-<<<<<<< oxcaml
   let {md_loc; md_name; md_type; md_attributes; md_modalities; _} = md in
-||||||| upstream-base
-let module_declaration sub {md_loc; md_name; md_type; md_attributes; _} =
-=======
-  let {md_loc; md_name; md_type; md_attributes; _} = md in
->>>>>>> upstream-incoming
   sub.item_declaration sub (Module md);
   sub.location sub md_loc;
   sub.attributes sub md_attributes;
@@ -194,14 +188,8 @@ let value_description sub x =
    | Valmi_sig_value moda -> sub.modalities sub moda
    | Valmi_str_primitive modes -> sub.modes sub modes)
 
-<<<<<<< oxcaml
 let label_decl sub
     ({ld_loc; ld_name; ld_type; ld_attributes; ld_modalities} as ld) =
-||||||| upstream-base
-let label_decl sub {ld_loc; ld_name; ld_type; ld_attributes; _} =
-=======
-let label_decl sub ({ld_loc; ld_name; ld_type; ld_attributes; _} as ld) =
->>>>>>> upstream-incoming
   sub.item_declaration sub (Label ld);
   sub.location sub ld_loc;
   sub.attributes sub ld_attributes;
@@ -302,13 +290,7 @@ let pat
   List.iter (pat_extra sub) extra;
   match pat_desc with
   | Tpat_any  -> ()
-<<<<<<< oxcaml
   | Tpat_var (_, s, _, _, _) -> iter_loc sub s
-||||||| upstream-base
-  | Tpat_var (_, s) -> iter_loc sub s
-=======
-  | Tpat_var (_, s, _) -> iter_loc sub s
->>>>>>> upstream-incoming
   | Tpat_constant _ -> ()
 <<<<<<< oxcaml
   | Tpat_unboxed_unit -> ()
@@ -341,7 +323,7 @@ let pat
 ||||||| upstream-base
       List.iter (fun (lid, _, i) -> iter_loc sub lid; sub.pat sub i) l
   | Tpat_array l -> List.iter (sub.pat sub) l
-  | Tpat_alias (p, _, s) -> sub.pat sub p; iter_loc sub s
+  | Tpat_alias (p, _, s, _, _) -> sub.pat sub p; iter_loc sub s
 =======
       List.iter (fun (lid, _, i) -> iter_loc_lid sub lid; sub.pat sub i) l
   | Tpat_array (_, l) -> List.iter (sub.pat sub) l
@@ -935,7 +917,6 @@ let value_binding sub ({vb_loc; vb_pat; vb_expr; vb_attributes; _} as vb) =
 
 let env _sub _ = ()
 
-<<<<<<< oxcaml
 let jkind_annotation sub l =
   (* iterate over locations contained within parsetree jkind annotation *)
   let ast_iterator =
@@ -951,9 +932,6 @@ let modalities sub x =
 let modes sub x =
   List.iter (iter_loc sub) x.mode_desc
 
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 let item_declaration _sub _ = ()
 
 let default_iterator =

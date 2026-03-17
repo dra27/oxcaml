@@ -302,7 +302,7 @@ static void scan_native_globals(scanning_action f, void* fdata)
   int start, stop;
 ||||||| upstream-base
   int i, j;
-  static link* dyn_globals;
+  link* dyn_globals;
   value* glob;
   link* lnk;
 

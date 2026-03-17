@@ -123,12 +123,8 @@ val locs : bool ref
 val directory : string option ref
 val annotations : bool ref
 val binary_annotations : bool ref
-<<<<<<< oxcaml
 val binary_annotations_cms : bool ref
 val shape_format : shape_format ref
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 val store_occurrences : bool ref
 val use_threads : bool ref
 val noassert : bool ref

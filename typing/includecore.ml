@@ -442,11 +442,7 @@ let report_modality_equate_error first second ppf
 
 module Style = Misc.Style
 module Fmt = Format_doc
-<<<<<<< oxcaml
-||||||| upstream-base
-=======
 module Printtyp = Printtyp.Doc
->>>>>>> upstream-incoming
 
 let report_primitive_mismatch first second ppf err =
   let pr fmt = Fmt.fprintf ppf fmt in
@@ -487,8 +483,7 @@ let report_value_mismatch first second env ppf err =
       pr "The implementation is not a primitive."
   | Type trace ->
       let msg = Fmt.Doc.msg in
-<<<<<<< oxcaml
-      Printtyp.report_moregen_error ppf Type_scheme env trace
+      Errortrace_report.moregen ppf Type_scheme env trace
         (msg "The type")
         (msg "is not compatible with the type")
   | Zero_alloc e -> Zero_alloc.print_error ppf e
@@ -497,27 +492,10 @@ let report_value_mismatch first second env ppf err =
       let got = first ^ " is" in
       let expected = second ^ " is" in
       report_mode_sub_error got expected ppf e
-||||||| upstream-base
-      Printtyp.report_moregen_error ppf Type_scheme env trace
-        (fun ppf -> Format.fprintf ppf "The type")
-        (fun ppf -> Format.fprintf ppf "is not compatible with the type")
-=======
-      Errortrace_report.moregen ppf Type_scheme env trace
-        (msg "The type")
-        (msg "is not compatible with the type")
->>>>>>> upstream-incoming
 
 let report_type_inequality env ppf err =
   let msg = Fmt.Doc.msg in
-<<<<<<< oxcaml
-  Printtyp.report_equality_error ppf Type_scheme env err
-||||||| upstream-base
-  Printtyp.report_equality_error ppf Type_scheme env err
-    (fun ppf -> Format.fprintf ppf "The type")
-    (fun ppf -> Format.fprintf ppf "is not equal to the type")
-=======
   Errortrace_report.equality ppf Type_scheme env err
->>>>>>> upstream-incoming
     (msg "The type")
     (msg "is not equal to the type")
 
@@ -540,22 +518,17 @@ let report_label_mismatch first second env ppf err =
       report_type_inequality env ppf err
   | Mutability ord ->
       Format_doc.fprintf ppf "%s is mutable and %s is not."
+        (String.capitalize_ascii (choose ord first second))
+        (choose_other ord first second)
+  | Atomicity ord ->
+      Format_doc.fprintf ppf "%s is atomic and %s is not."
+        (String.capitalize_ascii (choose ord first second))
+        (choose_other ord first second)
 <<<<<<< oxcaml
-||||||| upstream-base
-      Format.fprintf ppf "%s is mutable and %s is not."
-=======
-        (String.capitalize_ascii (choose ord first second))
-        (choose_other ord first second)
-  | Atomicity ord ->
-      Format_doc.fprintf ppf "%s is atomic and %s is not."
->>>>>>> upstream-incoming
-        (String.capitalize_ascii (choose ord first second))
-        (choose_other ord first second)
-  | Atomicity ord ->
-      Format_doc.fprintf ppf "%s is atomic and %s is not."
-        (String.capitalize_ascii (choose ord first second))
-        (choose_other ord first second)
   | Modality err_ -> report_modality_equate_error first second ppf err_
+||||||| upstream-base
+=======
+>>>>>>> upstream-incoming
 
 let pp_record_diff first second prefix decl env ppf (x : record_change) =
   match x with
@@ -765,13 +738,6 @@ let report_unsafe_mode_crossing_mismatch first second ppf e =
 
 let report_type_mismatch first second decl env ppf err =
   let pr fmt = Fmt.fprintf ppf fmt in
-<<<<<<< oxcaml
-  pr "@ ";
-||||||| upstream-base
-  let pr fmt = Format.fprintf ppf fmt in
-  pr "@ ";
-=======
->>>>>>> upstream-incoming
   match err with
   | Arity ->
       pr "They have different arities."

@@ -681,7 +681,6 @@ CAMLno_tsan_for_perf
 <<<<<<< oxcaml
 static mopup_result_s oldify_mopup (struct oldify_state* st, int do_ephemerons)
 ||||||| upstream-base
-CAMLno_tsan /* Disable TSan instrumentation for performance. */
 static void oldify_mopup (struct oldify_state* st, int do_ephemerons)
 =======
 static promote_result oldify_mopup (struct oldify_state* st, int do_ephemerons)

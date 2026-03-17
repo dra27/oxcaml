@@ -23,13 +23,7 @@ let variables_iterator scope =
   let super = default_iterator in
   let pat sub (type k) (p : k general_pattern) =
     begin match p.pat_desc with
-<<<<<<< oxcaml
     | Tpat_var (id, _, _, _, _) | Tpat_alias (_, id, _, _, _, _, _) ->
-||||||| upstream-base
-    | Tpat_var (id, _) | Tpat_alias (_, id, _) ->
-=======
-    | Tpat_var (id, _, _) | Tpat_alias (_, id, _, _, _) ->
->>>>>>> upstream-incoming
         Stypes.record (Stypes.An_ident (p.pat_loc,
                                         Ident.name id,
                                         Annot.Idef scope))

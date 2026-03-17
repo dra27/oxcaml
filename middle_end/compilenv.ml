@@ -430,13 +430,6 @@ let require_global global_ident =
 (* Error report *)
 
 open Format_doc
-<<<<<<< oxcaml
-||||||| upstream-base
-open Format
-module Style = Misc.Style
-=======
-module Style = Misc.Style
->>>>>>> upstream-incoming
 
 let report_error_doc ppf = function
   | Not_a_unit_info filename ->
@@ -444,54 +437,13 @@ let report_error_doc ppf = function
         Location.Doc.quoted_filename filename
   | Corrupted_unit_info filename ->
       fprintf ppf "Corrupted compilation unit description@ %a"
-<<<<<<< oxcaml
         Location.Doc.quoted_filename filename
-||||||| upstream-base
-        (Style.as_inline_code Location.print_filename) filename
-=======
-       Location.Doc.quoted_filename filename
->>>>>>> upstream-incoming
   | Illegal_renaming(name, modname, filename) ->
       fprintf ppf "%a@ contains the description for unit\
                    @ %a when %a was expected"
         Location.Doc.quoted_filename filename
-<<<<<<< oxcaml
         CU.print_as_inline_code name
         CU.print_as_inline_code modname
-||||||| upstream-base
-        (Style.as_inline_code Location.print_filename) filename
-        Style.inline_code name
-        Style.inline_code modname
-  | Mismatching_for_pack(filename, pack_1, current_unit, None) ->
-      fprintf ppf "%a@ was built with %a, but the \
-                   @ current unit %a is not"
-        (Style.as_inline_code Location.print_filename) filename
-        Style.inline_code ("-for-pack " ^ pack_1)
-        Style.inline_code current_unit
-  | Mismatching_for_pack(filename, pack_1, current_unit, Some pack_2) ->
-      fprintf ppf "%a@ was built with %a, but the \
-                   @ current unit %a is built with %a"
-        (Style.as_inline_code Location.print_filename) filename
-        Style.inline_code ("-for-pack " ^ pack_1)
-        Style.inline_code current_unit
-        Style.inline_code ("-for-pack " ^ pack_2)
-=======
-        Style.inline_code name
-        Style.inline_code modname
-  | Mismatching_for_pack(filename, pack_1, current_unit, None) ->
-      fprintf ppf "%a@ was built with %a, but the \
-                   @ current unit %a is not"
-        Location.Doc.quoted_filename filename
-        Style.inline_code ("-for-pack " ^ pack_1)
-        Style.inline_code current_unit
-  | Mismatching_for_pack(filename, pack_1, current_unit, Some pack_2) ->
-      fprintf ppf "%a@ was built with %a, but the \
-                   @ current unit %a is built with %a"
-        Location.Doc.quoted_filename filename
-        Style.inline_code ("-for-pack " ^ pack_1)
-        Style.inline_code current_unit
-        Style.inline_code ("-for-pack " ^ pack_2)
->>>>>>> upstream-incoming
 
 let () =
   Location.register_error_of_exn

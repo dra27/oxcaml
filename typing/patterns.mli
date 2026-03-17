@@ -83,17 +83,9 @@ end
 module General : sig
   type view = [
     | Half_simple.view
-<<<<<<< oxcaml
     | `Var of Ident.t * string loc * Uid.t * Jkind.Sort.t * Mode.Value.l
     | `Alias of pattern * Ident.t * string loc * Uid.t
                 * Jkind.Sort.t * Mode.Value.l * Types.type_expr
-||||||| upstream-base
-    | `Var of Ident.t * string loc
-    | `Alias of pattern * Ident.t * string loc
-=======
-    | `Var of Ident.t * string loc * Uid.t
-    | `Alias of pattern * Ident.t * string loc * Uid.t * Types.type_expr
->>>>>>> upstream-incoming
   ]
   type pattern = view pattern_data
 

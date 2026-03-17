@@ -139,36 +139,10 @@ let tyvar_of_name s =
   else
     "'" ^ s
 
-<<<<<<< oxcaml
 (* Unlike upstream, we call this module [Doc_internal] and define [Doc] at the
    end of the file to include [jkind_annotation]. *)
 module Doc_internal = struct
-||||||| upstream-base
-=======
-module Doc = struct
->>>>>>> upstream-incoming
 (* Turn an arbitrary variable name into a valid OCaml identifier by adding \#
-<<<<<<< oxcaml
-  in case it is a keyword, or parenthesis when it is an infix or prefix
-  operator. *)
-  let ident_of_name ppf txt =
-    let format : (_, _, _) format =
-      if Lexer.is_keyword txt then "\\#%s"
-      else if not (needs_parens txt) then "%s"
-      else if needs_spaces txt then "(@;%s@;)"
-      else "(%s)"
-    in Format_doc.fprintf ppf format txt
-||||||| upstream-base
-  in case it is a keyword, or parenthesis when it is an infix or prefix
-  operator. *)
-let ident_of_name ppf txt =
-  let format : (_, _, _) format =
-    if Lexer.is_keyword txt then "\\#%s"
-    else if not (needs_parens txt) then "%s"
-    else if needs_spaces txt then "(@;%s@;)"
-    else "(%s)"
-  in fprintf ppf format txt
-=======
    in case it is a keyword, or parenthesis when it is an infix or prefix
    operator. *)
   let ident_of_name ~kind ppf txt =
@@ -255,36 +229,7 @@ let ident_of_name ppf txt =
     nominal_exp empty t
 end
 
-let value_longident ppf l = Format_doc.compat Doc.value_longident ppf l
-let type_longident ppf l = Format_doc.compat Doc.type_longident ppf l
-
-let ident_of_name ppf i =
-  Format_doc.compat (Doc.ident_of_name ~kind:Other) ppf i
-
-let constr ppf l = Format_doc.compat Doc.constr ppf l
->>>>>>> upstream-incoming
-
-  let protect_longident ppf print_longident longprefix txt =
-    if not (needs_parens txt) then
-      Format_doc.fprintf ppf "%a.%a"
-        print_longident longprefix
-        ident_of_name txt
-    else if needs_spaces txt then
-      Format_doc.fprintf ppf "%a.(@;%s@;)" print_longident longprefix txt
-    else
-      Format_doc.fprintf ppf "%a.(%s)" print_longident longprefix txt
-
 <<<<<<< oxcaml
-  let rec longident f = function
-    | Lident s -> ident_of_name f s
-    | Ldot(y,s) -> protect_longident f longident y s
-    | Lapply (y,s) ->
-        Format_doc.fprintf f "%a(%a)" longident y longident s
-
-  let tyvar ppf s =
-    Format_doc.fprintf ppf "%s" (tyvar_of_name s)
-end
-
 let longident ppf l = Format_doc.compat Doc_internal.longident ppf l
 let ident_of_name ppf i = Format_doc.compat Doc_internal.ident_of_name ppf i
 
@@ -299,17 +244,22 @@ let split_out_curry_attr attrs =
     | _ :: _ -> true
   in
   is_curry, non_curry
-
 ||||||| upstream-base
-let protect_longident ppf print_longident longprefix txt =
-  let format : (_, _, _) format =
-    if not (needs_parens txt) then "%a.%s"
-    else if needs_spaces txt then  "%a.(@;%s@;)"
-    else "%a.(%s)" in
-  fprintf ppf format print_longident longprefix txt
-
+let longident ppf l = Format_doc.compat Doc.longident ppf l
+let ident_of_name ppf i = Format_doc.compat Doc.ident_of_name ppf i
+let ident_of_name_loc ppf s = ident_of_name ppf s.txt
 =======
+let value_longident ppf l = Format_doc.compat Doc.value_longident ppf l
+let type_longident ppf l = Format_doc.compat Doc.type_longident ppf l
+
+let ident_of_name ppf i =
+  Format_doc.compat (Doc.ident_of_name ~kind:Other) ppf i
+
+let constr ppf l = Format_doc.compat Doc.constr ppf l
+
+let ident_of_name_loc ppf s = ident_of_name ppf s.txt
 >>>>>>> upstream-incoming
+
 type space_formatter = (unit, Format.formatter, unit) format
 
 let override = function
@@ -427,26 +377,10 @@ let paren: 'a . ?first:space_formatter -> ?last:space_formatter ->
     if b then (pp f "("; pp f first; fu f x; pp f last; pp f ")")
     else fu f x
 
-<<<<<<< oxcaml
-let longident_loc f x = pp f "%a" longident x.txt
-
-let constant f = function
-||||||| upstream-base
-let rec longident f = function
-  | Lident s -> ident_of_name f s
-  | Ldot(y,s) -> protect_longident f longident y s
-  | Lapply (y,s) ->
-      pp f "%a(%a)" longident y longident s
-
-let longident_loc f x = pp f "%a" longident x.txt
-
-let constant f = function
-=======
 let with_loc pr ppf x = pr ppf x.txt
 let value_longident_loc = with_loc value_longident
 
 let constant_desc f = function
->>>>>>> upstream-incoming
   | Pconst_char i ->
       pp f "%C"  i
   | Pconst_untagged_char i ->
@@ -506,14 +440,6 @@ let iter_loc f ctxt {txt; loc = _} = f ctxt txt
 let constant_string f s = pp f "%S" s
 
 
-<<<<<<< oxcaml
-||||||| upstream-base
-let tyvar ppf s =
-  Format.fprintf ppf "%s" (tyvar_of_name s)
-=======
-
-let tyvar ppf v = Format_doc.compat Doc.tyvar ppf v
->>>>>>> upstream-incoming
 
 let tyvar ppf v = Format_doc.compat Doc_internal.tyvar ppf v
 
@@ -838,45 +764,27 @@ and core_type1 ctxt f x =
     | Ptyp_class (li, l) ->   (*FIXME*)
         pp f "@[<hov2>%a@;#%a@]"
           (list (core_type ctxt) ~sep:"," ~first:"(" ~last:")") l
-<<<<<<< oxcaml
-          longident_loc li
-    | Ptyp_package (lid, cstrs) ->
-        let aux f (s, ct) =
-          pp f "type %a@ =@ %a" longident_loc s (core_type ctxt) ct  in
-        (match cstrs with
-         |[] -> pp f "@[<hov2>(module@ %a)@]" longident_loc lid
-         |_ ->
-             pp f "@[<hov2>(module@ %a@ with@ %a)@]" longident_loc lid
-               (list aux  ~sep:"@ and@ ")  cstrs)
+          (with_loc type_longident) li
+    | Ptyp_package pck_ty ->
+        pp f "@[<hov2>(module@ %a)@]" (package_type ctxt) pck_ty
     | Ptyp_open(li, ct) ->
+<<<<<<< oxcaml
        pp f "@[<hov2>%a.(%a)@]" longident_loc li (core_type ctxt) ct
     | Ptyp_quote t ->
         pp f "@[<hov2><[%a]>@]" (core_type ctxt) t
     | Ptyp_splice t ->
         pp f "@[<hov2>$(%a)@]" (core_type ctxt) t
 ||||||| upstream-base
-          longident_loc li
-    | Ptyp_package (lid, cstrs) ->
-        let aux f (s, ct) =
-          pp f "type %a@ =@ %a" longident_loc s (core_type ctxt) ct  in
-        (match cstrs with
-         |[] -> pp f "@[<hov2>(module@ %a)@]" longident_loc lid
-         |_ ->
-             pp f "@[<hov2>(module@ %a@ with@ %a)@]" longident_loc lid
-               (list aux  ~sep:"@ and@ ")  cstrs)
+       pp f "@[<hov2>%a.(%a)@]" longident_loc li (core_type ctxt) ct
 =======
-          (with_loc type_longident) li
-    | Ptyp_package pck_ty ->
-        pp f "@[<hov2>(module@ %a)@]" (package_type ctxt) pck_ty
-    | Ptyp_open(li, ct) ->
        pp f "@[<hov2>%a.(%a)@]" value_longident_loc li (core_type ctxt) ct
 >>>>>>> upstream-incoming
     | Ptyp_extension e -> extension ctxt f e
-<<<<<<< oxcaml
     | (Ptyp_arrow _ | Ptyp_alias _ | Ptyp_poly _ | Ptyp_repr _
       | Ptyp_of_kind _) ->
        paren true (core_type ctxt) f x
 
+<<<<<<< oxcaml
 and core_type2 ctxt f x =
   if x.ptyp_attributes <> [] then core_type ctxt f x
   else
@@ -921,11 +829,7 @@ and core_type_with_optional_modes  ctxt f (ty, modes) =
   | [] -> core_type ctxt f ty
   | _ :: _ -> pp f "%a%a" (core_type2 ctxt) ty optional_at_modes modes
 ||||||| upstream-base
-    | _ -> paren true (core_type ctxt) f x
 =======
-    | (Ptyp_arrow _ | Ptyp_alias _ | Ptyp_poly _) ->
-       paren true (core_type ctxt) f x
-
 and package_type ctxt f ptyp =
   let aux f (s, ct) =
     pp f "type %a@ =@ %a" (with_loc type_longident) s (core_type ctxt) ct
@@ -1348,68 +1252,6 @@ and sugar_expr ctxt f e =
     end
   | _ -> false
 
-<<<<<<< oxcaml
-||||||| upstream-base
-and function_param ctxt f param =
-  match param.pparam_desc with
-  | Pparam_val (a, b, c) -> label_exp ctxt f (a, b, c)
-  | Pparam_newtype ty -> pp f "(type %s)@;" ty.txt
-
-and function_body ctxt f function_body =
-  match function_body with
-  | Pfunction_body body -> expression ctxt f body
-  | Pfunction_cases (cases, _, attrs) ->
-      pp f "@[<hv>function%a%a@]"
-        (item_attributes ctxt) attrs
-        (case_list ctxt) cases
-
-and type_constraint ctxt f constraint_ =
-  match constraint_ with
-  | Pconstraint ty ->
-      pp f ":@;%a" (core_type ctxt) ty
-  | Pcoerce (ty1, ty2) ->
-      pp f "%a:>@;%a"
-        (option ~first:":@;" (core_type ctxt)) ty1
-        (core_type ctxt) ty2
-
-and function_params_then_body ctxt f params constraint_ body ~delimiter =
-  pp f "%a%a%s@;%a"
-    (list (function_param ctxt) ~sep:"") params
-    (option (type_constraint ctxt)) constraint_
-    delimiter
-    (function_body (under_functionrhs ctxt)) body
-
-=======
-and function_param ctxt f param =
-  match param.pparam_desc with
-  | Pparam_val (a, b, c) -> label_exp ctxt f (a, b, c)
-  | Pparam_newtype ty -> pp f "(type %a)@;" ident_of_name ty.txt
-
-and function_body ctxt f function_body =
-  match function_body with
-  | Pfunction_body body -> expression ctxt f body
-  | Pfunction_cases (cases, _, attrs) ->
-      pp f "@[<hv>function%a%a@]"
-        (item_attributes ctxt) attrs
-        (case_list ctxt) cases
-
-and type_constraint ctxt f constraint_ =
-  match constraint_ with
-  | Pconstraint ty ->
-      pp f ":@;%a" (core_type ctxt) ty
-  | Pcoerce (ty1, ty2) ->
-      pp f "%a:>@;%a"
-        (option ~first:":@;" (core_type ctxt)) ty1
-        (core_type ctxt) ty2
-
-and function_params_then_body ctxt f params constraint_ body ~delimiter =
-  pp f "%a%a%s@;%a"
-    (list (function_param ctxt) ~sep:"") params
-    (option (type_constraint ctxt)) constraint_
-    delimiter
-    (function_body (under_functionrhs ctxt)) body
-
->>>>>>> upstream-incoming
 and expression ctxt f x =
   if x.pexp_attributes <> [] then
     pp f "((%a)@,%a)" (expression ctxt) {x with pexp_attributes=[]}

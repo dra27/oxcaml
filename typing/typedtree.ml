@@ -40,6 +40,10 @@ type constant =
   | Const_unboxed_int32 of int32
   | Const_unboxed_int64 of int64
   | Const_unboxed_nativeint of nativeint
+||||||| upstream-base
+=======
+open Data_types
+>>>>>>> upstream-incoming
 
 module Uid = Shape.Uid
 
@@ -52,12 +56,6 @@ type modalities = Typemode.modalities =
   { moda_modalities : Mode.Modality.Const.t;
     moda_desc : Mode.Modality.atom Location.loc list
   }
-||||||| upstream-base
-=======
-open Data_types
-
-module Uid = Shape.Uid
->>>>>>> upstream-incoming
 
 (* Value expressions for the core language *)
 
@@ -184,25 +182,12 @@ and pat_extra =
 and 'k pattern_desc =
   (* value patterns *)
   | Tpat_any : value pattern_desc
-<<<<<<< oxcaml
   | Tpat_var :
     Ident.t * string loc * Uid.t * Jkind_types.Sort.t * Mode.Value.l ->
     value pattern_desc
-||||||| upstream-base
-  | Tpat_var : Ident.t * string loc -> value pattern_desc
-=======
-  | Tpat_var : Ident.t * string loc * Uid.t -> value pattern_desc
->>>>>>> upstream-incoming
   | Tpat_alias :
-<<<<<<< oxcaml
       value general_pattern * Ident.t * string loc * Uid.t * Jkind_types.Sort.t
       * Mode.Value.l * Types.type_expr -> value pattern_desc
-||||||| upstream-base
-      value general_pattern * Ident.t * string loc -> value pattern_desc
-=======
-      value general_pattern * Ident.t * string loc * Uid.t * type_expr ->
-      value pattern_desc
->>>>>>> upstream-incoming
   | Tpat_constant : constant -> value pattern_desc
 <<<<<<< oxcaml
   | Tpat_unboxed_unit : value pattern_desc
@@ -979,13 +964,7 @@ and constructor_declaration =
      cd_id: Ident.t;
      cd_name: string loc;
      cd_uid: Uid.t;
-<<<<<<< oxcaml
      cd_vars: (string * Parsetree.jkind_annotation option) list;
-||||||| upstream-base
-     cd_vars: string loc list;
-=======
-     cd_vars: string loc list;
->>>>>>> upstream-incoming
      cd_args: constructor_arguments;
      cd_res: core_type option;
      cd_loc: Location.t;
@@ -1181,7 +1160,7 @@ let shallow_iter_pattern_desc
   | Tpat_tuple patl -> List.iter (fun (_, p) -> f.f p) patl
   | Tpat_unboxed_tuple patl -> List.iter (fun (_, p, _) -> f.f p) patl
 ||||||| upstream-base
-  | Tpat_alias(p, _, _) -> f.f p
+  | Tpat_alias(p, _, _, _, _) -> f.f p
   | Tpat_tuple patl -> List.iter f.f patl
 =======
   | Tpat_alias(p, _, _, _, _) -> f.f p
@@ -1215,16 +1194,8 @@ type pattern_transformation =
 let shallow_map_pattern_desc
   : type k . pattern_transformation -> k pattern_desc -> k pattern_desc
   = fun f d -> match d with
-<<<<<<< oxcaml
   | Tpat_alias (p1, id, s, uid, sort, m, ty) ->
       Tpat_alias (f.f p1, id, s, uid, sort, m, ty)
-||||||| upstream-base
-  | Tpat_alias (p1, id, s) ->
-      Tpat_alias (f.f p1, id, s)
-=======
-  | Tpat_alias (p1, id, s, uid, ty) ->
-      Tpat_alias (f.f p1, id, s, uid, ty)
->>>>>>> upstream-incoming
   | Tpat_tuple pats ->
       Tpat_tuple (List.map (fun (label, pat) -> label, f.f pat) pats)
 <<<<<<< oxcaml
@@ -1306,27 +1277,11 @@ let rec iter_bound_idents
   : type k . _ -> k general_pattern -> _
   = fun f pat ->
   match pat.pat_desc with
-<<<<<<< oxcaml
   | Tpat_var (id, s, uid, sort, _mode) ->
       f (id, s, pat.pat_type, sort, uid)
   | Tpat_alias(p, id, s, uid, sort, _mode, ty) ->
-||||||| upstream-base
-  | Tpat_var (id,s) ->
-     f (id,s,pat.pat_type)
-  | Tpat_alias(p, id, s) ->
-=======
-  | Tpat_var (id, s, uid) ->
-     f (id,s,pat.pat_type, uid)
-  | Tpat_alias(p, id, s, uid, ty) ->
->>>>>>> upstream-incoming
       iter_bound_idents f p;
-<<<<<<< oxcaml
       f (id, s, ty, sort, uid)
-||||||| upstream-base
-      f (id,s,pat.pat_type)
-=======
-      f (id, s, ty, uid)
->>>>>>> upstream-incoming
   | Tpat_or(p1, _, _) ->
       (* Invariant : both arguments bind the same variables *)
       iter_bound_idents f p1
@@ -1398,13 +1353,7 @@ let rev_pat_bound_idents_full ~of_sort ~of_const_sort pat =
   !idents_full
 
 let rev_only_idents idents_full =
-<<<<<<< oxcaml
   List.rev_map (fun (id,_,_,_,_) -> id) idents_full
-||||||| upstream-base
-  List.rev_map (fun (id,_,_) -> id) idents_full
-=======
-  List.rev_map (fun (id,_,_,_) -> id) idents_full
->>>>>>> upstream-incoming
 
 let pat_bound_idents_full pat =
   List.rev (for_transl rev_pat_bound_idents_full pat)
@@ -1486,39 +1435,15 @@ let alpha_var env id = List.assoc id env
 let rec alpha_pat
   : type k . _ -> k general_pattern -> k general_pattern
   = fun env p -> match p.pat_desc with
-<<<<<<< oxcaml
   | Tpat_var (id, s, uid, sort, mode) -> (* note the ``Not_found'' case *)
-||||||| upstream-base
-  | Tpat_var (id, s) -> (* note the ``Not_found'' case *)
-=======
-  | Tpat_var (id, s, uid) -> (* note the ``Not_found'' case *)
->>>>>>> upstream-incoming
       {p with pat_desc =
-<<<<<<< oxcaml
        try Tpat_var (alpha_var env id, s, uid, sort, mode) with
-||||||| upstream-base
-       try Tpat_var (alpha_var env id, s) with
-=======
-       try Tpat_var (alpha_var env id, s, uid) with
->>>>>>> upstream-incoming
        | Not_found -> Tpat_any}
-<<<<<<< oxcaml
   | Tpat_alias (p1, id, s, uid, sort, mode, ty) ->
-||||||| upstream-base
-  | Tpat_alias (p1, id, s) ->
-=======
-  | Tpat_alias (p1, id, s, uid, ty) ->
->>>>>>> upstream-incoming
       let new_p =  alpha_pat env p1 in
       begin try
-<<<<<<< oxcaml
         {p with pat_desc =
            Tpat_alias (new_p, alpha_var env id, s, uid, sort, mode, ty)}
-||||||| upstream-base
-        {p with pat_desc = Tpat_alias (new_p, alpha_var env id, s)}
-=======
-        {p with pat_desc = Tpat_alias (new_p, alpha_var env id, s, uid, ty)}
->>>>>>> upstream-incoming
       with
       | Not_found -> new_p
       end
@@ -1807,16 +1732,35 @@ and fold_antiquote_binding_op f acc op =
    if they satisfy one of:
    - Similar to an identifier: words separated by '.' or '#'.
    - Do not contain spaces when printed.
-  *)
-let rec exp_is_nominal exp =
-  match exp.exp_desc with
-  | _ when exp.exp_attributes <> [] -> false
-  | Texp_ident _ | Texp_instvar _ | Texp_constant _
-  | Texp_variant (_, None)
-  | Texp_construct (_, _, []) ->
-      true
-  | Texp_field (parent, _, _) | Texp_send (parent, _) -> exp_is_nominal parent
-  | _ -> false
+*)
+let nominal_exp_doc lid t =
+  let open Format_doc.Doc in
+  let longident l = Format_doc.doc_printer lid l.Location.txt in
+  let rec nominal_exp_doc doc exp =
+    match exp.exp_desc with
+    | _ when exp.exp_attributes <> [] -> None
+    | Texp_ident (_,l,_) ->
+        Some (longident l doc)
+    | Texp_instvar (_,_,s) ->
+        Some (string s.Location.txt doc)
+    | Texp_constant _ -> assert false
+    | Texp_variant (lbl, None) ->
+        Some (printf "`%s" lbl doc)
+    | Texp_construct (l, _, []) -> Some (longident l doc)
+    | Texp_field (parent, lbl, _) ->
+        Option.map
+          (printf ".%t" (longident lbl))
+          (nominal_exp_doc doc parent)
+    | Texp_send (parent, meth) ->
+        let name = match meth with
+          | Tmeth_name name -> name
+          | Tmeth_val id | Tmeth_ancestor (id,_) -> Ident.name id in
+        Option.map
+          (printf "#%s" name)
+          (nominal_exp_doc doc parent)
+    | _ -> None
+  in
+  nominal_exp_doc empty t
 =======
 let map_apply_arg f = function
   | Arg arg -> Arg (f arg)

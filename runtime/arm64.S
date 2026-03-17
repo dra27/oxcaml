@@ -379,6 +379,34 @@ G(name):
         str     xzr, [TMP, (Dynamic_cache + 6*Dynamic_binding_size + Dynamic_binding_var)]
         str     xzr, [TMP, (Dynamic_cache + 7*Dynamic_binding_size + Dynamic_binding_var)]
 .endm
+||||||| upstream-base
+=======
+/* Updates the oldest saved frame pointer in the target fiber.
+
+   A fiber stack may need to grow, causing the reallocation of the entire fiber,
+   including stack_info and stack_handler structures.
+   caml_try_realloc_stack will not be able to update the linked list of
+   frame-pointers if it has been split (i.e., in a continuation).
+   caml_resume and caml_reperform use this macro to update the oldest saved x29
+   (highest one in the stack) in case the fiber was reallocated to reattach the
+   frame-pointer linked list.
+
+   REG: Stack_handler(target_fiber)
+
+   The frame pointer will be pushed into the stack immediately after these
+   instructions. The offset of the oldest saved x29 in a fiber from the stack
+   handler is 48 = 4 words (caml_runstack) + 2 words (x30 and x29).
+   */
+#ifdef WITH_FRAME_POINTERS
+.macro UPDATE_BASE_POINTER reg
+        sub     TMP2, sp, 16
+        str     TMP2, [\reg, -48]
+.endm
+#else
+.macro UPDATE_BASE_POINTER reg
+.endm
+#endif
+>>>>>>> upstream-incoming
 
 #if defined(WITH_THREAD_SANITIZER) /* { */
 
@@ -512,164 +540,9 @@ G(name):
 
 #endif /* } WITH_THREAD_SANITIZER */
 
-/* Allocation functions and GC interface */
-||||||| upstream-base
-/* Allocation functions and GC interface */
-=======
-/* Updates the oldest saved frame pointer in the target fiber.
-
-   A fiber stack may need to grow, causing the reallocation of the entire fiber,
-   including stack_info and stack_handler structures.
-   caml_try_realloc_stack will not be able to update the linked list of
-   frame-pointers if it has been split (i.e., in a continuation).
-   caml_resume and caml_reperform use this macro to update the oldest saved x29
-   (highest one in the stack) in case the fiber was reallocated to reattach the
-   frame-pointer linked list.
-
-   REG: Stack_handler(target_fiber)
-
-   The frame pointer will be pushed into the stack immediately after these
-   instructions. The offset of the oldest saved x29 in a fiber from the stack
-   handler is 48 = 4 words (caml_runstack) + 2 words (x30 and x29).
-   */
-#ifdef WITH_FRAME_POINTERS
-.macro UPDATE_BASE_POINTER reg
-        sub     TMP2, sp, 16
-        str     TMP2, [\reg, -48]
-.endm
-#else
-.macro UPDATE_BASE_POINTER reg
-.endm
-#endif
-
-#if defined(WITH_THREAD_SANITIZER) /* { */
-
-/* Push the current value of the link register to the stack. */
-.macro TSAN_SETUP_C_CALL
-        CFI_OFFSET(30, -16)
-        str     x30, [sp, -16]!
-        CFI_ADJUST(16)
-.endm
-
-/* Restore the value of the link register from the stack. */
-.macro TSAN_CLEANUP_AFTER_C_CALL
-        ldr     x30, [sp], 16
-        CFI_ADJUST(-16)
-.endm
-
-/* Invoke a C function, switching back and forth the OCaml and C stacks. */
-.macro TSAN_C_CALL fun
-        SWITCH_OCAML_TO_C
-        TSAN_SETUP_C_CALL
-        bl      \fun
-        TSAN_CLEANUP_AFTER_C_CALL
-        SWITCH_C_TO_OCAML
-.endm
-
-/* Invoke __tsan_func_entry(return address in the caller) */
-.macro TSAN_ENTER_FUNCTION
-        mov     x0, x30        /* arg1: return address in caller */
-        TSAN_C_CALL G(__tsan_func_entry)
-.endm
-
-/* Invoke __tsan_func_exit(0) */
-.macro TSAN_EXIT_FUNCTION
-        mov     x0, xzr
-        TSAN_C_CALL G(__tsan_func_exit)
-.endm
-
-/* This is similar to SAVE_ALL_REGS, but only saving the caller-saved
-   registers. */
-.macro TSAN_SAVE_CALLER_REGS
-    /* First, save the young_ptr & exn_handler */
-        str     ALLOC_PTR, Caml_state(young_ptr)
-        str     TRAP_PTR, Caml_state(exn_handler)
-    /* Now, use TMP to point to the gc_regs bucket */
-        ldr     TMP, Caml_state(gc_regs_buckets)
-        ldr     TMP2, [TMP, 0] /* next ptr */
-        str     TMP2, Caml_state(gc_regs_buckets)
-    /* Save caller-saved registers */
-        stp     x0, x1, [TMP, 16]
-        stp     x2, x3, [TMP, 32]
-        stp     x4, x5, [TMP, 48]
-        stp     x6, x7, [TMP, 64]
-        stp     x8, x9, [TMP, 80]
-        stp     x10, x11, [TMP, 96]
-        stp     x12, x13, [TMP, 112]
-        stp     x14, x15, [TMP, 128]
-    /* Save caller-save floating-point registers */
-        stp     d0, d1, [TMP, 208]
-        stp     d2, d3, [TMP, 224]
-        stp     d4, d5, [TMP, 240]
-        stp     d6, d7, [TMP, 256]
-        stp     d16, d17, [TMP, 272]
-        stp     d18, d19, [TMP, 288]
-        stp     d20, d21, [TMP, 304]
-        stp     d22, d23, [TMP, 320]
-        stp     d24, d25, [TMP, 336]
-        stp     d26, d27, [TMP, 352]
-        stp     d28, d29, [TMP, 368]
-        stp     d30, d31, [TMP, 384]
-        add     TMP, TMP, #16
-        str     TMP, Caml_state(gc_regs)
-.endm
-
-/* This is similar to RESTORE_ALL_REGS, but only restoring the caller-saved
-   registers. */
-.macro TSAN_RESTORE_CALLER_REGS
-    /* Restore x0, x1, freeing up the next ptr slot */
-        ldr     TMP, Caml_state(gc_regs)
-        sub     TMP, TMP, #16
-    /* Restore registers */
-        ldp     x0, x1, [TMP, 16]
-        ldp     x2, x3, [TMP, 32]
-        ldp     x4, x5, [TMP, 48]
-        ldp     x6, x7, [TMP, 64]
-        ldp     x8, x9, [TMP, 80]
-        ldp     x10, x11, [TMP, 96]
-        ldp     x12, x13, [TMP, 112]
-        ldp     x14, x15, [TMP, 128]
-        ldp     d0, d1, [TMP, 208]
-        ldp     d2, d3, [TMP, 224]
-        ldp     d4, d5, [TMP, 240]
-        ldp     d6, d7, [TMP, 256]
-        ldp     d16, d17, [TMP, 272]
-        ldp     d18, d19, [TMP, 288]
-        ldp     d20, d21, [TMP, 304]
-        ldp     d22, d23, [TMP, 320]
-        ldp     d24, d25, [TMP, 336]
-        ldp     d26, d27, [TMP, 352]
-        ldp     d28, d29, [TMP, 368]
-        ldp     d30, d31, [TMP, 384]
-    /* Put gc_regs struct back in bucket linked list */
-        ldr     TMP2, Caml_state(gc_regs_buckets)
-        str     TMP2, [TMP, 0]  /* next ptr */
-        str     TMP, Caml_state(gc_regs_buckets)
-    /* Reload new allocation pointer & exn handler */
-        ldr     ALLOC_PTR, Caml_state(young_ptr)
-        ldr     TRAP_PTR, Caml_state(exn_handler)
-.endm
-
-#else /* } { */
-
-.macro TSAN_ENTER_FUNCTION
-.endm
-
-.macro TSAN_EXIT_FUNCTION
-.endm
-
-.macro TSAN_SAVE_CALLER_REGS
-.endm
-
-.macro TSAN_RESTORE_CALLER_REGS
-.endm
-
-#endif /* } WITH_THREAD_SANITIZER */
-
 /* Allocation functions and GC interface.
    Referenced from C code in runtime/startup_nat.c
  */
->>>>>>> upstream-incoming
         TEXT_SECTION(caml_system__code_begin)
         .globl  G(caml_system__code_begin)
 G(caml_system__code_begin):
@@ -842,7 +715,6 @@ FUNCTION(caml_c_call)
 #if defined(WITH_THREAD_SANITIZER)
     /* Save return value registers. Since the called function could be
        anything, it may have returned its result (if any) either in x0
-<<<<<<< oxcaml
        or q0:q1. */
         stp     x0, x1, [sp, -16]!
         CFI_ADJUST(16)
@@ -852,18 +724,6 @@ FUNCTION(caml_c_call)
     /* Restore return value registers */
         ldp     q0, q1, [sp], 32
         CFI_ADJUST(-32)
-||||||| upstream-base
-=======
-       or d0:d1. */
-        stp     x0, x1, [sp, -16]!
-        CFI_ADJUST(16)
-        stp     d0, d1, [sp, -16]!
-        CFI_ADJUST(16)
-        TSAN_EXIT_FUNCTION
-    /* Restore return value registers */
-        ldp     d0, d1, [sp], 16
-        CFI_ADJUST(-16)
->>>>>>> upstream-incoming
         ldp     x0, x1, [sp], 16
         CFI_ADJUST(-16)
 #endif
@@ -1025,10 +885,10 @@ L(jump_to_caml):
         CFI_OFFSET(30, 8)
         add     x29, sp, #0
 ||||||| upstream-base
-        CFI_OFFSET(29, -160)
-        CFI_OFFSET(30, -152)
         stp     x29, x30, [sp, -160]!
         CFI_ADJUST(160)
+        CFI_OFFSET(29, 0)
+        CFI_OFFSET(30, 8)
         add     x29, sp, #0
 =======
         CFI_OFFSET(29, -160)
@@ -1375,14 +1235,7 @@ END_FUNCTION(caml_callback3_asm)
         ldr     TMP, Stack_local_limit(\new_stack)
         str     TMP, Caml_state(local_limit)
     /* Restore frame pointer and return address for new_stack */
-<<<<<<< oxcaml
-        ldp     x29, x30, [sp], 16
-        CFI_ADJUST(-16)
-||||||| upstream-base
-        ldp     x29, x30, [sp], 16
-=======
         LEAVE_FUNCTION
->>>>>>> upstream-incoming
 .endm
 
 /*
@@ -1412,12 +1265,7 @@ L(do_perform):
         TSAN_C_CALL G(caml_tsan_exit_on_perform)
         TSAN_RESTORE_CALLER_REGS
 #endif
-<<<<<<< oxcaml
-||||||| upstream-base
-
-=======
         str     x3, [x1, 8] /* Set the last_fiber field in the continuation */
->>>>>>> upstream-incoming
         ldr     x9, Stack_handler(x2)  /* x9 := old stack -> handler */
         ldr     x10, Handler_parent(x9) /* x10 := parent stack */
         cbz     x10, 1f
@@ -1518,11 +1366,7 @@ CFI_STARTPROC
         mov     x1, x24 /* x1 := fun */
     /* Check if stack null, then already used */
         cbz     x0, 1f
-<<<<<<< oxcaml
         ldr     x4, [x1]  /* code pointer */
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 #if defined(WITH_THREAD_SANITIZER)
     /* Save non-callee-saved registers x0, x1, x2, x3 and x4 */
         stp     x0, x1, [sp, -16]!

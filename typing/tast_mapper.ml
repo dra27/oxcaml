@@ -362,7 +362,7 @@ let pat
     | Tpat_construct (loc, cd, l, vto) ->
 ||||||| upstream-base
     | Tpat_constant _ -> x.pat_desc
-    | Tpat_var (id, s) -> Tpat_var (id, map_loc sub s)
+    | Tpat_var (id, s, uid) -> Tpat_var (id, map_loc sub s, uid)
     | Tpat_tuple l -> Tpat_tuple (List.map (sub.pat sub) l)
     | Tpat_construct (loc, cd, l, vto) ->
 =======
@@ -401,7 +401,8 @@ let pat
 ||||||| upstream-base
         Tpat_record (List.map (tuple3 (map_loc sub) id (sub.pat sub)) l, closed)
     | Tpat_array l -> Tpat_array (List.map (sub.pat sub) l)
-    | Tpat_alias (p, id, s) -> Tpat_alias (sub.pat sub p, id, map_loc sub s)
+    | Tpat_alias (p, id, s, uid, ty) ->
+        Tpat_alias (sub.pat sub p, id, map_loc sub s, uid)
 =======
         Tpat_record
           (List.map (tuple3 (map_loc_lid sub) id (sub.pat sub)) l, closed)

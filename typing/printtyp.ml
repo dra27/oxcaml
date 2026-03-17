@@ -109,7 +109,29 @@ module Style = Misc.Style
 
 (* Print a long identifier *)
 
+||||||| upstream-base
+(* Printing functions *)
+
+open Misc
+open Ctype
+open Longident
+open Path
+open Asttypes
+open Types
+open Btype
+open Outcometree
+
+module String = Misc.Stdlib.String
+module Sig_component_kind = Shape.Sig_component_kind
+module Style = Misc.Style
+
+(* Print a long identifier *)
+
+=======
+open Out_type
+>>>>>>> upstream-incoming
 module Fmt = Format_doc
+<<<<<<< oxcaml
 open Format_doc
 
 let longident = Pprintast.Doc.longident
@@ -442,24 +464,9 @@ let reset_naming_context = Naming_context.reset
 let ident ppf id = pp_print_string ppf
     (Out_name.print (Naming_context.ident_name_simple None id))
 ||||||| upstream-base
-(* Printing functions *)
+open Format_doc
 
-open Misc
-open Ctype
-open Format
-open Longident
-open Path
-open Asttypes
-open Types
-open Btype
-open Outcometree
-
-module String = Misc.Stdlib.String
-module Sig_component_kind = Shape.Sig_component_kind
-module Style = Misc.Style
-
-(* Print a long identifier *)
-let longident = Pprintast.longident
+let longident = Pprintast.Doc.longident
 
 let () = Env.print_longident := longident
 
@@ -484,6 +491,8 @@ let in_printing_env f = Env.without_cmis f !printing_env
  type namespace = Sig_component_kind.t =
     | Value
     | Type
+    | Constructor
+    | Label
     | Module
     | Module_type
     | Extension_constructor
@@ -499,14 +508,14 @@ module Namespace = struct
     | Module_type -> 2
     | Class -> 3
     | Class_type -> 4
-    | Extension_constructor | Value -> 5
+    | Extension_constructor | Value | Constructor | Label -> 5
      (* we do not handle those component *)
 
   let size = 1 + id Value
 
 
   let pp ppf x =
-    Format.pp_print_string ppf (Shape.Sig_component_kind.to_string x)
+    Fmt.pp_print_string ppf (Shape.Sig_component_kind.to_string x)
 
   (** The two functions below should never access the filesystem,
       and thus use {!in_printing_env} rather than directly
@@ -519,7 +528,8 @@ module Namespace = struct
     | Some Module_type -> to_lookup Env.find_modtype_by_name
     | Some Class -> to_lookup Env.find_class_by_name
     | Some Class_type -> to_lookup Env.find_cltype_by_name
-    | None | Some(Value|Extension_constructor) -> fun _ -> raise Not_found
+    | None | Some(Value|Extension_constructor|Constructor|Label) ->
+         fun _ -> raise Not_found
 
   let location namespace id =
     let path = Path.Pident id in
@@ -530,7 +540,8 @@ module Namespace = struct
         | Some Module_type -> (in_printing_env @@ Env.find_modtype path).mtd_loc
         | Some Class -> (in_printing_env @@ Env.find_class path).cty_loc
         | Some Class_type -> (in_printing_env @@ Env.find_cltype path).clty_loc
-        | Some (Extension_constructor|Value) | None -> Location.none
+        | Some (Extension_constructor|Value|Constructor|Label) | None ->
+            Location.none
       ) with Not_found -> None
 
   let best_class_namespace = function
@@ -582,12 +593,13 @@ module Conflicts = struct
       end
 
   let pp_explanation ppf r=
-    Format.fprintf ppf "@[<v 2>%a:@,Definition of %s %a@]"
-      Location.print_loc r.location (Sig_component_kind.to_string r.kind)
+    Fmt.fprintf ppf "@[<v 2>%a:@,Definition of %s %a@]"
+      Location.Doc.loc r.location (Sig_component_kind.to_string r.kind)
       Style.inline_code r.name
 
   let print_located_explanations ppf l =
-    Format.fprintf ppf "@[<v>%a@]" (Format.pp_print_list pp_explanation) l
+    Fmt.fprintf ppf "@[<v>%a@]"
+      (Fmt.pp_print_list pp_explanation) l
 
   let reset () = explanations := M.empty
   let list_explanations () =
@@ -597,8 +609,8 @@ module Conflicts = struct
 
 
   let print_toplevel_hint ppf l =
-    let conj ppf () = Format.fprintf ppf " and@ " in
-    let pp_namespace_plural ppf n = Format.fprintf ppf "%as" Namespace.pp n in
+    let conj ppf () = Fmt.fprintf ppf " and@ " in
+    let pp_namespace_plural ppf n = Fmt.fprintf ppf "%as" Namespace.pp n in
     let root_names = List.map (fun r -> r.kind, r.root_name) l in
     let unique_root_names = List.sort_uniq Stdlib.compare root_names in
     let submsgs = Array.make Namespace.size [] in
@@ -609,7 +621,7 @@ module Conflicts = struct
       match names with
       | [] -> ()
       | [namespace, a] ->
-          Format.fprintf ppf
+          Fmt.fprintf ppf
         "@ \
          @[<2>@{<hint>Hint@}: The %a %a has been defined multiple times@ \
          in@ this@ toplevel@ session.@ \
@@ -618,14 +630,14 @@ module Conflicts = struct
         Namespace.pp namespace
         Style.inline_code a Namespace.pp namespace
       | (namespace, _) :: _ :: _ ->
-      Format.fprintf ppf
+      Fmt.fprintf ppf
         "@ \
          @[<2>@{<hint>Hint@}: The %a %a have been defined multiple times@ \
          in@ this@ toplevel@ session.@ \
          Some toplevel values still refer to@ old@ versions@ of@ those@ %a.\
          @ Did you try to redefine them?@]"
         pp_namespace_plural namespace
-        Format.(pp_print_list ~pp_sep:conj Style.inline_code)
+        Fmt.(pp_print_list ~pp_sep:conj Style.inline_code)
         (List.map snd names)
         pp_namespace_plural namespace in
     Array.iter (pp_submsg ppf) submsgs
@@ -639,7 +651,7 @@ module Conflicts = struct
     in
     begin match l with
     | [] -> ()
-    | l -> Format.fprintf ppf "@,%a" print_located_explanations l
+    | l -> Fmt.fprintf ppf "@,%a" print_located_explanations l
     end;
     (* if there are name collisions in a toplevel session,
        display at least one generic hint by namespace *)
@@ -713,7 +725,7 @@ let indexed_name namespace id =
     | Module_type -> Env.find_modtype_index id env
     | Class -> Env.find_class_index id env
     | Class_type-> Env.find_cltype_index id env
-    | Value | Extension_constructor -> None
+    | Value | Extension_constructor | Constructor | Label -> None
   in
   let index =
     match M.find_opt (Ident.name id) !bound_in_recursion with
@@ -757,8 +769,6 @@ let ident_name = Naming_context.ident_name
 let ident ppf id = pp_print_string ppf
     (Out_name.print (Naming_context.ident_name None id))
 =======
-open Out_type
-module Fmt = Format_doc
 >>>>>>> upstream-incoming
 
 let namespaced_ident namespace  id =
@@ -1567,14 +1577,14 @@ let tree_of_path ?disambiguation namespace p =
     (rewrite_double_underscore_paths !printing_env p)
 
 let path ppf p =
-  !Oprint.out_ident ppf (tree_of_path None p)
+  !Oprint.out_ident ppf (tree_of_path ~disambiguation:false None p)
 
 let string_of_path p =
-  Format.asprintf "%a" path p
+  Format.asprintf "%a" (Fmt.compat path) p
 
 let strings_of_paths namespace p =
   let trees = List.map (tree_of_path namespace) p in
-  List.map (Format.asprintf "%a" !Oprint.out_ident) trees
+  List.map (Fmt.asprintf "%a" !Oprint.out_ident) trees
 
 let () = Env.print_path := path
 
@@ -1631,6 +1641,10 @@ let rec raw_type ppf ty =
       ty.scope raw_type_desc ty.desc
   end
 and raw_type_list tl = raw_list raw_type tl
+and raw_lid_type_list tl =
+  raw_list (fun ppf (lid, typ) ->
+             fprintf ppf "(@,%a,@,%a)" longident lid raw_type typ)
+    tl
 and raw_type_desc ppf = function
     Tvar name -> fprintf ppf "Tvar %a" print_name name
   | Tarrow(l,t1,t2,c) ->
@@ -1680,8 +1694,7 @@ and raw_type_desc ppf = function
           | Some(p,tl) ->
               fprintf ppf "Some(@,%a,@,%a)" path p raw_type_list tl)
   | Tpackage (p, fl) ->
-      fprintf ppf "@[<hov1>Tpackage(@,%a@,%a)@]" path p
-        raw_type_list (List.map snd fl)
+    fprintf ppf "@[<hov1>Tpackage(@,%a,@,%a)@]" path p raw_lid_type_list fl
 and raw_row_fixed ppf = function
 | None -> fprintf ppf "None"
 | Some Types.Fixed_private -> fprintf ppf "Some Fixed_private"
@@ -1710,7 +1723,7 @@ let raw_type_expr ppf t =
   raw_type ppf t;
   visited := []; kind_vars := []
 
-let () = Btype.print_raw := raw_type_expr
+let () = Btype.print_raw := compat raw_type_expr
 
 (* Normalize paths *)
 
@@ -1967,13 +1980,16 @@ let printer_iter_type_expr f ty =
   | _ ->
       Btype.iter_type_expr f ty
 
+let quoted_ident ppf x =
+  Style.as_inline_code !Oprint.out_ident ppf x
+
 module Internal_names : sig
 
   val reset : unit -> unit
 
   val add : Path.t -> unit
 
-  val print_explanations : Env.t -> Format.formatter -> unit
+  val print_explanations : Env.t -> Fmt.formatter -> unit
 
 end = struct
 
@@ -3267,17 +3283,17 @@ let extension_only_constructor id ppf ext =
             fprintf ppf
               "@ @[<2>@{<hint>Hint@}:@ %a@ is an existential type@ \
                bound by the constructor@ %a.@]"
-              (Style.as_inline_code !Oprint.out_ident) out_ident
+              quoted_ident out_ident
               Style.inline_code constr
         | out_ident :: out_idents ->
             fprintf ppf
               "@ @[<2>@{<hint>Hint@}:@ %a@ and %a@ are existential types@ \
                bound by the constructor@ %a.@]"
-              (Format.pp_print_list
+              (Fmt.pp_print_list
                  ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
-                 (Style.as_inline_code !Oprint.out_ident))
+                 quoted_ident)
               (List.rev out_idents)
-              (Style.as_inline_code !Oprint.out_ident) out_ident
+              quoted_ident out_ident
               Style.inline_code constr)
       constrs
 
@@ -4086,7 +4102,7 @@ let extension_only_constructor id ppf ext =
       ext.ext_args
       ext.ext_ret_type
   in
-  Format.fprintf ppf "@[<hv>%a@]"
+  Fmt.fprintf ppf "@[<hv>%a@]"
     !Oprint.out_constr {
       ocstr_name = name;
 =======
@@ -5054,11 +5070,11 @@ and tree_of_module id ?ellipsis mty rs =
 let rec functor_parameters ~sep custom_printer = function
   | [] -> ignore
   | [id,param] ->
-      Format.dprintf "%t%t"
+      Fmt.dprintf "%t%t"
         (custom_printer param)
         (functor_param ~sep ~custom_printer id [])
   | (id,param) :: q ->
-      Format.dprintf "%t%a%t"
+      Fmt.dprintf "%t%a%t"
         (custom_printer param)
         sep ()
         (functor_param ~sep ~custom_printer id q)
@@ -5810,12 +5826,12 @@ end
   if Warnings.(is_active @@ Erroneous_printed_signature "")
   && Conflicts.exists ()
   then begin
-    let conflicts = Format.asprintf "%t" Conflicts.print_explanations in
+    let conflicts = Format_doc.asprintf "%t" Conflicts.print_explanations in
     Location.prerr_warning (Location.in_file sourcefile)
       (Warnings.Erroneous_printed_signature conflicts);
     Warnings.check_fatal ()
   end;
-  fprintf ppf "%a" print_signature t
+  compat print_signature ppf t
 
 (* Trace-specific printing *)
 
@@ -5871,12 +5887,18 @@ let trees_of_type_expansion mode Errortrace.{ty = t; expanded = t'} =
     else Diff(first,second)
   end
 
+let pp_type ppf t =
+  Style.as_inline_code !Oprint.out_type ppf t
+
+let quoted_ident ppf t =
+  Style.as_inline_code !Oprint.out_ident ppf t
+
 let type_expansion ppf = function
-  | Same t -> Style.as_inline_code !Oprint.out_type ppf t
+  | Same t -> pp_type ppf t
   | Diff(t,t') ->
       fprintf ppf "@[<2>%a@ =@ %a@]"
-        (Style.as_inline_code !Oprint.out_type) t
-        (Style.as_inline_code !Oprint.out_type) t'
+        pp_type t
+        pp_type t'
 
 let trees_of_trace mode =
   List.map (Errortrace.map_diff (trees_of_type_expansion mode))
@@ -5886,11 +5908,11 @@ let trees_of_type_path_expansion (tp,tp') =
     Diff(tree_of_path (Some Type) tp, tree_of_path (Some Type) tp')
 
 let type_path_expansion ppf = function
-  | Same p -> Style.as_inline_code !Oprint.out_ident ppf p
+  | Same p -> quoted_ident ppf p
   | Diff(p,p') ->
       fprintf ppf "@[<2>%a@ =@ %a@]"
-        (Style.as_inline_code !Oprint.out_ident) p
-        (Style.as_inline_code !Oprint.out_ident) p'
+       quoted_ident p
+       quoted_ident p'
 
 let rec trace fst txt ppf = function
   | {Errortrace.got; expected} :: rem ->
@@ -5942,19 +5964,20 @@ let prepare_any_trace printing_status tr =
 let prepare_trace f tr =
   prepare_any_trace printing_status (Errortrace.map f tr)
 
-(** Keep elements that are [Diff _ ] and take the decision
-    for the last element, require a prepared trace *)
-let rec filter_trace keep_last = function
-  | [] -> []
+(** Keep elements that are [Diff _ ] and split the the last element if it is
+    optionally elidable, require a prepared trace *)
+let rec filter_trace = function
+  | [] -> [], None
   | [Errortrace.Diff d as elt]
-    when printing_status elt = Optional_refinement ->
-    if keep_last then [d] else []
-  | Errortrace.Diff d :: rem -> d :: filter_trace keep_last rem
-  | _ :: rem -> filter_trace keep_last rem
+    when printing_status elt = Optional_refinement -> [], Some d
+  | Errortrace.Diff d :: rem ->
+      let filtered, last = filter_trace rem in
+      d :: filtered, last
+  | _ :: rem -> filter_trace rem
 
-let type_path_list =
-  Format.pp_print_list ~pp_sep:(fun ppf () -> Format.pp_print_break ppf 2 0)
-    type_path_expansion
+let type_path_list ppf l =
+  Fmt.pp_print_list ~pp_sep:(fun ppf () -> Fmt.pp_print_break ppf 2 0)
+    type_path_expansion ppf l
 
 (* Hide variant name and var, to force printing the expanded type *)
 let hide_variant_name t =
@@ -5981,13 +6004,12 @@ let may_prepare_expansion compact (Errortrace.{ty; expanded} as ty_exp) =
   | _ -> prepare_expansion ty_exp
 
 let print_path p =
-  Format.dprintf "%a" !Oprint.out_ident (tree_of_path (Some Type) p)
+  Fmt.dprintf "%a" !Oprint.out_ident (tree_of_path (Some Type) p)
 
 let print_tag ppf s = Style.inline_code ppf ("`" ^ s)
 
-let print_tags =
-  let comma ppf () = Format.fprintf ppf ",@ " in
-  Format.pp_print_list ~pp_sep:comma print_tag
+let print_tags ppf tags  =
+  Fmt.(pp_print_list ~pp_sep:comma) print_tag ppf tags
 
 let is_unit env ty =
   match get_desc (Ctype.expand_head env ty) with
@@ -6003,19 +6025,17 @@ let unifiable env ty1 ty2 =
   Btype.backtrack snap;
   res
 
-let explanation_diff env t3 t4 : (Format.formatter -> unit) option =
+let explanation_diff env t3 t4 =
   match get_desc t3, get_desc t4 with
   | Tarrow (_, ty1, ty2, _), _
     when is_unit env ty1 && unifiable env ty2 t4 ->
-      Some (fun ppf ->
-        fprintf ppf
+      Some (doc_printf
           "@,@[@{<hint>Hint@}: Did you forget to provide %a as argument?@]"
           Style.inline_code "()"
         )
   | _, Tarrow (_, ty1, ty2, _)
     when is_unit env ty1 && unifiable env t3 ty2 ->
-      Some (fun ppf ->
-        fprintf ppf
+      Some (doc_printf
           "@,@[@{<hint>Hint@}: Did you forget to wrap the expression using \
            %a?@]"
           Style.inline_code "fun () ->"
@@ -6023,42 +6043,41 @@ let explanation_diff env t3 t4 : (Format.formatter -> unit) option =
   | _ ->
       None
 
-let explain_fixed_row_case ppf = function
-  | Errortrace.Cannot_be_closed ->
-      fprintf ppf "it cannot be closed"
+let explain_fixed_row_case = function
+  | Errortrace.Cannot_be_closed -> doc_printf "it cannot be closed"
   | Errortrace.Cannot_add_tags tags ->
-      fprintf ppf "it may not allow the tag(s) %a"
+      doc_printf "it may not allow the tag(s) %a"
         print_tags tags
 
 let explain_fixed_row pos expl = match expl with
   | Fixed_private ->
-    dprintf "The %a variant type is private" Errortrace.print_pos pos
+    doc_printf "The %a variant type is private" Errortrace.print_pos pos
   | Univar x ->
     reserve_names x;
-    dprintf "The %a variant type is bound to the universal type variable %a"
+    doc_printf "The %a variant type is bound to the universal type variable %a"
       Errortrace.print_pos pos
       (Style.as_inline_code type_expr_with_reserved_names) x
   | Reified p ->
-    dprintf "The %a variant type is bound to %a"
+    doc_printf "The %a variant type is bound to %a"
       Errortrace.print_pos pos
       (Style.as_inline_code
          (fun ppf p ->
            Internal_names.add p;
            print_path p ppf))
       p
-  | Rigid -> ignore
+  | Rigid -> Format_doc.Doc.empty
 
 let explain_variant (type variety) : variety Errortrace.variant -> _ = function
   (* Common *)
   | Errortrace.Incompatible_types_for s ->
-      Some(dprintf "@,Types for tag %a are incompatible"
+      Some(doc_printf "@,Types for tag %a are incompatible"
              print_tag s
           )
   (* Unification *)
   | Errortrace.No_intersection ->
-      Some(dprintf "@,These two variant types have no intersection")
+      Some(doc_printf "@,These two variant types have no intersection")
   | Errortrace.No_tags(pos,fields) -> Some(
-      dprintf
+      doc_printf
         "@,@[The %a variant type does not allow tag(s)@ @[<hov>%a@]@]"
         Errortrace.print_pos pos
         print_tags (List.map fst fields)
@@ -6067,15 +6086,15 @@ let explain_variant (type variety) : variety Errortrace.variant -> _ = function
                           k,
                           (Univar _ | Reified _ | Fixed_private as e)) ->
       Some (
-        dprintf "@,@[%t,@ %a@]" (explain_fixed_row pos e)
-          explain_fixed_row_case k
+        doc_printf "@,@[%a,@ %a@]" pp_doc (explain_fixed_row pos e)
+          pp_doc (explain_fixed_row_case k)
       )
   | Errortrace.Fixed_row (_,_, Rigid) ->
       (* this case never happens *)
       None
   (* Equality & Moregen *)
   | Errortrace.Presence_not_guaranteed_for (pos, s) -> Some(
-      dprintf
+      doc_printf
         "@,@[The tag %a is guaranteed to be present in the %a variant type,\
          @ but not in the %a@]"
         print_tag s
@@ -6083,7 +6102,7 @@ let explain_variant (type variety) : variety Errortrace.variant -> _ = function
         Errortrace.print_pos pos
     )
   | Errortrace.Openness pos ->
-      Some(dprintf "@,The %a variant type is open and the %a is not"
+      Some(doc_printf "@,The %a variant type is open and the %a is not"
              Errortrace.print_pos pos
              Errortrace.print_pos (Errortrace.swap_position pos))
 
@@ -6091,50 +6110,52 @@ let explain_escape pre = function
   | Errortrace.Univ u ->
       reserve_names u;
       Some(
-        dprintf "%t@,The universal variable %a would escape its scope"
-          pre
+        doc_printf "%a@,The universal variable %a would escape its scope"
+          pp_doc pre
           (Style.as_inline_code type_expr_with_reserved_names) u
       )
   | Errortrace.Constructor p -> Some(
-      dprintf
-        "%t@,@[The type constructor@;<1 2>%a@ would escape its scope@]"
-        pre (Style.as_inline_code path) p
+      doc_printf
+        "%a@,@[The type constructor@;<1 2>%a@ would escape its scope@]"
+        pp_doc pre (Style.as_inline_code path) p
     )
   | Errortrace.Module_type p -> Some(
-      dprintf
-        "%t@,@[The module type@;<1 2>%a@ would escape its scope@]"
-        pre (Style.as_inline_code path) p
+      doc_printf
+        "%a@,@[The module type@;<1 2>%a@ would escape its scope@]"
+        pp_doc pre (Style.as_inline_code path) p
     )
   | Errortrace.Equation Errortrace.{ty = _; expanded = t} ->
       reserve_names t;
       Some(
-        dprintf "%t @,@[<hov>This instance of %a is ambiguous:@ %s@]"
-          pre
+        doc_printf "%a@ @[<hov>This instance of %a is ambiguous:@ %s@]"
+          pp_doc pre
           (Style.as_inline_code type_expr_with_reserved_names) t
           "it would escape the scope of its equation"
       )
   | Errortrace.Self ->
-      Some (dprintf "%t@,Self type cannot escape its class" pre)
+      Some (doc_printf "%a@,Self type cannot escape its class" pp_doc pre)
   | Errortrace.Constraint ->
       None
 
 let explain_object (type variety) : variety Errortrace.obj -> _ = function
   | Errortrace.Missing_field (pos,f) -> Some(
-      dprintf "@,@[The %a object type has no method %a@]"
+      doc_printf "@,@[The %a object type has no method %a@]"
         Errortrace.print_pos pos Style.inline_code f
     )
   | Errortrace.Abstract_row pos -> Some(
-      dprintf
+      doc_printf
         "@,@[The %a object type has an abstract row, it cannot be closed@]"
         Errortrace.print_pos pos
     )
   | Errortrace.Self_cannot_be_closed ->
-      Some (dprintf "@,Self type cannot be unified with a closed object type")
+      Some (doc_printf
+              "@,Self type cannot be unified with a closed object type"
+           )
 
 let explain_incompatible_fields name (diff: Types.type_expr Errortrace.diff) =
   reserve_names diff.got;
   reserve_names diff.expected;
-  dprintf "@,@[The method %a has type@ %a,@ \
+  doc_printf "@,@[The method %a has type@ %a,@ \
   but the expected method type was@ %a@]"
     Style.inline_code name
     (Style.as_inline_code type_expr_with_reserved_names) diff.got
@@ -6149,11 +6170,11 @@ let explanation (type variety) intro prev env
       match context, kind, prev with
       | Some ctx, _, _ ->
         reserve_names ctx;
-        dprintf "@[%t@;<1 2>%a@]" intro
+        doc_printf "@[%a@;<1 2>%a@]" pp_doc intro
           (Style.as_inline_code type_expr_with_reserved_names) ctx
       | None, Univ _, Some(Errortrace.Incompatible_fields {name; diff}) ->
         explain_incompatible_fields name diff
-      | _ -> ignore
+      | _ -> Format_doc.Doc.empty
     in
     explain_escape pre kind
   | Errortrace.Incompatible_fields { name; diff} ->
@@ -6167,18 +6188,17 @@ let explanation (type variety) intro prev env
     reserve_names y;
     begin match get_desc x with
     | Tvar _ | Tunivar _  ->
-        Some(fun ppf ->
-          reset_loop_marks ();
-          mark_loops x;
-          mark_loops y;
-          dprintf "@,@[<hov>The type variable %a occurs inside@ %a@]"
+        mark_loops x;
+        mark_loops y;
+        Some(
+          doc_printf "@,@[<hov>The type variable %a occurs inside@ %a@]"
             (Style.as_inline_code prepared_type_expr) x
             (Style.as_inline_code prepared_type_expr) y
-            ppf)
+        )
     | _ ->
         (* We had a delayed unification of the type variable with
            a non-variable after the occur check. *)
-        Some ignore
+        Some Format_doc.Doc.empty
         (* There is no need to search further for an explanation, but
            we don't want to print a message of the form:
              {[ The type int occurs inside int list -> 'a |}
@@ -6187,11 +6207,6 @@ let explanation (type variety) intro prev env
 
 let mismatch intro env trace =
   Errortrace.explain trace (fun ~prev h -> explanation intro prev env h)
-
-let explain mis ppf =
-  match mis with
-  | None -> ()
-  | Some explain -> explain ppf
 
 let warn_on_missing_def env ppf t =
   match get_desc t with
@@ -6219,12 +6234,12 @@ let prepare_expansion_head empty_tr = function
   | _ -> None
 
 let head_error_printer mode txt_got txt_but = function
-  | None -> ignore
+  | None -> Format_doc.Doc.empty
   | Some d ->
       let d = Errortrace.map_diff (trees_of_type_expansion mode) d in
-      dprintf "%t@;<1 2>%a@ %t@;<1 2>%a"
-        txt_got type_expansion d.Errortrace.got
-        txt_but type_expansion d.Errortrace.expected
+      doc_printf "%a@;<1 2>%a@ %a@;<1 2>%a"
+        pp_doc txt_got type_expansion d.Errortrace.got
+        pp_doc txt_but type_expansion d.Errortrace.expected
 
 let warn_on_missing_defs env ppf = function
   | None -> ()
@@ -6244,25 +6259,32 @@ let error trace_format mode subst env tr txt1 ppf txt2 ty_expect_explanation =
          Errortrace.{ty_exp with expanded = hide_variant_name ty_exp.expanded})
       tr
   in
-  let mis = mismatch txt1 env tr in
   match tr with
   | [] -> assert false
-  | elt :: tr ->
+  | (elt :: tr) as full_trace ->
     try
       print_labels := not !Clflags.classic;
-      let tr = filter_trace (mis = None) tr in
-      let head = prepare_expansion_head (tr=[]) elt in
+      let tr, last = filter_trace tr in
+      let head = prepare_expansion_head (tr=[] && last=None) elt in
       let tr = List.map (Errortrace.map_diff prepare_expansion) tr in
+      let last = Option.map (Errortrace.map_diff prepare_expansion) last in
       let head_error = head_error_printer mode txt1 txt2 head in
       let tr = trees_of_trace mode tr in
-      fprintf ppf
+      let last =
+        Option.map (Errortrace.map_diff (trees_of_type_expansion mode)) last in
+      let mis = mismatch txt1 env full_trace in
+      let tr = match mis, last with
+        | None, Some elt -> tr @ [elt]
+        | Some _, _ | _, None -> tr
+       in
+       fprintf ppf
         "@[<v>\
-          @[%t%t@]%a%t\
+          @[%a%a@]%a%a\
          @]"
-        head_error
-        ty_expect_explanation
+        pp_doc head_error
+        pp_doc ty_expect_explanation
         (trace false (incompatibility_phrase trace_format)) tr
-        (explain mis);
+        (pp_print_option pp_doc) mis;
       if env <> Env.empty
       then warn_on_missing_defs env ppf head;
       Internal_names.print_explanations env ppf;
@@ -6274,7 +6296,7 @@ let error trace_format mode subst env tr txt1 ppf txt2 ty_expect_explanation =
 
 let report_error trace_format ppf mode env tr
       ?(subst = [])
-      ?(type_expected_explanation = fun _ -> ())
+      ?(type_expected_explanation = Fmt.Doc.empty)
       txt1 txt2 =
   wrap_printing_env ~error:true env (fun () ->
     error trace_format mode subst env tr txt1 ppf txt2
@@ -6319,10 +6341,14 @@ module Subtype = struct
     try match tr with
       | elt :: tr' ->
         let diffed_elt = get_diff elt in
+        let tr, last = filter_trace tr' in
+        let tr = match keep_last, last with
+          | true, Some last -> tr @ [last]
+          | _ -> tr
+        in
         let tr =
           trees_of_trace Type
-          @@ List.map (Errortrace.map_diff prepare_expansion)
-          @@ filter_trace keep_last tr' in
+          @@ List.map (Errortrace.map_diff prepare_expansion) tr in
         let tr =
           match fst, diffed_elt with
           | true, Some elt -> elt :: tr
@@ -6335,13 +6361,14 @@ module Subtype = struct
       print_labels := true;
       raise exn
 
-  let rec filter_subtype_trace keep_last = function
-    | [] -> []
+  let rec filter_subtype_trace = function
+    | [] -> [], None
     | [Errortrace.Subtype.Diff d as elt]
       when printing_status elt = Optional_refinement ->
-        if keep_last then [d] else []
+        [], Some d
     | Errortrace.Subtype.Diff d :: rem ->
-        d :: filter_subtype_trace keep_last rem
+        let ftr, last = filter_subtype_trace rem in
+        d :: ftr, last
 
   let unification_get_diff = function
     | Errortrace.Diff diff ->
@@ -6368,11 +6395,11 @@ module Subtype = struct
         (trace filter_subtype_trace subtype_get_diff true keep_first txt1)
         tr_sub;
       if tr_unif = [] then fprintf ppf "@]" else
-        let mis = mismatch (dprintf "Within this type") env tr_unif in
-        fprintf ppf "%a%t%t@]"
+        let mis = mismatch (doc_printf "Within this type") env tr_unif in
+        fprintf ppf "%a%a%t@]"
           (trace filter_trace unification_get_diff false
              (mis = None) "is not compatible with type") tr_unif
-          (explain mis)
+          (pp_print_option pp_doc) mis
           Conflicts.print_explanations
     )
 end
@@ -6385,18 +6412,18 @@ let report_ambiguous_type_error ppf env tp0 tpl txt1 txt2 txt3 =
       [] -> assert false
     | [tp] ->
         fprintf ppf
-          "@[%t@;<1 2>%a@ \
-             %t@;<1 2>%a\
+          "@[%a@;<1 2>%a@ \
+             %a@;<1 2>%a\
            @]"
-          txt1 type_path_expansion (trees_of_type_path_expansion tp)
-          txt3 type_path_expansion tp0
+          pp_doc txt1 type_path_expansion (trees_of_type_path_expansion tp)
+          pp_doc txt3 type_path_expansion tp0
     | _ ->
         fprintf ppf
-          "@[%t@;<1 2>@[<hv>%a@]\
-             @ %t@;<1 2>%a\
+          "@[%a@;<1 2>@[<hv>%a@]\
+             @ %a@;<1 2>%a\
            @]"
-          txt2 type_path_list (List.map trees_of_type_path_expansion tpl)
-          txt3 type_path_expansion tp0)
+          pp_doc txt2 type_path_list (List.map trees_of_type_path_expansion tpl)
+          pp_doc txt3 type_path_expansion tp0)
 
 (* Adapt functions to exposed interface *)
 let tree_of_path = tree_of_path None
@@ -6406,6 +6433,18 @@ let type_expansion mode ppf ty_exp =
 let tree_of_type_declaration ident td rs =
   with_hidden_items [{hide=true; ident}]
     (fun () -> tree_of_type_declaration ident td rs)
+
+(** Compatibility module for Format printers *)
+module Compat = struct
+  let longident = Fmt.compat longident
+  let path = Fmt.compat path
+  let type_expr = Fmt.compat type_expr
+  let shared_type_scheme = Fmt.compat shared_type_scheme
+  let signature = Fmt.compat signature
+  let class_type = Fmt.compat class_type
+  let modtype = Fmt.compat modtype
+  let string_of_label = string_of_label
+end
 =======
   if Warnings.(is_active @@ Erroneous_printed_signature "") then
     begin match Ident_conflicts.err_msg () with

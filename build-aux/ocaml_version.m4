@@ -39,7 +39,7 @@ m4_define([OCAML__VERSION_PATCHLEVEL], [1])
 <<<<<<< oxcaml
 m4_define([OCAML__VERSION_EXTRA], [ox])
 ||||||| upstream-base
-m4_define([OCAML__VERSION_EXTRA], [dev1-2023-12-22])
+m4_define([OCAML__VERSION_EXTRA], [dev11-2024-05-13])
 =======
 m4_define([OCAML__VERSION_EXTRA], [dev0-2025-10-09])
 >>>>>>> upstream-incoming
@@ -106,7 +106,7 @@ m4_define([MAGIC_NUMBER__PREFIX], [Caml1999])
 <<<<<<< oxcaml
 m4_define([MAGIC_NUMBER__VERSION], [572])
 ||||||| upstream-base
-m4_define([MAGIC_NUMBER__VERSION], [033])
+m4_define([MAGIC_NUMBER__VERSION], [034])
 =======
 m4_define([MAGIC_NUMBER__VERSION], [036])
 >>>>>>> upstream-incoming

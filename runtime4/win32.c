@@ -28,12 +28,12 @@
 #include <winsock2.h>
 #include <winioctl.h>
 <<<<<<< oxcaml:runtime4/win32.c
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
 #include <shlobj.h>
 =======
 #include <shlobj.h>
 #include <shlwapi.h>
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 #include <direct.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -82,11 +82,11 @@ static void caml_win32_sys_error (int errnum)
 CAMLnoreturn_end;
 
 static void caml_win32_sys_error(int errnum)
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
 static CAMLnoret void caml_win32_sys_error(int errnum)
 =======
 CAMLnoret static void caml_win32_sys_error(int errnum)
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 {
   wchar_t buffer[512];
   value msg;
@@ -243,13 +243,13 @@ void * caml_dlopen(wchar_t * libname, int for_execution, int global)
   handle = flexdll_wdlopen(libname, flags);
 <<<<<<< oxcaml:runtime4/win32.c
   if ((handle != NULL) && ((caml_verb_gc & 0x100) != 0)) {
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   if ((handle != NULL)
      && ((atomic_load_relaxed(&caml_verb_gc) & 0x100) != 0)) {
 =======
   if ((handle != NULL)
      && ((atomic_load_relaxed(&caml_verb_gc) & CAML_GC_MSG_STARTUP) != 0)) {
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
     flexdll_dump_exports(handle);
     fflush(stdout);
   }
@@ -821,7 +821,7 @@ int caml_win32_rename(const wchar_t * oldpath, const wchar_t * newpath)
     errno = EEXIST; break;
   default:
     errno = EINVAL;
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   /* Another cornercase not handled by MoveFileEx:
      - dir to empty dir - positive - should succeed */
   if ((old_attribs != INVALID_FILE_ATTRIBUTES) &&
@@ -852,7 +852,7 @@ int caml_win32_rename(const wchar_t * oldpath, const wchar_t * newpath)
                    MOVEFILE_COPY_ALLOWED)) {
       return 0;
     }
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
   }
   return -1;
 }
@@ -997,7 +997,7 @@ Caml_inline wchar_t *char_array_to_utf16_noexc(const char *s,
   retcode = win_multi_byte_to_wide_char(s, -1, NULL, 0);
   ws = caml_stat_alloc_noexc(retcode * sizeof(*ws));
   win_multi_byte_to_wide_char(s, -1, ws, retcode);
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   retcode = caml_win32_multi_byte_to_wide_char(s, -1, NULL, 0);
   ws = caml_stat_alloc_noexc(retcode * sizeof(*ws));
   caml_win32_multi_byte_to_wide_char(s, -1, ws, retcode);
@@ -1009,14 +1009,14 @@ Caml_inline wchar_t *char_array_to_utf16_noexc(const char *s,
     if (out_size != NULL)
       *out_size = retcode;
   }
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 
   return ws;
 }
 
 <<<<<<< oxcaml:runtime4/win32.c
 CAMLexport caml_stat_string caml_stat_strdup_noexc_of_utf16(const wchar_t *s)
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
 CAMLexport caml_stat_string caml_stat_strdup_of_utf16(const wchar_t *s)
 =======
 CAMLexport wchar_t *caml_stat_strdup_noexc_to_utf16(const char *s)
@@ -1045,7 +1045,7 @@ CAMLexport wchar_t *caml_stat_char_array_to_utf16(const char *s, size_t size,
 Caml_inline caml_stat_string char_array_of_utf16_noexc(const wchar_t *s,
                                                        int slen,
                                                        size_t *out_size)
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 {
   caml_stat_string out;
   int retcode;
@@ -1055,7 +1055,7 @@ Caml_inline caml_stat_string char_array_of_utf16_noexc(const wchar_t *s,
   out = caml_stat_alloc_noexc(retcode);
   if (out != NULL) {
     caml_win32_wide_char_to_multi_byte(s, -1, out, retcode);
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   retcode = caml_win32_wide_char_to_multi_byte(s, -1, NULL, 0);
   out = caml_stat_alloc(retcode);
   caml_win32_wide_char_to_multi_byte(s, -1, out, retcode);
@@ -1066,7 +1066,7 @@ Caml_inline caml_stat_string char_array_of_utf16_noexc(const wchar_t *s,
     caml_win32_wide_char_to_multi_byte(s, slen, out, retcode);
     if (out_size != NULL)
       *out_size = retcode;
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
   }
 
   return out;
@@ -1076,7 +1076,7 @@ Caml_inline caml_stat_string char_array_of_utf16_noexc(const wchar_t *s,
 CAMLexport caml_stat_string caml_stat_strdup_of_utf16(const wchar_t *s)
 {
   caml_stat_string out = caml_stat_strdup_noexc_of_utf16(s);
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
 =======
 CAMLexport caml_stat_string caml_stat_strdup_noexc_of_utf16(const wchar_t *s)
 {
@@ -1097,7 +1097,7 @@ CAMLexport caml_stat_string caml_stat_char_array_of_utf16(const wchar_t *s,
 {
   CAMLassert(size > 0);
   caml_stat_string out = char_array_of_utf16_noexc(s, size, out_size);
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
   if (out == NULL)
     caml_raise_out_of_memory();
   return out;
@@ -1212,7 +1212,7 @@ CAMLexport clock_t caml_win32_clock(void)
   FILETIME c, e, stime, utime;
   ULARGE_INTEGER tmp;
   ULONGLONG total, clocks_per_sec;
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   FILETIME _creation, _exit;
   CAML_ULONGLONG_FILETIME stime, utime;
   ULARGE_INTEGER tmp;
@@ -1221,7 +1221,7 @@ CAMLexport clock_t caml_win32_clock(void)
   FILETIME _creation, _exit;
   CAML_ULONGLONG_FILETIME stime, utime;
   ULONGLONG clocks_per_sec;
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 
   if (!(GetProcessTimes(GetCurrentProcess(), &c, &e, &stime, &utime))) {
     return (clock_t)(-1);
@@ -1238,7 +1238,7 @@ CAMLexport clock_t caml_win32_clock(void)
 <<<<<<< oxcaml:runtime4/win32.c
   clocks_per_sec = INT64_LITERAL(10000000U) / (ULONGLONG)CLOCKS_PER_SEC;
   return (clock_t)(total / clocks_per_sec);
-||||||| upstream-base:runtime/win32.c
+||||||| upstream-base
   clocks_per_sec = 10000000ULL / (ULONGLONG)CLOCKS_PER_SEC;
   return (clock_t)((stime.ul + utime.ul) / clocks_per_sec);
 }
@@ -1562,7 +1562,7 @@ value caml_win32_xdg_defaults(void)
   CoTaskMemFree(wpath);
 
   CAMLreturn(result);
->>>>>>> upstream-incoming:runtime/win32.c
+>>>>>>> upstream-incoming
 }
 
 static INIT_ONCE get_temp_path_init_once = INIT_ONCE_STATIC_INIT;

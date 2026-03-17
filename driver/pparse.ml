@@ -276,19 +276,9 @@ let () =
 
 let report_error = Format_doc.compat report_error_doc
 
-<<<<<<< oxcaml
 let parse_file ~tool_name invariant_fun parse kind source_file =
   Location.input_name := source_file;
   let inputfile = preprocess source_file in
-||||||| upstream-base
-let parse_file ~tool_name invariant_fun parse kind sourcefile =
-  Location.input_name := sourcefile;
-  let inputfile = preprocess sourcefile in
-=======
-let parse_file ~tool_name invariant_fun parse kind sourcefile =
-  Location.input_name := sourcefile;
-  let inputfile = preprocess sourcefile in
->>>>>>> upstream-incoming
   Misc.try_finally
     (fun () ->
        Profile.record_call "parsing" @@ fun () ->

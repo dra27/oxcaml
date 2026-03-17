@@ -60,13 +60,6 @@ let mk_binannot_occurrences f =
     features such as project-wide occurrences. This flag has\n\
     no effect in the absence of '-bin-annot'."
 
-let mk_binannot_occurrences f =
-  "-bin-annot-occurrences", Arg.Unit f,
-  " Store every occurrence of a bound name in the .cmt file.\n\
-    This information can be used by external tools to provide\n\
-    features such as project-wide occurrences. This flag has\n\
-    no effect in the absence of '-bin-annot'."
-
 let mk_c f =
   "-c", Arg.Unit f, " Compile only (do not link)"
 
@@ -1208,12 +1201,8 @@ module type Compiler_options = sig
   val _as_argument_for : string -> unit
   val _as_parameter : unit -> unit
   val _binannot : unit -> unit
-<<<<<<< oxcaml
   val _binannot_cms : unit -> unit
   val _shape_format : string -> unit
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
   val _binannot_occurrences : unit -> unit
   val _c : unit -> unit
   val _cc : string -> unit
@@ -1461,11 +1450,7 @@ struct
     mk_as_argument_for F._as_argument_for;
     mk_as_parameter F._as_parameter;
     mk_binannot F._binannot;
-<<<<<<< oxcaml
     mk_binannot_cms F._binannot_cms;
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
     mk_binannot_occurrences F._binannot_occurrences;
     mk_c F._c;
     mk_cc F._cc;
@@ -1725,11 +1710,7 @@ struct
     mk_as_argument_for F._as_argument_for;
     mk_as_parameter F._as_parameter;
     mk_binannot F._binannot;
-<<<<<<< oxcaml
     mk_binannot_cms F._binannot_cms;
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
     mk_binannot_occurrences F._binannot_occurrences;
     mk_inline_branch_factor F._inline_branch_factor;
     mk_c F._c;
@@ -2536,16 +2517,12 @@ module Default = struct
     let _as_argument_for s = as_argument_for := Some s
     let _as_parameter = set as_parameter
     let _binannot = set binary_annotations
-<<<<<<< oxcaml
     let _binannot_cms = set binary_annotations_cms
     let _shape_format s =
       match s with
       | "old-merlin" -> shape_format := Old_merlin
       | "debugging-shapes" -> shape_format := Debugging_shapes
       | _ -> ()
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
     let _binannot_occurrences = set store_occurrences
     let _c = set compile_only
     let _cc s = c_compiler := (Some s)

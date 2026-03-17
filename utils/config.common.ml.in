@@ -143,7 +143,6 @@ let configuration_variables () =
 <<<<<<< oxcaml
   p_bool "parameterised_modules" parameterised_modules;
 ||||||| upstream-base
-  p_bool "compression_supported" (Marshal.compression_supported());
 =======
   p_bool "with_codegen_invariants" with_codegen_invariants;
 >>>>>>> upstream-incoming

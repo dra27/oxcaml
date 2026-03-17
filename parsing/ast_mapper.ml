@@ -1179,23 +1179,11 @@ let extension_of_error {kind; main; sub} =
   let extension_of_sub sub =
     { loc = sub.loc; txt = "ocaml.error" },
     PStr ([Str.eval (Exp.constant
-<<<<<<< oxcaml
-                       (Pconst_string (str_of_msg sub.txt, sub.loc, None)))])
-||||||| upstream-base
-                       (Pconst_string (str_of_pp sub.txt, sub.loc, None)))])
-=======
                        (Const.string ~loc:sub.loc (str_of_msg sub.txt)))])
->>>>>>> upstream-incoming
   in
   { loc = main.loc; txt = "ocaml.error" },
   PStr (Str.eval (Exp.constant
-<<<<<<< oxcaml
-                    (Pconst_string (str_of_msg main.txt, main.loc, None))) ::
-||||||| upstream-base
-                    (Pconst_string (str_of_pp main.txt, main.loc, None))) ::
-=======
                     (Const.string ~loc:main.loc (str_of_msg main.txt))) ::
->>>>>>> upstream-incoming
         List.map (fun msg -> Str.extension (extension_of_sub msg)) sub)
 
 let attribute_of_warning loc s =

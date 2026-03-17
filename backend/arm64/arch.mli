@@ -47,7 +47,7 @@ type specific_operation =
 <<<<<<< oxcaml:backend/arm64/arch.mli
   | Ifar_poll
   | Ifar_alloc of { bytes : int; dbginfo : Cmm.alloc_dbginfo }
-||||||| upstream-base:asmcomp/arm64/arch.mli
+||||||| upstream-base
   | Ifar_poll of { return_label: cmm_label option }
   | Ifar_alloc of { bytes : int; dbginfo : Debuginfo.alloc_dbginfo }
   | Ifar_intop_checkbound
@@ -57,16 +57,16 @@ type specific_operation =
   | Ialloc_far of { bytes : int; dbginfo : Debuginfo.alloc_dbginfo }
   | Icheckbound_far
   | Icheckbound_imm_far of { bound : int; }
->>>>>>> upstream-incoming:asmcomp/arm64/arch.mli
+>>>>>>> upstream-incoming
   | Ishiftarith of arith_operation * int
 <<<<<<< oxcaml:backend/arm64/arch.mli
-||||||| upstream-base:asmcomp/arm64/arch.mli
+||||||| upstream-base
   | Ishiftcheckbound of { shift : int; }
   | Ifar_shiftcheckbound of { shift : int; }
 =======
   | Ishiftcheckbound of { shift : int; }
   | Ishiftcheckbound_far of { shift : int; }
->>>>>>> upstream-incoming:asmcomp/arm64/arch.mli
+>>>>>>> upstream-incoming
   | Imuladd       (* multiply and add *)
   | Imulsub       (* multiply and subtract *)
   | Inegmulf      (* floating-point negate and multiply *)
@@ -122,11 +122,11 @@ val num_args_addressing : addressing_mode -> int
 
 val addressing_displacement_for_llvmize : addressing_mode -> int
 
-||||||| upstream-base:asmcomp/arm64/arch.mli
+||||||| upstream-base
 val num_args_addressing : addressing_mode -> int
 
 =======
->>>>>>> upstream-incoming:asmcomp/arm64/arch.mli
+>>>>>>> upstream-incoming
 (* Printing operations and addressing modes *)
 
 val print_addressing :

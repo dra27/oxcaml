@@ -120,7 +120,7 @@ OC_OCAMLDEPDIRS = $(VPATH)
 # capitalized module names.
 PERVASIVES=$(STDLIB_MODULES) outcometree topprinters topdirs toploop
 
-LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
+LIBFILES=stdlib.cma std_exit.cmo *.cmi $(HEADER_NAME)
 
 COMPLIBDIR=$(LIBDIR)/compiler-libs
 
@@ -133,6 +133,7 @@ expunge := expunge$(EXE)
 utils_SOURCES = $(addprefix utils/, \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -152,7 +153,8 @@ utils_SOURCES = $(addprefix utils/, \
   binutils.mli binutils.ml \
   lazy_backtrack.mli lazy_backtrack.ml \
   diffing.mli diffing.ml \
-  diffing_with_keys.mli diffing_with_keys.ml)
+  diffing_with_keys.mli diffing_with_keys.ml \
+  compression.mli compression.ml)
 
 parsing_SOURCES = $(addprefix parsing/, \
   location.mli location.ml \
@@ -207,6 +209,7 @@ typing_SOURCES = \
   typing/tast_iterator.mli typing/tast_iterator.ml \
   typing/tast_mapper.mli typing/tast_mapper.ml \
   typing/stypes.mli typing/stypes.ml \
+  typing/shape_reduce.mli typing/shape_reduce.ml \
   file_formats/cmt_format.mli file_formats/cmt_format.ml \
   typing/cmt2annot.mli typing/cmt2annot.ml \
   typing/untypeast.mli typing/untypeast.ml \
@@ -234,6 +237,7 @@ lambda_SOURCES = $(addprefix lambda/, \
   printlambda.mli printlambda.ml \
   switch.mli switch.ml \
   matching.mli matching.ml \
+  value_rec_compiler.mli value_rec_compiler.ml \
   translobj.mli translobj.ml \
   translattribute.mli translattribute.ml \
   translprim.mli translprim.ml \
@@ -482,6 +486,15 @@ beforedepend:: utils/config_main.mli utils/config_boot.mli
 
 $(addprefix compilerlibs/ocamlcommon., cma cmxa): \
   OC_COMMON_LINKFLAGS += -linkall
+
+COMPRESSED_MARSHALING_FLAGS=-cclib -lcomprmarsh \
+           $(patsubst %, -ccopt %, $(filter-out -l%,$(ZSTD_LIBS))) \
+           $(patsubst %, -cclib %, $(filter -l%,$(ZSTD_LIBS))) \
+
+compilerlibs/ocamlcommon.cmxa: \
+  OC_NATIVE_LINKFLAGS += $(COMPRESSED_MARSHALING_FLAGS)
+
+compilerlibs/ocamlcommon.cmxa: stdlib/libcomprmarsh.$(A)
 
 partialclean::
 	rm -f compilerlibs/ocamlcommon.cma
@@ -1904,8 +1917,6 @@ ocamlc_SOURCES = driver/main.mli driver/main.ml
 
 ocamlc$(EXE): OC_BYTECODE_LINKFLAGS += -compat-32 -g
 
-ocamlc.opt$(EXE): OC_NATIVE_LINKFLAGS += $(addprefix -cclib ,$(BYTECCLIBS))
-
 partialclean::
 	rm -f ocamlc ocamlc.exe ocamlc.opt ocamlc.opt.exe
 
@@ -2117,7 +2128,8 @@ runtime_BYTECODE_ONLY_C_SOURCES = \
   fail_byt \
   fix_code \
   interp \
-  startup_byt
+  startup_byt \
+  zstd
 runtime_BYTECODE_C_SOURCES = \
   $(runtime_COMMON_C_SOURCES:%=runtime/%.c) \
   $(runtime_BYTECODE_ONLY_C_SOURCES:%=runtime/%.c)
@@ -2148,7 +2160,8 @@ runtime_PROGRAMS = runtime/ocamlrun$(EXE)
 runtime_BYTECODE_STATIC_LIBRARIES = $(addprefix runtime/, \
   ld.conf libcamlrun.$(A))
 runtime_BYTECODE_SHARED_LIBRARIES =
-runtime_NATIVE_STATIC_LIBRARIES = runtime/libasmrun.$(A)
+runtime_NATIVE_STATIC_LIBRARIES = \
+  runtime/libasmrun.$(A) runtime/libcomprmarsh.$(A)
 runtime_NATIVE_SHARED_LIBRARIES =
 
 ifeq "$(RUNTIMED)" "true"
@@ -2198,6 +2211,8 @@ libasmruni_OBJECTS = \
 
 libasmrunpic_OBJECTS = $(runtime_NATIVE_C_SOURCES:.c=.npic.$(O)) \
   $(runtime_ASM_OBJECTS:.$(O)=_libasmrunpic.$(O))
+
+libcomprmarsh_OBJECTS = runtime/zstd.npic.$(O)
 
 ## General (non target-specific) assembler and compiler flags
 
@@ -2314,6 +2329,9 @@ runtime/libasmrun_pic.$(A): $(libasmrunpic_OBJECTS)
 
 runtime/libasmrun_shared.$(SO): $(libasmrunpic_OBJECTS)
 	$(V_MKDLL)$(MKDLL) -o $@ $^ $(NATIVECCLIBS)
+
+runtime/libcomprmarsh.$(A): $(libcomprmarsh_OBJECTS)
+	$(V_MKLIB)$(call MKLIB,$@, $^)
 
 ## Runtime target-specific preprocessor and compiler flags
 
@@ -2471,9 +2489,12 @@ runtimeopt: stdlib/libasmrun.$(A)
 makeruntimeopt: runtime-allopt
 stdlib/libasmrun.$(A): runtime-allopt
 	cd stdlib; $(LN) ../runtime/libasmrun.$(A) .
+stdlib/libcomprmarsh.$(A): runtime/libcomprmarsh.$(A)
+	cd stdlib; $(LN) ../runtime/libcomprmarsh.$(A) .
 
 clean::
 	rm -f stdlib/libasmrun.a stdlib/libasmrun.lib
+	rm -f stdlib/libcomprmarsh.a stdlib/libcomprmarsh.lib
 
 # Dependencies
 
@@ -2692,6 +2713,8 @@ OCAMLDOC_LIBCMTS=$(OCAMLDOC_LIBMLIS:.mli=.cmt) $(OCAMLDOC_LIBMLIS:.mli=.cmti)
 
 ocamldoc/%: CAMLC = $(BEST_OCAMLC) $(STDLIBFLAGS)
 
+ocamldoc/%: CAMLOPT = $(BEST_OCAMLOPT) $(STDLIBFLAGS)
+
 .PHONY: ocamldoc
 ocamldoc: ocamldoc/ocamldoc$(EXE) ocamldoc/odoc_test.cmo
 
@@ -2700,7 +2723,7 @@ ocamldoc/ocamldoc$(EXE): ocamlc ocamlyacc ocamllex
 .PHONY: ocamldoc.opt
 ocamldoc.opt: ocamldoc/ocamldoc.opt$(EXE)
 
-ocamldoc/ocamldoc.opt$(EXE): ocamlc.opt ocamlyacc ocamllex
+ocamldoc/ocamldoc.opt$(EXE): ocamlopt ocamlyacc ocamllex
 
 # OCamltest
 
@@ -2780,6 +2803,8 @@ $(ocamltest_DEP_FILES): $(DEPDIR)/ocamltest/%.$(D): ocamltest/%.c
 
 ocamltest/%: CAMLC = $(BEST_OCAMLC) $(STDLIBFLAGS)
 
+ocamltest/%: CAMLOPT = $(BEST_OCAMLOPT) $(STDLIBFLAGS)
+
 ocamltest: ocamltest/ocamltest$(EXE) \
   testsuite/lib/lib.cmo testsuite/lib/testing.cma testsuite/tools/expect$(EXE)
 
@@ -2825,7 +2850,7 @@ ocamltest/ocamltest$(EXE): ocamlc ocamlyacc ocamllex
 ocamltest.opt: ocamltest/ocamltest.opt$(EXE) \
   testsuite/lib/testing.cmxa $(asmgen_OBJECT) testsuite/tools/codegen$(EXE)
 
-ocamltest/ocamltest.opt$(EXE): ocamlc.opt ocamlyacc ocamllex
+ocamltest/ocamltest.opt$(EXE): ocamlopt ocamlyacc ocamllex
 
 # ocamltest does _not_ want to have access to the Unix interface by default,
 # to ensure functions and types are only used via Ocamltest_stdlib.Unix
@@ -3118,6 +3143,7 @@ ocamlprof_LIBRARIES =
 ocamlprof_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -3144,6 +3170,7 @@ ocamlprof_SOURCES = \
 ocamlcp_ocamloptp_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   profile.mli profile.ml \
   warnings.mli warnings.ml \
@@ -3171,6 +3198,7 @@ ocamlmklib_LIBRARIES =
 ocamlmklib_SOURCES = \
   config.ml \
   build_path_prefix_map.ml \
+  format_doc.ml \
   misc.ml \
   ocamlmklib.mli ocamlmklib.ml
 
@@ -3180,6 +3208,7 @@ ocamlmktop_LIBRARIES =
 ocamlmktop_SOURCES = \
   config.mli config.ml \
   build_path_prefix_map.mli build_path_prefix_map.ml \
+  format_doc.mli format_doc.ml \
   misc.mli misc.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -5090,7 +5119,7 @@ distclean: clean
 	rm -f tools/eventlog_metadata tools/*.bak
 	rm -f utils/config.common.ml utils/config.generated.ml
 	rm -f compilerlibs/META
-	rm -f boot/ocamlrun boot/ocamlrun.exe boot/camlheader \
+	rm -f boot/ocamlrun boot/ocamlrun.exe boot/$(HEADER_NAME) \
 	      boot/flexdll_*.o boot/flexdll_*.obj \
 	      boot/*.cm* boot/libcamlrun.a boot/libcamlrun.lib boot/ocamlc.opt
 	rm -f Makefile.config Makefile.build_config

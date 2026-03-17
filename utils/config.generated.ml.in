@@ -27,12 +27,30 @@ let c_compiler = {@QS@|@CC@|@QS@}
 let c_output_obj = {@QS@|@outputobj@|@QS@}
 let c_has_debug_prefix_map = @cc_has_debug_prefix_map@
 let as_has_debug_prefix_map = @as_has_debug_prefix_map@
+<<<<<<< oxcaml
+let ocamlc_cflags = {@QS@|@ocamlc_cflags@|@QS@}
+let ocamlc_cppflags = {@QS@|@ocamlc_cppflags@|@QS@}
+(* #7678: ocamlopt uses these only to compile .c files, and the behaviour for
+          the two drivers should be identical. *)
+let ocamlopt_cflags = {@QS@|@ocamlc_cflags@|@QS@}
+let ocamlopt_cppflags = {@QS@|@ocamlc_cppflags@|@QS@}
+let bytecomp_c_libraries = {@QS@|@cclibs@|@QS@}
+||||||| upstream-base
+let ocamlc_cflags = {@QS@|@ocamlc_cflags@|@QS@}
+let ocamlc_cppflags = {@QS@|@ocamlc_cppflags@|@QS@}
+(* #7678: ocamlopt uses these only to compile .c files, and the behaviour for
+          the two drivers should be identical. *)
+let ocamlopt_cflags = {@QS@|@ocamlc_cflags@|@QS@}
+let ocamlopt_cppflags = {@QS@|@ocamlc_cppflags@|@QS@}
+let bytecomp_c_libraries = {@QS@|@zstd_libs@ @cclibs@|@QS@}
+=======
 let bytecode_cflags = {@QS@|@bytecode_cflags@|@QS@}
 let bytecode_cppflags = {@QS@|@bytecode_cppflags@|@QS@}
 let native_cflags = {@QS@|@native_cflags@|@QS@}
 let native_cppflags = {@QS@|@native_cppflags@|@QS@}
 
 let bytecomp_c_libraries = {@QS@|@zstd_libs@ @cclibs@|@QS@}
+>>>>>>> upstream-incoming
 (* bytecomp_c_compiler and native_c_compiler have been supported for a
    long time and are retained for backwards compatibility.
    For programs that don't need compatibility with older OCaml releases

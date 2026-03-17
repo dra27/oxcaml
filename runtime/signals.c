@@ -521,13 +521,7 @@ caml_result caml_do_pending_actions_res(void)
      at this point. */
   caml_process_external_interrupt();
 
-<<<<<<< oxcaml
-  return Val_unit;
-||||||| upstream-base
-  return Val_unit;
-=======
   return Result_unit;
->>>>>>> upstream-incoming
 
 exception:
   /* If an exception is raised during an asynchronous callback, then

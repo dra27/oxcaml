@@ -336,8 +336,7 @@ module User = struct
        the write buffer across calls.
 
        To be safe for multi-domain programs, we use domain-local
-<<<<<<< oxcaml
-       storage for the write buffer. To accomodate for multi-threaded
+       storage for the write buffer. To accommodate for multi-threaded
        programs (without depending on the Thread module), we store
        a list of caches for each domain. This might leak a bit of
        memory: the number of buffers for a domain is equal to the
@@ -374,48 +373,6 @@ module User = struct
              thread could have popped [buf]. *)
           let buf = Obj.magic_uncontended buf.Modes.Contended.contended in
           consumer buf)
-||||||| upstream-base
-  let write event value = user_write event value
-=======
-       storage for the write buffer. To accommodate for multi-threaded
-       programs (without depending on the Thread module), we store
-       a list of caches for each domain. This might leak a bit of
-       memory: the number of buffers for a domain is equal to the
-       maximum number of threads that requested a buffer concurrently,
-       and we never free those buffers. *)
-    let create_buffer () = Bytes.create 1024 in
-    let write_buffer_cache = Domain.DLS.new_key (fun () -> ref []) in
-    let pop_or_create buffers =
-      (* intended to be thread-safe *)
-      (* begin atomic *)
-      match !buffers with
-      | [] ->
-          (* end atomic *)
-          create_buffer ()
-      | b::bs ->
-          buffers := bs;
-          (* end atomic *)
-          b
-    in
-    let[@poll error] compare_and_set r old_val new_val =
-      if !r == old_val then (r := new_val; true)
-      else false
-    in
-    let rec push buffers buf =
-      (* intended to be thread-safe *)
-      let old_buffers = !buffers in
-      let new_buffers = buf :: old_buffers in
-      (* retry if !buffers changed under our feet: *)
-      if compare_and_set buffers old_buffers new_buffers
-      then ()
-      else push buffers buf
-    in
-    fun consumer ->
-      let buffers = Domain.DLS.get write_buffer_cache in
-      let buf = pop_or_create buffers in
-      Fun.protect ~finally:(fun () -> push buffers buf)
-        (fun () -> consumer buf)
->>>>>>> upstream-incoming
 
   let write (type a) (event : a t) (value : a) =
     if runtime_events_are_active () then

@@ -339,7 +339,6 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   if !Clflags.debug && compunit.cu_debug > 0 then begin
     seek_in inchan compunit.cu_debug;
     let debug_event_list : Instruct.debug_event list =
-<<<<<<< oxcaml
       (* CR ocaml 5 compressed-marshal:
       Compression.input_value inchan
       *)
@@ -351,14 +350,6 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
       *)
       Marshal.from_channel inchan
     in
-||||||| upstream-base
-    let debug_event_list : Instruct.debug_event list = input_value inchan in
-    let debug_dirs : string list = input_value inchan in
-=======
-      Compression.input_value inchan in
-    let debug_dirs : string list =
-      Compression.input_value inchan in
->>>>>>> upstream-incoming
     let file_path = Filename.dirname (Location.absolute_path file_name) in
     let debug_dirs =
       if List.mem file_path debug_dirs
@@ -781,19 +772,7 @@ static char caml_data[] = {
          [| Bytesections.Name.to_string SYMB,
             Symtable.data_global_map();
             Bytesections.Name.to_string CRCS,
-<<<<<<< oxcaml
             Obj.repr(extract_crc_interfaces() |> Array.of_list) |]
-||||||| upstream-base
-       let sections : (string * Obj.t) list =
-         [ Bytesections.Name.to_string SYMB,
-           Symtable.data_global_map();
-           Bytesections.Name.to_string PRIM,
-           Obj.repr(Symtable.data_primitive_names());
-           Bytesections.Name.to_string CRCS,
-           Obj.repr(extract_crc_interfaces()) ]
-=======
-            Obj.repr(extract_crc_interfaces()) |]
->>>>>>> upstream-incoming
        in
        output_string outchan {|
 static char caml_sections[] = {
@@ -1081,16 +1060,8 @@ let report_error_doc ppf = function
                  make inconsistent assumptions over interface %a@]"
         Location.Doc.quoted_filename file1
         Location.Doc.quoted_filename file2
-<<<<<<< oxcaml
         Style.inline_code
         (Format_doc.asprintf "%a" CU.Name.print intf)
-||||||| upstream-base
-        (Style.as_inline_code Location.print_filename) file1
-        (Style.as_inline_code Location.print_filename) file2
-        Style.inline_code intf
-=======
-        Style.inline_code intf
->>>>>>> upstream-incoming
   | Custom_runtime ->
       fprintf ppf "Error while building custom runtime system"
   | File_exists file ->
@@ -1105,7 +1076,6 @@ let report_error_doc ppf = function
         CU.print_as_inline_code unavailable
         CU.print_as_inline_code required_by
 ||||||| upstream-base
-        Location.print_filename file
   | Required_compunit_unavailable
     (Compunit unavailable, Compunit required_by) ->
       fprintf ppf "Module %a is unavailable (required by %a)"
@@ -1146,10 +1116,9 @@ let report_error_doc ppf = function
   | Multiple_definition(compunit, file1, file2) ->
       fprintf ppf
         "@[<hov>Files %a@ and %a@ both define a module named %a@]"
-        (Style.as_inline_code Location.print_filename) file1
-        (Style.as_inline_code Location.print_filename) file2
+        Location.Doc.quoted_filename file1
+        Location.Doc.quoted_filename file2
         Style.inline_code (Compunit.name compunit)
-
 =======
   | Link_error e ->
       Linkdeps.report_error_doc ~print_filename:Location.Doc.filename ppf e

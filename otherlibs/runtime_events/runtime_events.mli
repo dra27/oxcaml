@@ -46,15 +46,9 @@
     very short running programs.
 *)
 
-<<<<<<< oxcaml
-(** The type for counter events emitted by the runtime. *)
-||||||| upstream-base
-(** The type for counter events emitted by the runtime *)
-=======
 (** The type for counter events emitted by the runtime. Counter events are used
   to measure a quantity at a point in time or record the occurence of an event.
   In the latter case their value will be one. *)
->>>>>>> upstream-incoming
 type runtime_counter =
 | EV_C_FORCE_MINOR_ALLOC_SMALL
 (**
@@ -517,13 +511,7 @@ This includes time spent trying to become stop-the-world leader.
 *)
 >>>>>>> upstream-incoming
 
-<<<<<<< oxcaml
-(** Lifecycle events for the ring itself. *)
-||||||| upstream-base
-(** Lifecycle events for the ring itself *)
-=======
 (** Lifecycle events for Runtime_events and domains. *)
->>>>>>> upstream-incoming
 type lifecycle =
   EV_RING_START
 (**

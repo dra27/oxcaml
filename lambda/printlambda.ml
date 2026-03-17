@@ -318,6 +318,7 @@ let record_rep ppf r = match r with
   | Record_boxed _ -> fprintf ppf "boxed"
   | Record_inlined _ -> fprintf ppf "inlined"
   | Record_float -> fprintf ppf "float"
+<<<<<<< oxcaml
   | Record_ufloat -> fprintf ppf "ufloat"
   | Record_mixed _ -> fprintf ppf "mixed"
 
@@ -357,6 +358,11 @@ and mixed_block_shape
       shape;
     fprintf ppf ")"
   end
+||||||| upstream-base
+  | Record_extension path -> fprintf ppf "ext(%a)" Printtyp.Compat.path path
+=======
+  | Record_extension path -> fprintf ppf "ext(%a)" Printtyp.path path
+>>>>>>> upstream-incoming
 
 let block_shape ppf shape = match shape with
   | All_value -> ()
@@ -1433,38 +1439,10 @@ let rec lam ppf = function
         apply_tailcall_attribute ap.ap_tailcall
         apply_inlined_attribute ap.ap_inlined
         apply_specialised_attribute ap.ap_specialised
-<<<<<<< oxcaml
         apply_probe ap.ap_probe
   | Lfunction lfun ->
       lfunction ppf lfun
   | Llet _ | Lmutlet _ as expr ->
-||||||| upstream-base
-  | Lfunction{kind; params; return; body; attr} ->
-      let pr_params ppf params =
-        match kind with
-        | Curried ->
-            List.iter (fun (param, k) ->
-                fprintf ppf "@ %a%a" Ident.print param value_kind k) params
-        | Tupled ->
-            fprintf ppf " (";
-            let first = ref true in
-            List.iter
-              (fun (param, k) ->
-                if !first then first := false else fprintf ppf ",@ ";
-                Ident.print ppf param;
-                value_kind ppf k)
-              params;
-            fprintf ppf ")" in
-      fprintf ppf "@[<2>(function%a@ %a%a%a)@]" pr_params params
-        function_attribute attr return_kind return lam body
-  | Llet(_, k, id, arg, body)
-  | Lmutlet(k, id, arg, body) as l ->
-=======
-  | Lfunction lfun ->
-      lfunction ppf lfun
-  | Llet(_, k, id, arg, body)
-  | Lmutlet(k, id, arg, body) as l ->
->>>>>>> upstream-incoming
       let let_kind = begin function
         | Llet(str,_,_,_,_,_) ->
            begin match str with
@@ -1490,31 +1468,12 @@ let rec lam ppf = function
       let bindings ppf id_arg_list =
         let spc = ref false in
         List.iter
-<<<<<<< oxcaml
           (fun { id; debug_uid=duid; def } ->
-||||||| upstream-base
-          (fun { id; rkind; def } ->
-=======
-          (fun { id; def } ->
->>>>>>> upstream-incoming
             if !spc then fprintf ppf "@ " else spc := true;
-<<<<<<< oxcaml
             fprintf ppf "@[<2>%a%a@ %a@]"
               Ident.print id
               debug_uid duid
               lfunction def)
-||||||| upstream-base
-            let rec_annot =
-              match rkind with
-              | Static -> ""
-              | Not_recursive -> "[Nonrec]"
-              | Constant -> "[Cst]"
-              | Class -> "[Class]"
-            in
-            fprintf ppf "@[<2>%a%s@ %a@]" Ident.print id rec_annot lam def)
-=======
-            fprintf ppf "@[<2>%a@ %a@]" Ident.print id lfunction def)
->>>>>>> upstream-incoming
           id_arg_list in
       fprintf ppf
         "@[<2>(letrec@ (@[<hv 1>%a@])@ %a)@]" bindings id_arg_list lam body
@@ -1649,7 +1608,6 @@ and sequence ppf = function
   | l ->
       lam ppf l
 
-<<<<<<< oxcaml
 and lfunction ppf {kind; params; return; body; attr; ret_mode; mode} =
   let pr_params ppf params =
     match kind with
@@ -1680,27 +1638,6 @@ and lfunction ppf {kind; params; return; body; attr; ret_mode; mode} =
   fprintf ppf "@[<2>(function%s%a@ %a%a%a)@]"
     (locality_kind mode) pr_params params
     function_attribute attr return_kind (ret_mode, return) lam body
-||||||| upstream-base
-=======
-and lfunction ppf {kind; params; return; body; attr} =
-  let pr_params ppf params =
-    match kind with
-    | Curried ->
-        List.iter (fun (param, k) ->
-            fprintf ppf "@ %a%a" Ident.print param value_kind k) params
-    | Tupled ->
-        fprintf ppf " (";
-        let first = ref true in
-        List.iter
-          (fun (param, k) ->
-             if !first then first := false else fprintf ppf ",@ ";
-             Ident.print ppf param;
-             value_kind ppf k)
-          params;
-            fprintf ppf ")" in
-  fprintf ppf "@[<2>(function%a@ %a%a%a)@]" pr_params params
-    function_attribute attr return_kind return lam body
->>>>>>> upstream-incoming
 
 
 let structured_constant = struct_const

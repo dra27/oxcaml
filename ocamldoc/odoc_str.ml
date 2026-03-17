@@ -22,6 +22,7 @@ module Printtyp_main = Printtyp
 module Printtyp = Printtyp.Compat
 ||||||| upstream-base
 let () = Printtyp.Naming_context.enable false
+module Printtyp = Printtyp.Compat
 =======
 let () = Out_type.Ident_names.enable false
 >>>>>>> upstream-incoming

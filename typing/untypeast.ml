@@ -344,13 +344,7 @@ let pattern : type k . _ -> k T.general_pattern -> _ = fun sub pat ->
       { pat_extra=[Tpat_unpack, loc, _attrs]; pat_desc = Tpat_any; _ } ->
         Ppat_unpack { txt = None; loc  }
     | { pat_extra=[Tpat_unpack, _, _attrs];
-<<<<<<< oxcaml
         pat_desc = Tpat_var (_,name, _, _, _); _ } ->
-||||||| upstream-base
-    | { pat_extra=[Tpat_unpack, _, _attrs]; pat_desc = Tpat_var (_,name); _ } ->
-=======
-        pat_desc = Tpat_var (_,name, _); _ } ->
->>>>>>> upstream-incoming
         Ppat_unpack { name with txt = Some name.txt }
     | { pat_extra=[Tpat_type (_path, lid), _, _attrs]; _ } ->
         Ppat_type (map_loc sub lid)
@@ -363,13 +357,7 @@ let pattern : type k . _ -> k T.general_pattern -> _ = fun sub pat ->
     | _ ->
     match pat.pat_desc with
       Tpat_any -> Ppat_any
-<<<<<<< oxcaml
     | Tpat_var (id, name,_,_,_) ->
-||||||| upstream-base
-    | Tpat_var (id, name) ->
-=======
-    | Tpat_var (id, name, _) ->
->>>>>>> upstream-incoming
         begin
           match (Ident.name id).[0] with
             'A'..'Z' ->
@@ -382,24 +370,12 @@ let pattern : type k . _ -> k T.general_pattern -> _ = fun sub pat ->
        The compiler transforms (x:t) into (_ as x : t).
        This avoids transforming a warning 27 into a 26.
      *)
-<<<<<<< oxcaml
     | Tpat_alias
       ({pat_desc = Tpat_any; pat_loc}, _id, name, _uid, _sort, _mode, _ty)
-||||||| upstream-base
-    | Tpat_alias ({pat_desc = Tpat_any; pat_loc}, _id, name)
-=======
-    | Tpat_alias ({pat_desc = Tpat_any; pat_loc}, _id, name, _, _ty)
->>>>>>> upstream-incoming
          when pat_loc = pat.pat_loc ->
        Ppat_var name
 
-<<<<<<< oxcaml
     | Tpat_alias (pat, _id, name, _uid, _sort, _mode, _ty) ->
-||||||| upstream-base
-    | Tpat_alias (pat, _id, name) ->
-=======
-    | Tpat_alias (pat, _id, name, _, _ty) ->
->>>>>>> upstream-incoming
         Ppat_alias (sub.pat sub pat, name)
     | Tpat_constant cst -> Ppat_constant (constant cst)
     | Tpat_unboxed_unit -> Ppat_unboxed_unit
@@ -1278,7 +1254,7 @@ let class_structure sub cs =
     | { pat_desc = Tpat_alias (p, id, _s, _uid, _sort, _mode, _ty) }
       when string_is_prefix "selfpat-" (Ident.name id) ->
 ||||||| upstream-base
-    | { pat_desc = Tpat_alias (p, id, _s) }
+    | { pat_desc = Tpat_alias (p, id, _s, _, _ty) }
       when string_is_prefix "selfpat-" (Ident.name id) ->
 =======
     | { pat_desc = Tpat_alias (p, id, _s, _, _ty) }
@@ -1316,7 +1292,7 @@ and is_self_pat = function
   | { pat_desc = Tpat_alias(_pat, id, _, _uid, _sort, _mode, _ty) } ->
       string_is_prefix "self-" (Ident.name id)
 ||||||| upstream-base
-  | { pat_desc = Tpat_alias(_pat, id, _) } ->
+  | { pat_desc = Tpat_alias(_pat, id, _, _, _ty) } ->
       string_is_prefix "self-" (Ident.name id)
 =======
   | { pat_desc = Tpat_alias(_pat, id, _, _, _ty) } ->

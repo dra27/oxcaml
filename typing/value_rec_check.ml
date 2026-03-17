@@ -158,23 +158,9 @@ let classify_expression : Typedtree.expression -> sd =
     | Texp_let (rec_flag, vb, e) ->
         let env = classify_value_bindings rec_flag env vb in
         classify_expression env e
-<<<<<<< oxcaml
     | Texp_letmutable (vb, e) ->
         let env = classify_value_bindings Nonrecursive env [vb] in
         classify_expression env e
-    | Texp_letmodule (Some mid, _, _, mexp, e) ->
-        (* Note on module presence:
-           For absent modules (i.e. module aliases), the module being bound
-           does not have a physical representation, but its size can still be
-           derived from the alias itself, so we can re-use the same code as
-           for modules that are present. *)
-        let size = classify_module_expression env mexp in
-        let env = Ident.add mid size env in
-        classify_expression env e
-    | Texp_ident (path, _, _, _, _, _) ->
-||||||| upstream-base
-    | Texp_ident (path, _, _) ->
-=======
     | Texp_letmodule (Some mid, _, _, mexp, e) ->
         (* Note on module presence:
            For absent modules (i.e. module aliases), the module being bound
@@ -184,25 +170,15 @@ let classify_expression : Typedtree.expression -> sd =
         let size = classify_module_expression env mexp in
         let env = Ident.add mid size env in
         classify_expression env e
-    | Texp_ident (path, _, _) ->
->>>>>>> upstream-incoming
+    | Texp_ident (path, _, _, _, _, _) ->
         classify_path env path
 
     (* non-binding cases *)
     | Texp_open (_, e)
     | Texp_letmodule (None, _, _, _, e)
-<<<<<<< oxcaml
     | Texp_sequence (_, _, e)
     | Texp_letexception (_, e)
     | Texp_exclave e ->
-||||||| upstream-base
-    | Texp_letmodule (_, _, _, _, e)
-    | Texp_sequence (_, e)
-    | Texp_letexception (_, e) ->
-=======
-    | Texp_sequence (_, e)
-    | Texp_letexception (_, e) ->
->>>>>>> upstream-incoming
         classify_expression env e
 
     | Texp_construct (_, {cstr_repr = Variant_unboxed}, [e], _) ->
@@ -210,60 +186,12 @@ let classify_expression : Typedtree.expression -> sd =
     | Texp_construct _ ->
         Static
 
-<<<<<<< oxcaml
     | Texp_record { representation = Record_unboxed;
-||||||| upstream-base
-    | Texp_construct (_, _, exprs) ->
-        if List.for_all is_constant exprs then Constant else Static
-
-    | Texp_variant (_, Some expr) ->
-        if is_constant expr then Constant else Static
-    | Texp_variant (_, None) ->
-        Constant
-
-    | Texp_record { representation = Record_unboxed _;
-=======
-    | Texp_record { representation = Record_unboxed _;
->>>>>>> upstream-incoming
                     fields = [| _, Overridden (_,e) |] } ->
         classify_expression env e
-<<<<<<< oxcaml
     | Texp_record { representation = Record_ufloat; _ } ->
         Dynamic
     | Texp_record _ ->
-||||||| upstream-base
-    | Texp_record { fields; _ } ->
-        (* We ignore the [extended_expression] field.
-           As long as all fields are Overridden rather than Kept, the value
-           can be constant. *)
-        let is_constant_field (_label, def) =
-          match def with
-          | Kept _ -> false
-          | Overridden (_loc, expr) -> is_constant expr
-        in
-        if Array.for_all is_constant_field fields then Constant else Static
-    | Texp_tuple exprs ->
-        if List.for_all is_constant exprs then Constant else Static
-=======
-    | Texp_record _ ->
-        Static
-
-    | Texp_variant _
-    | Texp_tuple _
-    | Texp_atomic_loc _
-    | Texp_extension_constructor _
-    | Texp_constant _ ->
-        Static
-
-    | Texp_for _
-    | Texp_setfield _
-    | Texp_while _
-    | Texp_setinstvar _ ->
-        (* Unit-returning expressions *)
-        Static
-
-    | Texp_unreachable ->
->>>>>>> upstream-incoming
         Static
 
     | Texp_record_unboxed_product { representation = Record_unboxed_product;
@@ -342,28 +270,9 @@ let classify_expression : Typedtree.expression -> sd =
           (* other cases compile to a lazy block holding a function *)
           Static
       end
-<<<<<<< oxcaml
     | Texp_eval _ ->
       (* CR metaprogramming mshinwell: Make sure this is correct *)
       Static
-||||||| upstream-base
-    | Texp_extension_constructor _ ->
-        Static
-
-    | Texp_constant _ ->
-        Constant
-
-    | Texp_for _
-    | Texp_setfield _
-    | Texp_while _
-    | Texp_setinstvar _ ->
-        (* Unit-returning expressions *)
-        Constant
-
-    | Texp_unreachable ->
-        Constant
-=======
->>>>>>> upstream-incoming
 
     | Texp_new _
     | Texp_instvar _
@@ -378,17 +287,10 @@ let classify_expression : Typedtree.expression -> sd =
     | Texp_assert _
     | Texp_try _
     | Texp_override _
-<<<<<<< oxcaml
     | Texp_letop _
     (* CR metaprogramming aivaskovic: verify for quotations and splices *)
     | Texp_quotation _
     | Texp_antiquotation _ ->
-||||||| upstream-base
-    | Texp_letop _ ->
-        Not_recursive
-=======
-    | Texp_letop _ ->
->>>>>>> upstream-incoming
         Dynamic
   and classify_value_bindings rec_flag env bindings =
     (* We use a non-recursive classification, classifying each
@@ -406,13 +308,7 @@ let classify_expression : Typedtree.expression -> sd =
     let old_env = env in
     let add_value_binding env vb =
       match vb.vb_pat.pat_desc with
-<<<<<<< oxcaml
       | Tpat_var (id, _loc, _uid, _sort, _mode) ->
-||||||| upstream-base
-      | Tpat_var (id, _loc) ->
-=======
-      | Tpat_var (id, _loc, _uid) ->
->>>>>>> upstream-incoming
           let size = classify_expression old_env vb.vb_expr in
           Ident.add id size env
       | _ ->
@@ -1717,16 +1613,8 @@ and pattern : type k . k general_pattern -> Env.t -> mode = fun pat env ->
 and is_destructuring_pattern : type k . k general_pattern -> bool =
   fun pat -> match pat.pat_desc with
     | Tpat_any -> false
-<<<<<<< oxcaml
     | Tpat_var (_, _, _, _, _) -> false
     | Tpat_alias (pat, _, _, _, _, _, _) -> is_destructuring_pattern pat
-||||||| upstream-base
-    | Tpat_var (_, _) -> false
-    | Tpat_alias (pat, _, _) -> is_destructuring_pattern pat
-=======
-    | Tpat_var (_, _, _) -> false
-    | Tpat_alias (pat, _, _, _, _) -> is_destructuring_pattern pat
->>>>>>> upstream-incoming
     | Tpat_constant _ -> true
     | Tpat_unboxed_unit -> true
     | Tpat_unboxed_bool _ -> true

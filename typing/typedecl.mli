@@ -59,7 +59,6 @@ val transl_with_constraint:
     Typedtree.type_declaration
 
 val transl_package_constraint:
-<<<<<<< oxcaml
   loc:Location.t -> type_expr -> Types.type_declaration
 
 val abstract_type_decl:
@@ -68,13 +67,6 @@ val abstract_type_decl:
   params:jkind_lr list ->
   type_declaration
 
-||||||| upstream-base
-val abstract_type_decl: injective:bool -> int -> type_declaration
-=======
-  loc:Location.t -> Env.t -> type_expr -> Types.type_declaration
-
-val abstract_type_decl: injective:bool -> int -> type_declaration
->>>>>>> upstream-incoming
 val approx_type_decl:
     Parsetree.type_declaration list -> (Ident.t * type_declaration) list
 val check_recmod_typedecl:
@@ -215,11 +207,4 @@ type error =
 
 exception Error of Location.t * error
 
-<<<<<<< oxcaml
-val report_error: error Format_doc.format_printer
-val report_error_doc: error Format_doc.printer
-||||||| upstream-base
-val report_error: formatter -> error -> unit
-=======
 val report_error: loc:Location.t -> error -> Location.report
->>>>>>> upstream-incoming

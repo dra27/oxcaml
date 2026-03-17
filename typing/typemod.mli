@@ -90,11 +90,7 @@ module Sig_component_kind : sig
     | Type
     | Constructor
     | Label
-<<<<<<< oxcaml
     | Unboxed_label
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
     | Module
     | Module_type
     | Extension_constructor

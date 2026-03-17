@@ -213,12 +213,7 @@ let remove_printer lid =
 open Format
 module Style = Misc.Style
 let quoted_longident =
-<<<<<<< oxcaml
-  Format_doc.compat @@ Style.as_inline_code Printtyp.longident
-||||||| upstream-base
-=======
   Format_doc.compat @@ Style.as_inline_code Printtyp.Doc.longident
->>>>>>> upstream-incoming
 
 let report_error ppf = function
   | `Load_failure e ->
@@ -227,42 +222,14 @@ let report_error ppf = function
   | `Unbound_identifier lid ->
       fprintf ppf "@[Unbound identifier %a@]@."
         quoted_longident lid
-<<<<<<< oxcaml
-  | Unavailable_module(md, lid) ->
-||||||| upstream-base
-      (Style.as_inline_code Printtyp.longident) lid
-  | Unavailable_module(md, lid) ->
-=======
   | `Unavailable_module(md, lid) ->
->>>>>>> upstream-incoming
       fprintf ppf
         "@[The debugger does not contain the code for@ %a.@ \
          Please load an implementation of %s first.@]@."
         quoted_longident lid md
-<<<<<<< oxcaml
-  | Wrong_type lid ->
-||||||| upstream-base
-           Please load an implementation of %s first.@]@."
-        (Style.as_inline_code Printtyp.longident) lid md
-  | Wrong_type lid ->
-=======
   | `Wrong_type lid ->
->>>>>>> upstream-incoming
       fprintf ppf "@[%a has the wrong type for a printing function.@]@."
         quoted_longident lid
-<<<<<<< oxcaml
-  | No_active_printer lid ->
-||||||| upstream-base
-      (Style.as_inline_code Printtyp.longident) lid
-  | No_active_printer lid ->
-=======
   | `No_active_printer path ->
->>>>>>> upstream-incoming
       fprintf ppf "@[%a is not currently active as a printing function.@]@."
-<<<<<<< oxcaml
-        quoted_longident lid
-||||||| upstream-base
-      (Style.as_inline_code Printtyp.longident) lid
-=======
         Printtyp.path path
->>>>>>> upstream-incoming

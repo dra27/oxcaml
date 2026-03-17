@@ -23,7 +23,6 @@
 
 open Asttypes
 module Uid = Shape.Uid
-<<<<<<< oxcaml
 
 (* We define a new constant type that can represent unboxed values.
    This is currently used only in [Typedtree], but the long term goal
@@ -50,9 +49,6 @@ type constant =
   | Const_unboxed_int32 of int32
   | Const_unboxed_int64 of int64
   | Const_unboxed_nativeint of nativeint
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 
 (* Value expressions for the core language *)
 
@@ -213,27 +209,14 @@ and 'k pattern_desc =
   (* value patterns *)
   | Tpat_any : value pattern_desc
         (** _ *)
-<<<<<<< oxcaml
   | Tpat_var :
       Ident.t * string loc * Uid.t * Jkind_types.Sort.t * Mode.Value.l ->
       value pattern_desc
-||||||| upstream-base
-  | Tpat_var : Ident.t * string loc -> value pattern_desc
-=======
-  | Tpat_var : Ident.t * string loc * Uid.t -> value pattern_desc
->>>>>>> upstream-incoming
         (** x *)
   | Tpat_alias :
-<<<<<<< oxcaml
       value general_pattern * Ident.t * string loc * Uid.t * Jkind_types.Sort.t
       * Mode.Value.l * Types.type_expr
         -> value pattern_desc
-||||||| upstream-base
-      value general_pattern * Ident.t * string loc -> value pattern_desc
-=======
-      value general_pattern * Ident.t * string loc * Uid.t * Types.type_expr ->
-      value pattern_desc
->>>>>>> upstream-incoming
         (** P as a *)
   | Tpat_constant : constant -> value pattern_desc
         (** 1, 'a', "true", 1.0, 1l, 1L, 1n *)
@@ -1428,13 +1411,7 @@ and constructor_declaration =
      cd_id: Ident.t;
      cd_name: string loc;
      cd_uid: Uid.t;
-<<<<<<< oxcaml
      cd_vars: (string * Parsetree.jkind_annotation option) list;
-||||||| upstream-base
-     cd_vars: string loc list;
-=======
-     cd_vars: string loc list;
->>>>>>> upstream-incoming
      cd_args: constructor_arguments;
      cd_res: core_type option;
      cd_loc: Location.t;
@@ -1623,7 +1600,6 @@ val let_bound_idents_with_sorts:
     value_binding list -> (Ident.t * Jkind.Sort.t) list
 val let_bound_idents_full:
     value_binding list ->
-<<<<<<< oxcaml
     (Ident.t * string loc * Types.type_expr * Jkind.Sort.t * Uid.t) list
 
 (* [let_bound_idents_with_modes_sorts_and_checks] finds all the idents in the
@@ -1642,11 +1618,6 @@ val let_bound_idents_with_modes_sorts_and_checks:
   value_binding list
   -> (Ident.t * (Location.t * Mode.Value.l * Jkind.sort) list
               * Zero_alloc.t) list
-||||||| upstream-base
-    value_binding list -> (Ident.t * string loc * Types.type_expr) list
-=======
-    (Ident.t * string loc * Types.type_expr * Types.Uid.t) list
->>>>>>> upstream-incoming
 
 (** Alpha conversion of patterns *)
 val alpha_pat:
@@ -1657,15 +1628,8 @@ val mkloc: 'a -> Location.t -> 'a Asttypes.loc
 
 val pat_bound_idents: 'k general_pattern -> Ident.t list
 val pat_bound_idents_full:
-<<<<<<< oxcaml
   'k general_pattern
   -> (Ident.t * string loc * Types.type_expr * Types.Uid.t * Jkind.Sort.Const.t) list
-||||||| upstream-base
-  'k general_pattern -> (Ident.t * string loc * Types.type_expr) list
-=======
-  'k general_pattern ->
-  (Ident.t * string loc * Types.type_expr * Types.Uid.t) list
->>>>>>> upstream-incoming
 
 (** Splits an or pattern into its value (left) and exception (right) parts. *)
 val split_pattern:
@@ -1695,9 +1659,11 @@ val mode_without_locks_exn : mode_with_locks -> Mode.Value.l
     evaluation order of antiquotations. *)
 val fold_antiquote_exp : ('a -> expression -> 'a) -> 'a -> expression -> 'a
 ||||||| upstream-base
-(** Whether an expression looks nice as the subject of a sentence in a error
-    message. *)
-val exp_is_nominal : expression -> bool
+(** Returns a format document if the expression reads nicely as the subject of a
+    sentence in a error message. *)
+val nominal_exp_doc :
+  Longident.t Format_doc.printer -> expression
+  -> Format_doc.t option
 =======
 val map_apply_arg:
   ('a -> ' b) -> ('a, 'omitted) arg_or_omitted ->  ('b, 'omitted) arg_or_omitted

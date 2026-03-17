@@ -75,12 +75,7 @@ type pattern_variable =
     pv_loc: Location.t;
     pv_kind: pattern_variable_kind;
     pv_attributes: Typedtree.attributes;
-<<<<<<< oxcaml
     pv_sort: Jkind.Sort.t;
-||||||| upstream-base
-=======
-    pv_uid : Uid.t;
->>>>>>> upstream-incoming
   }
 
 val mk_expected:

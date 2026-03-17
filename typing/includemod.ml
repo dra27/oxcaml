@@ -630,16 +630,10 @@ let rec print_coercion ppf c =
         print_coercion out
   | Tcoerce_primitive {pc_desc; pc_env = _; pc_type}  ->
       pr "prim %s@ (%a)" pc_desc.Primitive.prim_name
-<<<<<<< oxcaml
-        (Format_doc.compat Printtyp.raw_type_expr) pc_type
-||||||| upstream-base
-        Printtyp.raw_type_expr pc_type
-=======
         Rawprinttyp.type_expr pc_type
->>>>>>> upstream-incoming
   | Tcoerce_alias (_, p, c) ->
       pr "@[<2>alias %a@ (%a)@]"
-        Printtyp.Compat.path p
+        Printtyp.path p
         print_coercion c
 and print_coercion2 ppf (n, c) =
   Format.fprintf ppf "@[%d,@ %a@]" n print_coercion c

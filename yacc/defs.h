@@ -16,7 +16,6 @@
 #ifndef YACC_DEFS_H
 #define YACC_DEFS_H
 
-<<<<<<< oxcaml
 /* CR mshinwell: When the build compiler is OCaml 5, remove this.
    Alternatively fix the dune build so that ocamlyacc is only built in the
    "main" build context. */
@@ -31,9 +30,6 @@
   #define CAMLnoret
 #endif
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
-||||||| upstream-base
-=======
->>>>>>> upstream-incoming
 
 /* Based on public-domain code from Berkeley Yacc */
 
