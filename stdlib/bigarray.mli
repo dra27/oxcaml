@@ -1240,10 +1240,8 @@ val array3_of_genarray : ('a : any) ('b : any) ('c : any).
 
 (** {1 Re-shaping Bigarrays} *)
 
-external reshape : ('a : any) ('b : any) ('c : any).
-  ('a, 'b, 'c) Genarray.t -> (int array[@local_opt]) -> ('a, 'b, 'c) Genarray.t
-  @@ portable
-  = "caml_ba_reshape"
+val reshape : ('a : any) ('b : any) ('c : any).
+  ('a, 'b, 'c) Genarray.t -> int array @ local -> ('a, 'b, 'c) Genarray.t
 (** [reshape b [|d1;...;dN|]] converts the Bigarray [b] to a
    [N]-dimensional array of dimensions [d1]...[dN].  The returned
    array and the original array [b] share their data
