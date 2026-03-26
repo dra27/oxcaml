@@ -20,9 +20,8 @@
 #define HAS_STDINT_H 1 /* Deprecated since OCaml 5.3 */
 
 /* HAS_NANOSECOND_STAT is deprecated since OCaml 5.3 */
-#if defined(HAVE_STRUCT_STAT_ST_ATIM_TV_NSEC)
 #  define HAS_NANOSECOND_STAT 1
-#elif defined(HAVE_STRUCT_STAT_ST_ATIMESPEC_TV_NSEC)
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC_TV_NSEC)
 #  define HAS_NANOSECOND_STAT 2
 #elif defined(HAVE_STRUCT_STAT_ST_ATIMENSEC)
 #  define HAS_NANOSECOND_STAT 3
