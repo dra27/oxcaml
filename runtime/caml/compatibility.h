@@ -2,10 +2,9 @@
 /*                                                                        */
 /*                                 OCaml                                  */
 /*                                                                        */
-/*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           */
+/*                         Antonin Decimo, Tarides                        */
 /*                                                                        */
-/*   Copyright 2001 Institut National de Recherche en Informatique et     */
-/*     en Automatique.                                                    */
+/*   Copyright 2024 Tarides                                               */
 /*                                                                        */
 /*   All rights reserved.  This file is distributed under the terms of    */
 /*   the GNU Lesser General Public License version 2.1, with the          */
@@ -13,28 +12,25 @@
 /*                                                                        */
 /**************************************************************************/
 
-#ifndef CAML_PRINTEXC_H
-#define CAML_PRINTEXC_H
+/* Definitions for compatibility with old identifiers. */
 
-#include "misc.h"
-#include "mlvalues.h"
+#ifndef CAML_COMPATIBILITY_H
+#define CAML_COMPATIBILITY_H
 
-#ifdef __cplusplus
-extern "C" {
+#define HAS_STDINT_H 1 /* Deprecated since OCaml 5.3 */
+
+/* HAS_NANOSECOND_STAT is deprecated since OCaml 5.3 */
+#if defined(HAVE_STRUCT_STAT_ST_ATIM_TV_NSEC)
+#  define HAS_NANOSECOND_STAT 1
+#elif defined(HAVE_STRUCT_STAT_ST_ATIMESPEC_TV_NSEC)
+#  define HAS_NANOSECOND_STAT 2
+#elif defined(HAVE_STRUCT_STAT_ST_ATIMENSEC)
+#  define HAS_NANOSECOND_STAT 3
 #endif
 
-CAMLextern char * caml_format_exception (value);
-#ifdef CAML_INTERNALS
-CAMLnoret void caml_fatal_uncaught_exception (value);
-CAMLnoret void caml_fatal_uncaught_exception_with_message (value, const char *);
-#endif /* CAML_INTERNALS */
-
-#ifdef __cplusplus
-}
+#ifndef _WIN32
+/* unistd.h is assumed to be available */
+#define HAS_UNISTD 1
 #endif
 
-#ifdef CAML_INTERNALS
-CAMLnoret void caml_fatal_uncaught_exception (value);
-#endif /* CAML_INTERNALS */
-
-#endif /* CAML_PRINTEXC_H */
+#endif  /* CAML_COMPATIBILITY_H */
