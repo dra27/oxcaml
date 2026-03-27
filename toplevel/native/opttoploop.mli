@@ -185,9 +185,19 @@ val need_symbol : string -> bool
 
 val phrase_name : string ref
 
+val load_file_ref : (Format.formatter -> string -> bool) ref
+(** Set this to the actual file loader before calling {!prepare}. *)
+
 val preload_objects : string list ref
 (** List of compilation units to be loaded before entering the interactive
     loop. *)
+
+type input =
+  | Stdin
+  | File of string
+  | String of string
+
+val filename_of_input : input -> string
 
 val prepare : Format.formatter -> ?input:input -> unit -> bool
 (** Setup the load paths and initial toplevel environment and load compilation

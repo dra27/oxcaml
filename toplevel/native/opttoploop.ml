@@ -361,7 +361,7 @@ let outval_of_id env id val_type =
 (* Print the outcome of an evaluation *)
 
 let pr_item =
-  Printtyp.print_items
+  Out_type.print_items
     (fun env -> function
       | Sig_value(id, {val_kind = Val_reg _; val_type; _}, _) ->
          Some (outval_of_id env id val_type)
@@ -523,7 +523,7 @@ let execute_phrase print_outcome ppf phr =
                       match sg' with
                       | [ Sig_value (id, vd, _) ] ->
                           let outv = outval_of_id newenv id vd.val_type in
-                          let ty = Printtyp.tree_of_type_scheme vd.val_type in
+                          let ty = Out_type.tree_of_type_scheme vd.val_type in
                           Ophr_eval (outv, ty)
                       | _ -> assert false
                     else
@@ -849,13 +849,25 @@ let run_script ppf name args =
   use_silently ppf explicit_name
 
 
+let load_file_ref : (Format.formatter -> string -> bool) ref =
+  ref (fun _ _ -> failwith "Opttoploop.load_file_ref not initialized")
+
 let preload_objects = ref []
+
+type input =
+  | Stdin
+  | File of string
+  | String of string
+
+let filename_of_input = function
+  | File name -> name
+  | Stdin | String _ -> ""
 
 let prepare ppf ?input () =
   let dir =
-    (* CR sspies: Not sure we want to depend on the toploop like this. *)
-    Option.map (fun inp -> Filename.dirname (Toploop.filename_of_input inp)) input in
-  Topcommon.set_paths ?dir ();
+    Option.map (fun inp -> Filename.dirname (filename_of_input inp)) input in
+  ignore dir;
+  set_paths ();
   begin try
     initialize_toplevel_env ()
   with Env.Error _ | Typetexp.Error _ as exn ->
@@ -866,7 +878,7 @@ let prepare ppf ?input () =
       let objects =
         List.rev (!preload_objects @ !Compenv.first_objfiles)
       in
-      List.for_all (Opttopdirs.load_file ppf) objects
+      List.for_all (!load_file_ref ppf) objects
     in
     run_hooks Startup;
     res
