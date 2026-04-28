@@ -106,13 +106,12 @@ module Dummy : sig
 
   (** {4 Dummies} *)
 
-  type 'stamp dummy
+  type 'stamp dummy : immutable_data
   (** The type of dummies is parametrized by a ['stamp] variable,
       so that two dummies with different stamps cannot be confused
       together. *)
 
-  type fresh_dummy : value mod portable contended =
-    Fresh : 'stamp dummy -> fresh_dummy [@@unsafe_allow_any_mode_crossing]
+  type fresh_dummy = Fresh : 'stamp dummy -> fresh_dummy
   val fresh : unit -> fresh_dummy
   (** The type of [fresh] enforces a fresh/unknown/opaque stamp for
       the returned dummy, distinct from all previous stamps. *)
@@ -120,7 +119,7 @@ module Dummy : sig
 
   (** {4 Values or dummies} *)
 
-  type ('a, 'stamp) with_dummy
+  type ('a, 'stamp) with_dummy : immutable_data with 'a
   (** a value of type [('a, 'stamp) with_dummy] is either a proper
       value of type ['a] or a dummy with stamp ['stamp]. *)
 
@@ -210,16 +209,10 @@ end = struct
      (It is a bit tricky to build an object that does not contain
      functional values where marshalling fails, see [fresh ()] below
      for how we do it.) *)
-  (* CR dallsopp: WIP for avoiding the magic
+
   type 'stamp dummy : immutable_data =
     { dummy : < > } [@@unboxed] [@@unsafe_allow_any_mode_crossing]
-  type fresh_dummy : immutable_data =
-    Fresh : 'stamp dummy -> fresh_dummy
-  *)
-
-  type 'stamp dummy = < >
-  type fresh_dummy : value mod portable contended =
-    Fresh : 'stamp dummy -> fresh_dummy [@@unsafe_allow_any_mode_crossing]
+  type fresh_dummy = Fresh : 'stamp dummy -> fresh_dummy
 
   let fresh () =
     (* dummies and marshalling: we intentionally
@@ -233,9 +226,9 @@ end = struct
       val x = r
     end in
     r := Some dummy;
-    Fresh dummy
+    Fresh {dummy}
 
-  type ('a, 'stamp) with_dummy = 'a
+  type ('a, 'stamp) with_dummy : immutable_data with 'a = 'a
 
   let of_val v = v
 
@@ -363,21 +356,12 @@ end = struct
   end
 end
 
-type !'a t : mutable_data with 'a =
-(* CR dallsopp: WIP for avoiding the magic
-  Pack : ('a, 'stamp) t_ -> 'a t [@@unboxed]
-and ('a, 'stamp) t_ : mutable_data with 'a =
-  { mutable length : int
-  ; mutable arr : ('a, 'stamp) with_dummy array
-  ; dummy : 'stamp dummy
-  }
-*)
-  Pack : ('a, 'stamp) t_ -> 'a t [@@unboxed] [@@unsafe_allow_any_mode_crossing]
+type 'a t = Pack : ('a, 'stamp) t_ -> 'a t [@@unboxed]
 and ('a, 'stamp) t_ = {
   mutable length : int;
   mutable arr : ('a, 'stamp) Dummy.with_dummy array;
   dummy : 'stamp Dummy.dummy;
-} [@@unsafe_allow_any_mode_crossing]
+}
 
 let global_dummy = Dummy.fresh ()
 (* We need to ensure that dummies are never exposed to the user as
@@ -573,6 +557,7 @@ let pop_last (Pack a) =
   (* We know [length <= capacity a]. *)
   if length = 0 then raise Not_found;
   let last = length - 1 in
+  (* We know [length > 0] so [last >= 0]. *)
   let v = unsafe_get arr ~dummy ~i:last ~length in
   Array.unsafe_set arr last (Dummy.of_dummy dummy);
   a.length <- last;
