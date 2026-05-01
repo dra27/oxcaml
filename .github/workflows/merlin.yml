@@ -92,6 +92,8 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       working-directory: flambda-backend
       run: |
+        # We don't need the dev tool parts
+        sed -i -e '/ocamlformat\|merlin\|ocaml-lsp-server/d' oxcaml-dev.opam
         opam pin add --yes oxcaml-dev .
 
     - name: Configure, build, and install flambda-backend
