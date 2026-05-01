@@ -15,7 +15,7 @@ on:
 
 jobs:
   nix-matrix:
-    runs-on: ${{ github.repository == 'oxcaml/oxcaml' && 'warp-ubuntu-latest-arm64-8x' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'oxcaml/oxcaml' && 'warp-ubuntu-latest-arm64-8x' || 'ubuntu-24.04-arm' }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
