@@ -878,12 +878,14 @@ end = struct
            Format.pp_print_list ~pp_sep:Format.pp_print_cut
              (fun ppf (i, pss) ->
                 Format.fprintf ppf
-                  "Matrix for %a:@,\
+                  "Matrix for %d:@,\
                    %a"
-                  Static_label.format i
+                  i
                   pretty_matrix pss
              ) ppf li
       ) def
+
+  let pp ppf def = pp ppf (def : (Static_label.t * matrix) list :> (int * matrix) list)
 
   let flatten size def =
     List.map (fun (i, pss) -> (i, flatten_matrix size pss)) def
@@ -927,18 +929,18 @@ end = struct
     if env = [] then Format.fprintf ppf "empty" else
     Format.pp_print_list ~pp_sep:Format.pp_print_cut (fun ppf (i, ctx) ->
       Format.fprintf ppf
-        "jump for %a@,\
+        "jump for %d@,\
          %a"
-        Static_label.format i
+        i
         Context.pp ctx
-    ) ppf env
+    ) ppf (env :> (int * Context.t) list)
 
   let rec extract i = function
     | [] -> (Context.empty, [])
     | ((j, pss) as x) :: rem as all ->
-        if Static_label.equal i j then
+        if i = j then
           (pss, rem)
-        else if Static_label.compare j i < 0 then
+        else if j < i then
           (Context.empty, all)
         else
           let r, rem = extract i rem in
@@ -946,7 +948,7 @@ end = struct
 
   let rec remove i = function
     | [] -> []
-    | (j, _) :: rem when Static_label.equal i j -> rem
+    | (j, _) :: rem when i = j -> rem
     | x :: rem -> x :: remove i rem
 
   let empty = []
@@ -965,9 +967,9 @@ end = struct
     let rec add = function
       | [] -> [ (i, ctx) ]
       | ((j, qss) as x) :: rem as all ->
-          if Static_label.compare j i > 0 then
+          if j > i then
             x :: add rem
-          else if Static_label.compare j i < 0 then
+          else if j < i then
             (i, ctx) :: all
           else
             (i, Context.union ctx qss) :: rem
@@ -982,9 +984,9 @@ end = struct
     | [], _ -> env2
     | _, [] -> env1
     | ((i1, pss1) as x1) :: rem1, ((i2, pss2) as x2) :: rem2 ->
-        if Static_label.equal i1 i2 then
+        if i1 = i2 then
           (i1, Context.union pss1 pss2) :: union rem1 rem2
-        else if Static_label.compare i1 i2 > 0 then
+        else if i1 > i2 then
           x1 :: union rem1 env2
         else
           x2 :: union env1 rem2
@@ -1084,9 +1086,9 @@ let rec pretty_precompiled_ ~print_default ppf = function
       let pretty_handlers ppf handlers =
         List.iter (fun { exit = i; pm; _ } ->
           Format.fprintf ppf
-            "++ Handler %a ++@,\
+            "++ Handler %d ++@,\
              %a"
-            Static_label.format i
+            (i :> int)
             (pretty_pm_ ~print_default) pm
         ) handlers
       in
@@ -1114,11 +1116,14 @@ let pretty_precompiled_res ppf (first, nexts) =
     (Format.pp_print_list ~pp_sep:Format.pp_print_cut
        (fun ppf (e, pmh) ->
           Format.fprintf ppf
-            "@[<v 2>Default matrix %a:@,\
+            "@[<v 2>Default matrix %d:@,\
              %a@]"
-            Static_label.format e
+            e
             pretty_precompiled_without_default pmh)
     ) nexts
+
+let pretty_precompiled_res ppf (v : pm_half_compiled * (Static_label.t * pm_half_compiled) list) =
+  pretty_precompiled_res ppf (v :> pm_half_compiled * (int * pm_half_compiled) list)
 
 (* Identifying some semantically equivalent lambda-expressions,
    Our goal here is also to
@@ -2850,10 +2855,9 @@ module SArg = struct
         },
         loc, kind ))
 
-  let make_catch kind handler =
-    make_catch_delayed kind handler
+  let make_catch = make_catch_delayed
 
-  let make_exit i = make_exit i
+  let make_exit = make_exit
 end
 
 (* Action sharing for Lswitch argument *)
@@ -2893,39 +2897,37 @@ let share_actions_sw kind sw =
 let reintroduce_fail sw =
   match sw.sw_failaction with
   | None ->
-      let t = Static_label.Tbl.create 17 in
+      let t = Hashtbl.create 17 in
       let seen (_, l) =
         match as_simple_exit l with
         | Some i ->
-            let old = try Static_label.Tbl.find t i with Not_found -> 0 in
-            Static_label.Tbl.replace t i (old + 1)
+            let old = try Hashtbl.find t i with Not_found -> 0 in
+            Hashtbl.replace t i (old + 1)
         | None -> ()
       in
       List.iter seen sw.sw_consts;
       List.iter seen sw.sw_blocks;
-      let i_max = ref None and max = ref (-1) in
-      Static_label.Tbl.iter
+      let i_max = ref Static_label.dummy and max = ref (-1) in
+      Hashtbl.iter
         (fun i c ->
           if c > !max then (
-            i_max := Some i;
+            i_max := i;
             max := c
           ))
         t;
       if !max >= 3 then
-        match !i_max with
-        | Some default ->
-            let remove =
-              List.filter (fun (_, lam) ->
-                  match as_simple_exit lam with
-                  | Some j -> not (Static_label.equal j default)
-                  | None -> true)
-            in
-            { sw with
-              sw_consts = remove sw.sw_consts;
-              sw_blocks = remove sw.sw_blocks;
-              sw_failaction = Some (make_exit default)
-            }
-        | None -> sw
+        let default = !i_max in
+        let remove =
+          List.filter (fun (_, lam) ->
+              match as_simple_exit lam with
+              | Some j -> j <> default
+              | None -> true)
+        in
+        { sw with
+          sw_consts = remove sw.sw_consts;
+          sw_blocks = remove sw.sw_blocks;
+          sw_failaction = Some (make_exit default)
+        }
       else
         sw
   | Some _ -> sw
@@ -3686,7 +3688,7 @@ let compile_orhandlers value_kind compile_fun lambda1 total1 ctx to_catch =
           if rem <> [] then separate_debug_output ();
           begin match raw_action r with
           | Lstaticraise (j, args) ->
-              if Static_label.equal i j then
+              if i = j then
                 ( List.fold_right2
                     (bind_with_layout Alias)
                     vars args handler_i,
