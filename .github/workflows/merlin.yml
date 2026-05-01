@@ -66,8 +66,8 @@ jobs:
       run: |
         opam env --set-root --set-switch --shell=cmd | sed -n 's/^set //p' | tee -a "$GITHUB_ENV"
 
-    - name: Cache flambda-backend build
-      uses: actions/cache@v3
+    - name: Restore flambda-backend build
+      uses: actions/cache/restore@v4
       id: cache
       with:
         path: ${{ github.workspace }}/flambda-backend/_install
@@ -106,6 +106,13 @@ jobs:
           ${{ matrix.flambda-backend-config }}
         make install
         opam pin remove oxcaml-dev
+
+    - name: Upload flambda-backend cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/flambda-backend/_install
+        key: cache-flambda-backend-${{ matrix.name }}-${{ hashFiles('oxcaml/external/merlin/upstream/ocaml_flambda/base-rev.txt') }}
 
     - name: Install dependencies
       working-directory: oxcaml/external/merlin
