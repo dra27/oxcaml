@@ -126,14 +126,14 @@ jobs:
     - name: Check formatting
       working-directory: oxcaml/external/merlin
       run: |
-        opam exec -- dune build @fmt
+        dune build --root=. @fmt
 
     - name: Build and test in release mode (linux)
       working-directory: oxcaml/external/merlin
       run: |
         export MERLIN_TEST_OCAML_PATH=$GITHUB_WORKSPACE/flambda-backend/_install
-        opam exec -- dune build
-        opam exec -- dune runtest -p merlin-lib,dot-merlin-reader,merlin,ocaml-index
+        dune build --root=.
+        dune runtest -p merlin-lib,dot-merlin-reader,merlin,ocaml-index
         if ! git diff --quiet ; then
           echo "The following files were modified by dune:" >&2
           git diff --name-only >&2
