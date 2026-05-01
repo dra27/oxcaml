@@ -105,6 +105,7 @@ jobs:
     - name: Check formatting
       working-directory: oxcaml/external/merlin
       run: |
+        touch dune-workspace
         opam exec -- dune build @fmt
 
     - name: Build and test in release mode (linux)
