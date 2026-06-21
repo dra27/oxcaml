@@ -36,3 +36,4 @@ Currying functions:
 Apply functions:
 Send functions:
 Force link: no
+Requires caml_standard_library_nat: no

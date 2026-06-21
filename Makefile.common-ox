@@ -45,8 +45,22 @@ else
 main_ocamlopt_optimization_flags := -O3
 endif
 
+# Makefile.common upstream; but used in Makefile.build_config
+QUOTE_SINGLE = '$(subst ','\'',$(1))'
+
+# cf. similar setup in Makefile.common
+ifeq "$(TARGET_LIBDIR_IS_RELATIVE)" "true"
+  HASH := \#
+  bppm = $(subst =,%+,$(subst :,%.,$(subst %,%$(HASH),$(1))))
+  BUILD_PATH_PREFIX_MAP ?=
+  export BUILD_PATH_PREFIX_MAP := \
+    $(BUILD_PATH_PREFIX_MAP)$\
+      :/boot=$(call bppm,$(CURDIR)/_build/_bootinstall)$\
+      :/runtime_stdlib=$(call bppm,$(CURDIR)/_build/runtime_stdlib_install)
+endif
+
 define dune_runtime_stdlib_context
-(lang dune 2.8)
+(lang dune 3.0)
 (context (default
   (name runtime_stdlib)
   (profile main)
@@ -55,11 +69,13 @@ define dune_runtime_stdlib_context
     (OCAMLLIB ("$(CURDIR)/_build/_bootinstall/lib/ocaml")))
   (env (_
     (flags (:standard -directory stdlib -warn-error +A -alert -unsafe_multidomain))
+    (link_flags (:standard -set-runtime-default
+                           "standard_library_default=$(TARGET_LIBDIR)"))
     $(ENV_VARS)))))
 endef
 
 define dune_main_context
-(lang dune 2.8)
+(lang dune 3.0)
 (context (default
   (name main)
   (profile $(main_build_profile))
@@ -70,6 +86,8 @@ define dune_main_context
     (flags (:standard -directory compiler-distro -warn-error +A -alert -unsafe_multidomain))
     ; We never want to build the compiler itself with AddressSanitizer enabled.
     (ocamlopt_flags (:standard $(main_ocamlopt_optimization_flags) -fno-asan))
+    (link_flags (:standard -set-runtime-default
+                           "standard_library_default=$(TARGET_LIBDIR)"))
     $(ENV_VARS)))))
 endef
 
@@ -199,6 +217,7 @@ _build/_bootinstall: Makefile.config $(dune_config_targets)
 	echo '( $(OC_CFLAGS) )' > oc_cflags.sexp
 	echo '( $(subst -I $(ROOTDIR)/,-I $(CURDIR)/,$(OC_CPPFLAGS)) )' > oc_cppflags.sexp
 	echo '( $(SHAREDLIB_CFLAGS) )' > sharedlib_cflags.sexp
+	echo '( $(BUILD_MAP_CFLAGS) )' > build_map_cflags.sexp
 
 # _build/_bootinstall: a minimal install directory for the boot compiler,
 # which is placed on PATH for subsequent builds
@@ -233,7 +252,7 @@ _install: compiler
 	$(cpl) _build/install/main/bin/* _install/bin/
 	( cd _install/bin; for i in *.opt; do ln -s $$i $${i%.opt}; done )
 	$(cpl) -R _build/runtime_stdlib_install/lib/ocaml_runtime_stdlib/* _install/lib/ocaml/
-	rm -f _install/lib/ocaml/{META,dune-package,Makefile.config,dynlink.cmxa,dynlink/dynlink.cmxa}
+	rm -f _install/lib/ocaml/{META,dune-package,Makefile.config,dynlink.cmxa,dynlink/dynlink.cmxa,runtime-launch-info}
 	$(cpl) -R _build/install/main/lib/ocaml/* _install/lib/ocaml/
 	if [ "x$(legacy_layout)" == "xyes" ] ; \
 	then \
@@ -454,7 +473,7 @@ test-in-prefix-no-rebuild:
 	mkdir -p $(boot_build)/testsuite/in_prefix
 	cd $(boot_build)/testsuite/in_prefix && \
 	  ../tools/test_in_prefix.exe \
-	    --bindir "$(BINDIR)" --libdir "$(LIBDIR)" \
+	    --bindir "$(BINDIR)" --libdir "$(TARGET_LIBDIR)" \
 	    $(call bool_to_with, ocamlnat, $(INSTALL_OCAMLNAT)) \
 	    $(call bool_to_with, ocamlopt, $(NATIVE_COMPILER)) \
 	    $(call bool_to_with, cross-module-inlining, \

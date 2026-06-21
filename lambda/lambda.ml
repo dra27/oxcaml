@@ -36,14 +36,10 @@ type compile_time_constant =
   | Ostype_win32
   | Ostype_cygwin
   | Backend_type
-<<<<<<< OxCaml
+  | Standard_library_default
   | Runtime5
   | Arch_amd64
   | Arch_arm64
-||||||| Upstream OCaml
-=======
-  | Standard_library_default
->>>>>>> ocaml/ocaml#14244
 
 type immediate_or_pointer =
   | Immediate
@@ -3199,6 +3195,7 @@ let primitive_result_layout (p : primitive) =
     | Pbigarray_complex32 | Pbigarray_complex64 ->
       layout_block
     end
+  | Pctconst Standard_library_default -> layout_string
   | Pctconst (
     Big_endian | Word_size | Int_size | Max_wosize
     | Ostype_unix | Ostype_cygwin | Ostype_win32 | Backend_type | Runtime5

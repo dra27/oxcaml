@@ -20,6 +20,7 @@ Currying functions: 2L0
 Apply functions:
 Send functions:
 Force link: no
+Requires caml_standard_library_nat: no
 File ref_indirect.cmi
 Unit name: Ref_indirect
 Is parameter: no

@@ -27,6 +27,7 @@ Currying functions:
 Apply functions:
 Send functions:
 Force link: no
+Requires caml_standard_library_nat: no
 File question.cmx
 Name: Question
 CRC of implementation: 00000000000000000000000000000000
@@ -73,3 +74,4 @@ Currying functions:
 Apply functions:
 Send functions:
 Force link: no
+Requires caml_standard_library_nat: no
