@@ -531,8 +531,6 @@
 
 (install
  (files
-  Makefile.build_config
-  Makefile.config_if_required
   Makefile.config)
  (section lib)
  (package ocaml))
