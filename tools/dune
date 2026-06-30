@@ -67,6 +67,7 @@
   (name dumpobj)
   (modes byte)
   (modules dumpobj)
+  (link_flags (:standard (:include %{project_root}/build_map_ccopt.sexp)))
   (libraries ocamlcommon ocamlbytecomp opnames))
 
 (install
