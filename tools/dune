@@ -60,14 +60,13 @@
 
 (library
   (name opnames)
-  (modes byte)
+  (modes byte native)
   (modules opnames))
 
 (executable
   (name dumpobj)
-  (modes byte)
+  (modes byte native)
   (modules dumpobj)
-  (link_flags (:standard (:include %{project_root}/build_map_ccopt.sexp)))
   (libraries ocamlcommon ocamlbytecomp opnames))
 
 (install
