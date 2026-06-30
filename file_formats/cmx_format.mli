@@ -78,7 +78,7 @@ type unit_infos =
                                   (* Requires metaprogramming libs *)
     ui_external_symbols: string list; (* Set of external symbols *)
     ui_file_sections: Oxcaml_utils.File_sections.t;
-    mutable ui_need_stdlib: bool} (* caml_standard_library_nat needed *)
+    ui_need_stdlib: bool;         (* caml_standard_library_nat needed *)
   }
 
 type unit_infos_raw =
@@ -116,6 +116,7 @@ type lib_unit_info =
     li_quoted_cmi : Bitmap.t;   (* subset of lib_quoted_cmi *)
     li_quoted_cmx : Bitmap.t;   (* subset of lib_quoted_cmx *)
     li_external_symbols: string array;
+    li_need_stdlib: bool;       (* caml_standard_library_nat needed *)
   }
 
 type library_infos =

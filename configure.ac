@@ -494,6 +494,7 @@ AC_SUBST([opam_exec])
 AC_SUBST([objcopy])
 AC_SUBST([ocaml_bindir])
 AC_SUBST([ocaml_libdir])
+AC_SUBST([ocaml_libdir_boot])
 AC_SUBST([TARGET_LIBDIR])
 AC_SUBST([QS])
 AC_SUBST([ar_supports_response_files])
@@ -514,6 +515,7 @@ AC_CONFIG_FILES([ocamltest/ocamltest_config.ml])
 AC_CONFIG_FILES([otherlibs/dynlink/dynlink_config.ml])
 AC_CONFIG_FILES([utils/config.common.ml])
 AC_CONFIG_FILES([utils/config.generated.ml])
+AC_CONFIG_FILES([utils/config.fixed_libdir.ml])
 AC_CONFIG_HEADERS([runtime/caml/m.h])
 AC_CONFIG_HEADERS([runtime/caml/s.h])
 AC_CONFIG_HEADERS([runtime/caml/exec.h])
@@ -3752,6 +3754,9 @@ AC_CONFIG_COMMANDS_PRE([
       [TARGET_BINDIR="$HOST_BINDIR"],
       [TARGET_BINDIR='.'])])
   eval "ocaml_libdir=\"$ocaml_libdir\""
+  # Boot compiler can't ever be relocatable - use an expanded and absolute form
+  # of libdir.
+  eval "ocaml_libdir_boot=\"$libdir\""
   AS_IF([test x"$TARGET_LIBDIR" = 'x'],
     [AS_IF([test "x$bindir_to_libdir" = 'x'],
       [TARGET_LIBDIR="$ocaml_libdir"],

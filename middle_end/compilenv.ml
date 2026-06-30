@@ -269,7 +269,7 @@ let need_send_fun arity result mode =
 (* Record that caml_standard_library_nat is needed *)
 
 let need_stdlib_location () =
-  current_unit.ui_need_stdlib <- true
+  current_unit.uib_need_stdlib <- true
 
 (* Write the description of the current unit *)
 
@@ -350,6 +350,7 @@ let build_unit_info ~main_module_block_format ~arg_descr =
     ui_file_sections =
       File_sections.Builder.build current_unit.uib_file_sections;
     ui_external_symbols = current_unit.uib_external_symbols;
+    ui_need_stdlib = current_unit.uib_need_stdlib;
   }
 
 let save_unit_info filename ~main_module_block_format ~arg_descr =
