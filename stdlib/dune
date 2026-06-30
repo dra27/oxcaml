@@ -512,20 +512,22 @@
   .stdlib.objs/native/stdlib__In_channel.cmx
   .stdlib.objs/native/stdlib__Out_channel.cmx
   .stdlib.objs/native/stdlib__Pair.cmx
-  (META as stdlib/META)
+  (META as stdlib/META))
   ; The runtime_stdlib install gets the host runtime-launch-info (runtime.info),
   ; which is used during the build. The final installed compiler instead gets
   ; the target runtime-launch-info (target_runtime.info) via the [ocaml] package
   ; install below.
-  (runtime.info as runtime-launch-info))
+  ; XXX TODO
+  ;(runtime.info as runtime-launch-info))
  (section lib)
  (package ocaml_runtime_stdlib))
 
-(install
- (files
-  (target_runtime.info as runtime-launch-info))
- (section lib)
- (package ocaml))
+; XXX TODO
+;(install
+; (files
+;  (target_runtime.info as runtime-launch-info))
+; (section lib)
+; (package ocaml))
 
 (rule
   (targets sys.ml)

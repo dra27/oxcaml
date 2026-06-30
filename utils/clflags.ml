@@ -38,25 +38,15 @@ module Float_arg_helper = Arg_helper.Make (struct
   end
 end)
 
-<<<<<<< OxCaml
 type open_arg =
   | Open of string
   | Open_cmi of string
 
 let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
 and ccobjs = ref ([] : string list)     (* .o, .a, .so and -cclib -lxxx *)
-and dllibs = ref ([] : string list)     (* .so and -dllib -lxxx *)
-||||||| Upstream OCaml
-let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
-and ccobjs = ref ([] : string list)     (* .o, .a, .so and -cclib -lxxx *)
-and dllibs = ref ([] : string list)     (* .so and -dllib -lxxx *)
-=======
-let objfiles = ref ([] : string list)         (* .cmo and .cma files *)
-and ccobjs = ref ([] : string list)           (* .o, .a, .so and -cclib -lxxx *)
 and dllibs = ref ([] : (suffixed:bool * string) list)
                                               (* .so, -dllib -lxxx and
                                                  -dllib-suffixed -lxxx *)
->>>>>>> ocaml/ocaml#14245
 
 let cmi_file = ref None
 
