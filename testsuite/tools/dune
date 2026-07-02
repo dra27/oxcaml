@@ -31,3 +31,12 @@
  (enabled_if (= %{context_name} "default"))
  (action
   (run %{cc} -I %{ocaml_where} -c ../tools/main_in_c.c -o main_in_c.o)))
+
+; A stand-in ocamlrun used by test-in-prefix (placed on PATH) to check that the
+; relocatable bytecode launcher searches the program's own directory first.
+(rule
+ (target poisonedruntime.exe)
+ (deps ../tools/poisonedruntime.c)
+ (enabled_if (= %{context_name} "default"))
+ (action
+  (run %{cc} -I %{ocaml_where} ../tools/poisonedruntime.c -o poisonedruntime.exe)))

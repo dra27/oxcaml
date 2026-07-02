@@ -38,6 +38,26 @@
 
 (copy_files ../Makefile.config)
 
+; The bytecode-executable launcher (runtime-launch-info) is built by the stdlib
+; Makefile, which compiles stdlib/header.c with the full OC_CFLAGS (including the
+; build-path mapping), exactly as the runtime is built. Doing it this way keeps
+; the build directory out of the installed header without re-deriving the C
+; compilation flags here.
+(rule
+  (targets runtime-launch-info)
+  (deps
+    Makefile
+    StdlibModules
+    .depend
+    header.c
+    ../Makefile.common
+    ../Makefile.config_if_required
+    ../Makefile.build_config
+    ../Makefile.config
+    (glob_files ../runtime/caml/*.h))
+  (action
+    (run make COMPUTE_DEPS=false runtime-launch-info)))
+
 (install
  (files
   Makefile.config
@@ -512,22 +532,20 @@
   .stdlib.objs/native/stdlib__In_channel.cmx
   .stdlib.objs/native/stdlib__Out_channel.cmx
   .stdlib.objs/native/stdlib__Pair.cmx
-  (META as stdlib/META))
-  ; The runtime_stdlib install gets the host runtime-launch-info (runtime.info),
-  ; which is used during the build. The final installed compiler instead gets
-  ; the target runtime-launch-info (target_runtime.info) via the [ocaml] package
-  ; install below.
-  ; XXX TODO
-  ;(runtime.info as runtime-launch-info))
+  (META as stdlib/META)
+  ; The runtime_stdlib package's runtime-launch-info is used while building the
+  ; compiler. The final installed compiler instead uses the copy from the
+  ; [ocaml] package install below (so _install replaces this one); for a
+  ; non-cross build the two are identical.
+  runtime-launch-info)
  (section lib)
  (package ocaml_runtime_stdlib))
 
-; XXX TODO
-;(install
-; (files
-;  (target_runtime.info as runtime-launch-info))
-; (section lib)
-; (package ocaml))
+(install
+ (files
+  runtime-launch-info)
+ (section lib)
+ (package ocaml))
 
 (rule
   (targets sys.ml)

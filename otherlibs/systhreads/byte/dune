@@ -25,3 +25,19 @@
    ((:include %{project_root}/oc_cflags.sexp)
     (:include %{project_root}/sharedlib_cflags.sexp)
     (:include %{project_root}/oc_cppflags.sexp)))))
+
+; Relink threads.cma from the modules (in link order) with the runtime-id
+; suffixed stubs reference (see otherlibs/unix/dune); installed in place of
+; dune's by otherlibs/systhreads/dune.
+(rule
+ (targets threads_reloc.cma)
+ (deps
+  .threads.objs/byte/thread.cmo
+  .threads.objs/byte/multicore.cmo
+  .threads.objs/byte/event.cmo)
+ (action
+  (run %{ocamlc} -a -o threads_reloc.cma
+       .threads.objs/byte/thread.cmo .threads.objs/byte/multicore.cmo
+       .threads.objs/byte/event.cmo
+       -linkall -dllib-suffixed -lthreads_stubs
+       -cclib -lthreads_stubs -cclib -lpthread)))

@@ -139,13 +139,31 @@
            (:include %{project_root}/oc_cppflags.sexp)))
  ))
 
+; The installed byte unix.cma is relinked from the unix library's own .cmo
+; with the runtime-id *suffixed* stub name (-dllib-suffixed), so it stays
+; digest-consistent with the installed .cmi/.cmxa (which come from the unix
+; library) while loading only this version's dllunix_stubs. The compiler's
+; own bytecode tools instead link the byte-only unix_byte library (byte/dune),
+; which needs no digest match as it never dynlinks unix. dune's own unix.cma
+; keeps the plain stub name for build-time byte consumers. The matching .so is
+; renamed with the suffix in the install step.
+(rule
+ (targets unix_reloc.cma)
+ (deps
+  .unix.objs/byte/unix.cmo
+  .unix.objs/byte/unixLabels.cmo)
+ (action
+  (run %{ocamlc} -a -o unix_reloc.cma
+       .unix.objs/byte/unix.cmo .unix.objs/byte/unixLabels.cmo
+       -linkall -dllib-suffixed -lunix_stubs -cclib -lunix_stubs)))
+
 (install
   (files
     (.unix.objs/native/unix.cmx as unix/unix.cmx)
     (.unix.objs/native/unixLabels.cmx as unix/unixLabels.cmx)
     (unix.cmxa as unix/unix.cmxa)
     (unix.a as unix/unix.a)
-    (unix.cma as unix/unix.cma)
+    (unix_reloc.cma as unix/unix.cma)
     (.unix.objs/byte/unix.cmi as unix/unix.cmi)
     (.unix.objs/byte/unix.cmt as unix/unix.cmt)
     (.unix.objs/byte/unix.cmti as unix/unix.cmti)

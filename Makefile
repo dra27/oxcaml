@@ -44,6 +44,9 @@ CLEAN_FILES = \
   sharedlib_cflags.sexp \
   build_map_cflags.sexp \
   build_map_ccopt.sexp \
+  bytecode_launcher_flags_oxcaml.sexp \
+  otherlibs/unix/byte/stubdll.inc \
+  otherlibs/str/byte/stubdll.inc \
   .rsync-output \
   .rsync-output-compare \
   ocamlc \

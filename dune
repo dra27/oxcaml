@@ -397,6 +397,7 @@
  (modes byte)
  (flags
   (:standard -strict-sequence -w +67 -bin-annot -safe-string -strict-formats))
+ (link_flags (:standard (:include %{project_root}/bytecode_launcher_flags.sexp)))
  (libraries ocamlbytecomp ocamlcommon)
  (modules main))
 
@@ -467,6 +468,26 @@
    (= %{context_name} "runtime_stdlib")))
  (action
   (copy %{project_root}/ocamlopt_oxcaml_flags.sexp %{targets})))
+
+; Bytecode launcher flags: empty for the boot (system-compiler) context, which
+; does not understand -launch-method/-runtime-search, and the configured flags
+; for the OxCaml contexts (see Makefile.common-ox).
+
+(rule
+ (targets bytecode_launcher_flags.sexp)
+ (enabled_if
+  (= %{context_name} "default"))
+ (action
+  (write-file bytecode_launcher_flags.sexp "()")))
+
+(rule
+ (targets bytecode_launcher_flags.sexp)
+ (enabled_if
+  (or
+   (= %{context_name} "main")
+   (= %{context_name} "runtime_stdlib")))
+ (action
+  (copy %{project_root}/bytecode_launcher_flags_oxcaml.sexp %{targets})))
 
 ; C libraries needed to resolve [caml_zstd_initialize] when linking
 ; ocamlcommon.cmxa. -lcomprmarsh is always needed, along with the context's
@@ -798,15 +819,25 @@
  (modes byte)
  (instrumentation
   (backend bisect_ppx))
+ ; -I otherlibs/unix/byte (bare, i.e. relative to the _build/<ctx> link cwd, NOT
+ ; %{project_root} which is dune-file-relative) so the linker's primitive check
+ ; finds the suffixed dllunix_stubs there.
+ (link_flags (:standard (:include %{project_root}/bytecode_launcher_flags.sexp)
+            -I otherlibs/unix/byte))
+ ; ...and link_deps so it is built first (see otherlibs/unix/byte/dune).
+ (link_deps (glob_files %{project_root}/otherlibs/unix/byte/dllunix_stubs-*.so))
+ ; Byte tool: link the runtime-id-suffixed unix_byte/memtrace_byte (see
+ ; otherlibs/unix/byte/dune) so the installed ocamlopt.byte loads only this
+ ; version's dllunix_stubs.
  (libraries
-  memtrace
+  memtrace_byte
   flambda2
   flambda2_ui
   flambda2_to_cmm
   gc_timings
   ocamloptcomp
   ocamlcommon
-  unix)
+  unix_byte)
  (modules oxcaml_main))
 
 (rule
