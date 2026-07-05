@@ -1021,36 +1021,18 @@
 (install
  (files
   (compilerlibs/META as compiler-libs/META)
-  (external/owee/libcompiler_owee_stubs.a
-   as
-   compiler-libs/libcompiler_owee_stubs.a)
-  (external/owee/libcompiler_owee_stubs.a
-   as
-   compiler-libs/libcompiler_owee_stubs_native.a)
-  (external/gc-timings/libgc_timings_stubs.a
-   as
-   compiler-libs/libgc_timings_stubs.a)
-  (external/gc-timings/libgc_timings_stubs.a
-   as
-   compiler-libs/libgc_timings_stubs_native.a)
-  (middle_end/flambda2/numbers/floats/libflambda2_floats_stubs.a
-   as
-   compiler-libs/libflambda2_floats_stubs.a)
-  (middle_end/flambda2/numbers/floats/libflambda2_floats_stubs.a
-   as
-   compiler-libs/libflambda2_floats_stubs_native.a)
-  (middle_end/flambda2/algorithms/libflambda2_algorithms_stubs.a
-   as
-   compiler-libs/libflambda2_algorithms_stubs.a)
-  (middle_end/flambda2/algorithms/libflambda2_algorithms_stubs.a
-   as
-   compiler-libs/libflambda2_algorithms_stubs_native.a)
   ; for special_dune compat
   (ocamloptcomp_with_flambda2.cma as compiler-libs/ocamloptcomp.cma)
   (ocamloptcomp_with_flambda2.cmxa as compiler-libs/ocamloptcomp.cmxa)
   (ocamloptcomp_with_flambda2.a as compiler-libs/ocamloptcomp.a))
  (section lib)
  (package ocaml))
+
+; The compiler's C-stub libraries are permanently renamed with the runtime-id
+; suffix (see the stub_dll.dune.in files), so their libX_stubs.a install lands
+; here with the mangled name substituted by Makefile.common-ox (dune can't put a
+; build-config value in an install path).
+(include compilerlibs_stubs.inc)
 
 (rule
  (targets compiler-libs-installation.sexp)

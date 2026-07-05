@@ -234,6 +234,22 @@ _build/_bootinstall: Makefile.config $(dune_config_targets)
 # target, hence generating the rule here (as with the .sexp files above).
 	echo '(rule (target dllunix_stubs-$(TARGET)-$(BYTECODE_RUNTIME_ID)$(EXT_DLL)) (action (copy ../dllunix_stubs$(EXT_DLL) dllunix_stubs-$(TARGET)-$(BYTECODE_RUNTIME_ID)$(EXT_DLL))))' > otherlibs/unix/byte/stubdll.inc
 	echo '(rule (target dllstr_stubs-$(TARGET)-$(BYTECODE_RUNTIME_ID)$(EXT_DLL)) (action (copy ../dllstr_stubs$(EXT_DLL) dllstr_stubs-$(TARGET)-$(BYTECODE_RUNTIME_ID)$(EXT_DLL))))' > otherlibs/str/byte/stubdll.inc
+# The compiler's own C-stub libraries (referenced by ocamloptcomp.cma, reached by
+# every bytecode tool via ocamlcommon/flambda2) are PERMANENTLY mangled with the
+# runtime-id suffix (recorded as a plain -dllib) rather than -dllib-suffixed:
+# they cannot use the byte-only-library trick (the mixed-mode ocamlcommon/flambda2
+# would have to be split). Their library stanza is generated from stub_dll.dune.in
+# with the suffix substituted, because dune can't put a build-config value in an
+# (archive_name)/(foreign_archives) atom. (This drops the load-time multi-arch
+# portability that -dllib-suffixed provides, which we can live without here.)
+	for d in middle_end/flambda2/numbers/floats middle_end/flambda2/algorithms \
+	         external/gc-timings external/owee; do \
+	  sed 's/@STUB_SUFFIX@/$(TARGET)-$(BYTECODE_RUNTIME_ID)/g' \
+	    $$d/stub_dll.dune.in > $$d/stub_dll.inc; \
+	done
+# ...and the root fragment installing those mangled libX_stubs.a into compiler-libs.
+	sed 's/@STUB_SUFFIX@/$(TARGET)-$(BYTECODE_RUNTIME_ID)/g' \
+	  compilerlibs_stubs.dune.in > compilerlibs_stubs.inc
 
 # _build/_bootinstall: a minimal install directory for the boot compiler,
 # which is placed on PATH for subsequent builds
@@ -298,7 +314,8 @@ endif
 # only its own stubs (cf. MKLIB -suffixed in otherlibs/Makefile.otherlibs.common).
 ifeq "$(SUFFIXING)" "true"
 	cd _install/lib/ocaml/stublibs && \
-	  for b in dllunix_stubs dllstr_stubs dllruntime_events_stubs dllthreads_stubs; \
+	  for b in dllunix_stubs dllstr_stubs dllruntime_events_stubs dllthreads_stubs \
+	           dlleval_stubs dlljit_stubs; \
 	  do \
 	    if test -e "$$b$(EXT_DLL)"; then \
 	      mv "$$b$(EXT_DLL)" "$$b-$(TARGET)-$(BYTECODE_RUNTIME_ID)$(EXT_DLL)"; \

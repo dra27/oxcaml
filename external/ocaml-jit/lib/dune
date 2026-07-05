@@ -7,14 +7,27 @@
   (flags
    (:standard (:include %{project_root}/build_map_cflags.sexp)))))
 
+; Relink jit.cma from its modules with the runtime-id-suffixed stubs reference
+; (see otherlibs/unix/dune); installed in place of dune's, and the .so is now
+; installed too (dune's install was missing it) + renamed with the suffix in the
+; install step. jit is a wrapped library, so extract the modules in the .cma's
+; link order (re-linking jit.cma itself would copy its plain dllib → a duplicate).
+(rule
+ (targets jit_reloc.cma)
+ (deps jit.cma (glob_files .jit.objs/byte/*.cmo))
+ (action
+  (bash
+   "cmos=$(%{bin:ocamlobjinfo} jit.cma | awk '/Unit name:/{u=$3; print \".jit.objs/byte/\" tolower(substr(u,1,1)) substr(u,2) \".cmo\"}'); %{ocamlc} -a -o jit_reloc.cma $cmos -linkall -dllib-suffixed -ljit_stubs -cclib -ljit_stubs")))
+
 (install
  (files
   (.jit.objs/native/jit.cmx as ocaml-jit/jit.cmx)
   (jit.cmxa as ocaml-jit/jit.cmxa)
   (jit.a as ocaml-jit/jit.a)
   (libjit_stubs.a as ocaml-jit/libjit_stubs.a)
+  (dlljit_stubs.so as stublibs/dlljit_stubs.so)
   (jit.cmxs as ocaml-jit/jit.cmxs)
-  (jit.cma as ocaml-jit/jit.cma)
+  (jit_reloc.cma as ocaml-jit/jit.cma)
   (.jit.objs/byte/jit.cmi as ocaml-jit/jit.cmi)
   (.jit.objs/byte/jit.cmt as ocaml-jit/jit.cmt)
   (.jit.objs/byte/jit.cmti as ocaml-jit/jit.cmti))

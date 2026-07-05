@@ -56,14 +56,26 @@
   (flags
    (:standard (:include %{project_root}/build_map_cflags.sexp)))))
 
+; Relink eval.cma from the module with the runtime-id-suffixed stubs reference
+; (see otherlibs/unix/dune); installed in place of dune's, and the .so is now
+; installed too (dune's install was missing it) + renamed with the suffix in the
+; install step.
+(rule
+ (targets eval_reloc.cma)
+ (deps .eval.objs/byte/eval.cmo)
+ (action
+  (run %{ocamlc} -a -o eval_reloc.cma .eval.objs/byte/eval.cmo
+       -linkall -dllib-suffixed -leval_stubs -cclib -leval_stubs)))
+
 (install
  (files
   (.eval.objs/native/eval.cmx as eval.cmx)
   eval.cmxa
   eval.a
   libeval_stubs.a
+  (dlleval_stubs.so as stublibs/dlleval_stubs.so)
   eval.cmxs
-  eval.cma
+  (eval_reloc.cma as eval.cma)
   eval.mli
   (.eval.objs/byte/eval.cmi as eval.cmi)
   (.eval.objs/byte/eval.cmt as eval.cmt)

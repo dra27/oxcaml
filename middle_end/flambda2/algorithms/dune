@@ -1,24 +1,11 @@
 (include_subdirs unqualified)
 
-(library
- (name flambda2_algorithms)
- (wrapped true)
- (instrumentation (backend bisect_ppx))
- (foreign_stubs
-  (language c)
-  (names builtin_stubs)
-  (flags
-   ((:include %{project_root}/%{env:OC_CFLAGS_SEXP=oc_cflags.sexp})
-    (:include %{project_root}/sharedlib_cflags.sexp)
-    (:include %{project_root}/oc_cppflags.sexp))))
- (ocamlopt_flags
-  (:standard
-   (:include %{project_root}/ocamlopt_flags.sexp)
-   (:include ocamlopt_flags.sexp)
-   -O3
-   -open
-   Int_replace_polymorphic_compare))
- (libraries ocamlcommon))
+; The library + C-stub definitions (and the install of the mangled .so) are
+; generated into stub_dll.inc (from stub_dll.dune.in) by Makefile.common-ox,
+; baking the runtime-id suffix into the C stub library name. The
+; ocamlopt_flags.sexp rules stay here (the generated library references the
+; local ocamlopt_flags.sexp).
+(include stub_dll.inc)
 
 ; Regular OCaml Rule (first phase of bootstrapping)
 
@@ -37,9 +24,3 @@
   (= %{context_name} "main"))
  (action
   (copy ocamlopt_oxcaml_flags.sexp %{targets})))
-
-(install
- (files
-  (dllflambda2_algorithms_stubs.so as stublibs/dllflambda2_algorithms_stubs.so))
- (section lib)
- (package ocaml))

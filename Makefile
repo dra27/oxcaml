@@ -47,6 +47,11 @@ CLEAN_FILES = \
   bytecode_launcher_flags_oxcaml.sexp \
   otherlibs/unix/byte/stubdll.inc \
   otherlibs/str/byte/stubdll.inc \
+  middle_end/flambda2/numbers/floats/stub_dll.inc \
+  middle_end/flambda2/algorithms/stub_dll.inc \
+  external/gc-timings/stub_dll.inc \
+  external/owee/stub_dll.inc \
+  compilerlibs_stubs.inc \
   .rsync-output \
   .rsync-output-compare \
   ocamlc \
